@@ -46,7 +46,7 @@ app.UseMiddleware<SecurityHeadersMiddleware>();
 
 app.UseSerilogRequestLogging();
 
-if (app.Environment.IsDevelopment())
+if (!app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
@@ -58,6 +58,13 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseHsts();
+
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Society Management API v1");
+        options.RoutePrefix = "swagger";
+    });
 }
 
 app.UseHttpsRedirection();

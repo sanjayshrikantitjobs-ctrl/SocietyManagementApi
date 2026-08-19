@@ -27,7 +27,7 @@ builder.Services.AddRateLimiting(builder.Configuration);
 builder.Services.AddSwaggerDocumentation();
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-                      ?? new[] { "http://localhost:4200" };
+                      ?? new[] { "http://localhost:4200", "https://societymanagement-web.sanjay-shrikant-it-jobs.workers.dev" };
 
 builder.Services.AddCors(options =>
 {

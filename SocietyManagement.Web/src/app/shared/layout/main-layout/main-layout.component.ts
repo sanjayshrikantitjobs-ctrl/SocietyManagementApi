@@ -25,6 +25,8 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: 'dashboard', link: '/dashboard' },
   { label: 'Festivals & Events', icon: 'celebration', link: '/festivals' },
+  { label: 'Events', icon: 'event', link: '/events' },
+  { label: 'Visitors', icon: 'badge', link: '/visitors' },
   { label: 'Maintenance', icon: 'receipt_long', link: '/maintenance', adminOnly: true },
   { label: 'Residents', icon: 'people', link: '/residents', adminOnly: true },
   { label: 'My Bills', icon: 'payments', link: '/my-bills' },

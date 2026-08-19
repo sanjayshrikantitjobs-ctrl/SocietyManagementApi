@@ -13,6 +13,7 @@ import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.se
 import { RoleService } from '../../roles/role.service';
 import { SocietyService } from '../../society-setup/services/society.service';
 import { GENDER_LABELS, MemberDto } from '../models/resident.model';
+import { QuickAddFlatDialogComponent } from '../quick-add-flat/quick-add-flat-dialog.component';
 import { ResidentService } from '../services/resident.service';
 import { MemberDetailDialogComponent } from './member-detail-dialog.component';
 
@@ -23,7 +24,9 @@ import { MemberDetailDialogComponent } from './member-detail-dialog.component';
   template: `
     <div class="tab-content">
       <div class="toolbar">
-        <span></span>
+        <button mat-stroked-button color="primary" (click)="addFlatWithResident()" [disabled]="societyId === 0">
+          <mat-icon>domain_add</mat-icon> Add Flat + Resident
+        </button>
         <button mat-flat-button color="primary" (click)="add()" [disabled]="societyId === 0">
           <mat-icon>person_add</mat-icon> Add Member
         </button>
@@ -191,6 +194,13 @@ export class MembersListComponent implements OnInit {
         this.toast.success('Member updated.');
         this.load();
       });
+    });
+  }
+
+  addFlatWithResident(): void {
+    this.dialog.open(QuickAddFlatDialogComponent, { maxWidth: '95vw' }).afterClosed().subscribe((created) => {
+      if (!created) return;
+      this.load();
     });
   }
 

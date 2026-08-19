@@ -23,6 +23,7 @@
     "@microsoft/signalr": "^8.0.7",
     "chart.js": "^4.4.7",
     "ng2-charts": "^6.0.1",
+    "qrcode": "^1.5.4",
     "rxjs": "~7.8.1",
     "tslib": "^2.7.0",
     "zone.js": "~0.15.0"
@@ -32,6 +33,7 @@
     "@angular/cli": "^22.0.0",
     "@angular/compiler-cli": "^22.0.0",
     "@types/jasmine": "~5.1.4",
+    "@types/qrcode": "^1.5.6",
     "jasmine-core": "~5.4.0",
     "karma": "~6.4.4",
     "karma-chrome-launcher": "~3.2.0",

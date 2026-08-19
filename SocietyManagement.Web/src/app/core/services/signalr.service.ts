@@ -55,7 +55,8 @@ export class SignalrService {
     // adds its own strongly-typed `.on(...)` handler as it ships.
     [
       'NewNotice', 'ComplaintUpdate', 'PaymentSuccess', 'FestivalReminder',
-      'FestivalContributionRecorded', 'FestivalExpenseApproved'
+      'FestivalContributionRecorded', 'FestivalExpenseApproved',
+      'VisitorApprovalRequested', 'VisitorApproved', 'VisitorRejected', 'VisitorRequestExpired'
     ].forEach((eventName) => {
       this.connection!.on(eventName, (payload: unknown) => {
         this.notifications.update((list) => [{ eventName, payload, receivedAt: new Date() }, ...list].slice(0, 50));

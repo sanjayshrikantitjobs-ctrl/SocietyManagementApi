@@ -5,6 +5,9 @@
       { label: 'Structure', link: '/society-setup/societies/' + societyId() + '/structure' },
       { label: 'Flats' }
     ]">
+    <button mat-stroked-button color="primary" (click)="addFlatWithResident()">
+      <mat-icon>domain_add</mat-icon> Add Flat + Resident
+    </button>
     <button mat-flat-button color="primary" (click)="add()">
       <mat-icon>add</mat-icon> Add Flat
     </button>

@@ -26,6 +26,14 @@ export const routes: Routes = [
         loadChildren: () => import('./features/festivals/festivals.routes').then((m) => m.FESTIVALS_ROUTES)
       },
       {
+        path: 'events',
+        loadChildren: () => import('./features/events/events.routes').then((m) => m.EVENTS_ROUTES)
+      },
+      {
+        path: 'visitors',
+        loadChildren: () => import('./features/visitors/visitors.routes').then((m) => m.VISITORS_ROUTES)
+      },
+      {
         path: 'maintenance',
         canActivate: [roleGuard],
         data: { roles: ['Admin'] },

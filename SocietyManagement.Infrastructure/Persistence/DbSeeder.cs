@@ -34,6 +34,8 @@ public class DbSeeder
         var adminRole = await SeedRoleAsync(Roles.Admin, "Full access to every module.", isSystemRole: true);
         var memberRole = await SeedRoleAsync(Roles.Member,
             "Read-only access; can manage own profile, RSVP, vote, raise complaints.", isSystemRole: true);
+        var watchmanRole = await SeedRoleAsync(Roles.Watchman,
+            "Gate security — creates visitor requests, checks visitors in and out.", isSystemRole: true);
 
         var allPermissions = await SeedPermissionsAsync();
 
@@ -44,10 +46,19 @@ public class DbSeeder
             Permissions.Members.View, Permissions.Society.View, Permissions.Maintenance.View,
             Permissions.Festivals.View, Permissions.Festivals.Contribute, Permissions.Expenses.View,
             Permissions.Notices.View, Permissions.Complaints.View, Permissions.Complaints.Create,
-            Permissions.Polls.View, Permissions.Polls.Vote, Permissions.Events.View, Permissions.Events.Rsvp
+            Permissions.Polls.View, Permissions.Polls.Vote, Permissions.Events.View, Permissions.Events.Rsvp,
+            Permissions.Visitors.View, Permissions.Visitors.Approve, Permissions.Visitors.Reject
         };
         await SeedRolePermissionsAsync(
             memberRole, allPermissions.Where(p => memberPermissionCodes.Contains(p.Code)).ToList());
+
+        var watchmanPermissionCodes = new[]
+        {
+            Permissions.Society.View, Permissions.Visitors.View, Permissions.Visitors.Create,
+            Permissions.Visitors.CheckIn, Permissions.Visitors.CheckOut
+        };
+        await SeedRolePermissionsAsync(
+            watchmanRole, allPermissions.Where(p => watchmanPermissionCodes.Contains(p.Code)).ToList());
 
         await SeedAdminUserAsync(adminRole);
 
@@ -102,6 +113,22 @@ public class DbSeeder
             ("Events", "View", Permissions.Events.View),
             ("Events", "Rsvp", Permissions.Events.Rsvp),
             ("Events", "Manage", Permissions.Events.Manage),
+            ("Visitors", "View", Permissions.Visitors.View),
+            ("Visitors", "Create", Permissions.Visitors.Create),
+            ("Visitors", "Approve", Permissions.Visitors.Approve),
+            ("Visitors", "Reject", Permissions.Visitors.Reject),
+            ("Visitors", "CheckIn", Permissions.Visitors.CheckIn),
+            ("Visitors", "CheckOut", Permissions.Visitors.CheckOut),
+            ("Visitors", "Manage", Permissions.Visitors.Manage),
+            ("Visitors", "ManageGates", Permissions.Visitors.ManageGates),
+            ("Visitors", "ManagePurposes", Permissions.Visitors.ManagePurposes),
+            ("Visitors", "ViewHistory", Permissions.Visitors.ViewHistory),
+            ("Visitors", "ManualOverride", Permissions.Visitors.ManualOverride),
+            ("Visitors", "ViewReports", Permissions.Visitors.ViewReports),
+            ("Visitors", "ManageFrequentVisitors", Permissions.Visitors.ManageFrequentVisitors),
+            ("Visitors", "ManageDomesticHelp", Permissions.Visitors.ManageDomesticHelp),
+            ("Visitors", "ManageExpectedVisitors", Permissions.Visitors.ManageExpectedVisitors),
+            ("Visitors", "ScanQr", Permissions.Visitors.ScanQr),
             ("Reports", "View", Permissions.Reports.View),
             ("AuditLogs", "View", Permissions.AuditLogs.View)
         };

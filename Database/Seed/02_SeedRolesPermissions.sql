@@ -15,6 +15,9 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Roles WHERE Name = 'Admin')
 
 IF NOT EXISTS (SELECT 1 FROM dbo.Roles WHERE Name = 'Member')
     INSERT INTO dbo.Roles (Name, Description, IsSystemRole, CreatedBy) VALUES ('Member', 'Read-only access; can manage own profile, RSVP, vote, raise complaints.', 1, 'system');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Roles WHERE Name = 'Watchman')
+    INSERT INTO dbo.Roles (Name, Description, IsSystemRole, CreatedBy) VALUES ('Watchman', 'Gate security — creates visitor requests, checks visitors in and out.', 1, 'system');
 GO
 
 ;WITH PermissionSeed AS (
@@ -51,6 +54,22 @@ GO
         ('Events',     'View',        'events.view'),
         ('Events',     'Rsvp',        'events.rsvp'),
         ('Events',     'Manage',      'events.manage'),
+        ('Visitors',   'View',        'visitors.view'),
+        ('Visitors',   'Create',      'visitors.create'),
+        ('Visitors',   'Approve',     'visitors.approve'),
+        ('Visitors',   'Reject',      'visitors.reject'),
+        ('Visitors',   'CheckIn',     'visitors.checkin'),
+        ('Visitors',   'CheckOut',    'visitors.checkout'),
+        ('Visitors',   'Manage',      'visitors.manage'),
+        ('Visitors',   'ManageGates', 'visitors.manage_gates'),
+        ('Visitors',   'ManagePurposes', 'visitors.manage_purposes'),
+        ('Visitors',   'ViewHistory', 'visitors.view_history'),
+        ('Visitors',   'ManualOverride', 'visitors.manual_override'),
+        ('Visitors',   'ViewReports', 'visitors.view_reports'),
+        ('Visitors',   'ManageFrequentVisitors', 'visitors.manage_frequent'),
+        ('Visitors',   'ManageDomesticHelp', 'visitors.manage_domestic_help'),
+        ('Visitors',   'ManageExpectedVisitors', 'visitors.manage_expected'),
+        ('Visitors',   'ScanQr',      'visitors.scan_qr'),
         ('Reports',    'View',        'reports.view'),
         ('AuditLogs',  'View',        'auditlogs.view')
     ) AS p(Module, Action, Code)
@@ -83,8 +102,20 @@ WHERE r.Name = 'Member'
   AND p.Code IN (
       'members.view', 'society.view', 'maintenance.view', 'festivals.view', 'festivals.contribute',
       'expenses.view', 'notices.view', 'complaints.view', 'complaints.create', 'polls.view', 'polls.vote',
-      'events.view', 'events.rsvp'
+      'events.view', 'events.rsvp', 'visitors.view', 'visitors.approve', 'visitors.reject'
   )
+  AND NOT EXISTS (
+      SELECT 1 FROM dbo.RolePermissions rp WHERE rp.RoleId = r.Id AND rp.PermissionId = p.Id
+  );
+GO
+
+-- Watchman: create/view visitor requests and check people in/out at the gate.
+INSERT INTO dbo.RolePermissions (RoleId, PermissionId, CreatedBy)
+SELECT r.Id, p.Id, 'system'
+FROM dbo.Roles r
+CROSS JOIN dbo.Permissions p
+WHERE r.Name = 'Watchman'
+  AND p.Code IN ('society.view', 'visitors.view', 'visitors.create', 'visitors.checkin', 'visitors.checkout')
   AND NOT EXISTS (
       SELECT 1 FROM dbo.RolePermissions rp WHERE rp.RoleId = r.Id AND rp.PermissionId = p.Id
   );

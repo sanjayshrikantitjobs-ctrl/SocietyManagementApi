@@ -7,6 +7,7 @@ public static class Roles
 {
     public const string Admin = "Admin";
     public const string Member = "Member";
+    public const string Watchman = "Watchman";
 }
 
 /// <summary>
@@ -101,5 +102,30 @@ public static class Permissions
     public static class AuditLogs
     {
         public const string View = "auditlogs.view";
+    }
+
+    /// <summary>Phase 1 (core approval workflow) wires View/Create/Approve/Reject/
+    /// CheckIn/CheckOut/Manage/ManageGates/ManagePurposes. The rest are seeded now
+    /// so later phases (QR passes, frequent visitors, domestic help, delivery,
+    /// reports) can pick them up without a fresh migration, same as Events.* was
+    /// pre-seeded ahead of the Event RSVP module.</summary>
+    public static class Visitors
+    {
+        public const string View = "visitors.view";
+        public const string Create = "visitors.create";
+        public const string Approve = "visitors.approve";
+        public const string Reject = "visitors.reject";
+        public const string CheckIn = "visitors.checkin";
+        public const string CheckOut = "visitors.checkout";
+        public const string Manage = "visitors.manage";
+        public const string ManageGates = "visitors.manage_gates";
+        public const string ManagePurposes = "visitors.manage_purposes";
+        public const string ViewHistory = "visitors.view_history";
+        public const string ManualOverride = "visitors.manual_override";
+        public const string ViewReports = "visitors.view_reports";
+        public const string ManageFrequentVisitors = "visitors.manage_frequent";
+        public const string ManageDomesticHelp = "visitors.manage_domestic_help";
+        public const string ManageExpectedVisitors = "visitors.manage_expected";
+        public const string ScanQr = "visitors.scan_qr";
     }
 }

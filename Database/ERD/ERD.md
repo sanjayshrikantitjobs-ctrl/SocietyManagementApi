@@ -377,3 +377,138 @@ erDiagram
 primary-contact `FlatResidency` → `Member` name/phone over
 `Flat.OwnerName/OwnerPhone`, falling back to those plain fields only when
 no resident record exists yet for that flat.
+
+## Events — Module 3
+
+Tables created by `Database/Schema/05_CreateEventSchema.sql`. An `Event` is
+a dated, capacity-limited happening — optionally linked to a `Festival`
+(`FestivalId` nullable) when it's funded by / associated with one, but
+standalone otherwise, so it's reusable beyond festival-funded gatherings
+(AGM, sports day, ...). `EventRsvps` is the flat-level headcount
+registration: one row per `(EventId, FlatId)` (a flat resubmitting its
+headcount updates this same row rather than creating a duplicate), carrying
+the `QrToken` a flat's QR code encodes and, once scanned, the actual
+arrived `CheckedInCount` — separate from the registered `HeadCount` so a
+flat that registered 4 but only 3 show up doesn't silently overcount at the
+door. Capacity is never stored as a running total on `Event` itself: "how
+many plates do we need" is always computed by summing `HeadCount` across
+non-cancelled `EventRsvps`, so it can never drift from the underlying
+registrations.
+
+```mermaid
+erDiagram
+    Societies ||--o{ Events : "hosts"
+    Festivals |o--o{ Events : "optionally funds"
+    Events ||--o{ EventRsvps : "collects"
+    Flats ||--o{ EventRsvps : "registers via"
+    Members ||--o{ EventRsvps : "registered by"
+    Users |o--o{ EventRsvps : "optionally checked in by"
+
+    Events {
+        int Id PK
+        int SocietyId FK
+        int FestivalId FK "nullable"
+        nvarchar Name
+        datetime2 EventDateTime
+        int CapacityLimit "nullable = unlimited"
+        datetime2 RsvpDeadline
+        tinyint Status
+    }
+    EventRsvps {
+        int Id PK
+        int EventId FK
+        int FlatId FK
+        int MemberId FK
+        int HeadCount
+        nvarchar QrToken UK
+        tinyint Status
+        int CheckedInCount "nullable"
+        datetime2 CheckedInAt
+        int CheckedInByUserId FK "nullable"
+    }
+```
+
+## Visitor & Gate Management — Module 4 (Phase 1: core approval workflow)
+
+Tables created by `Database/Schema/06_CreateVisitorSchema.sql`. `Visitor`
+is a reusable person record (name/mobile/photo/vehicle), independent of
+any single gate visit — later phases (frequent visitors, domestic help)
+reuse it rather than duplicating fields. `VisitorVisit` is one gate-entry
+attempt, carrying the full approval/check-in/check-out lifecycle:
+`PendingApproval -> Approved -> CheckedIn -> CheckedOut`, or
+`PendingApproval -> Rejected / Expired / Cancelled` — no other transition
+is valid. `CreatedByUserId` is the watchman who filed the request (the
+target for real-time approve/reject/expire notifications back to the
+gate); it's a real FK, distinct from the inherited `CreatedBy` display
+string every table has. `VisitorPurpose.RequiresApproval` lets a society
+mark some purposes (e.g. a known daily vendor) as skip-approval — those
+visits go straight to `Approved` on creation. `VisitorSettings` is one row
+per society holding `ApprovalRequestExpiryMinutes` (default 30), read by
+`VisitorRequestExpiryService` — a `BackgroundService` checked every
+minute, mirroring `MaintenanceBillGenerationService`'s shape.
+
+A third seeded system role, `Watchman`, was added for this module
+alongside `Admin`/`Member` (`visitors.view/create/checkin/checkout`).
+Approve/Reject on `VisitorVisit` are held by `Member` (server-side
+restricted to the caller's own current flat via `FlatResidencies` — the
+same trust boundary `EventRsvps` already uses for "which flat is this
+for," just walked in the opposite direction here: given a `FlatId`,
+confirm the caller resides there, rather than resolving which flat the
+caller resides at).
+
+```mermaid
+erDiagram
+    Societies ||--o{ Gates : "has"
+    Societies ||--o{ VisitorPurposes : "defines"
+    Societies ||--o{ Visitors : "registers"
+    Societies ||--|| VisitorSettings : "configures"
+    Visitors ||--o{ VisitorVisits : "makes"
+    Flats ||--o{ VisitorVisits : "visited via"
+    VisitorPurposes ||--o{ VisitorVisits : "categorizes"
+    Gates ||--o{ VisitorVisits : "entered through"
+    Users ||--o{ VisitorVisits : "created by (watchman)"
+    Users |o--o{ VisitorVisits : "optionally approved/rejected/checked in/out by"
+
+    Gates {
+        int Id PK
+        int SocietyId FK
+        nvarchar Name
+        nvarchar Code
+        bit IsActive
+    }
+    VisitorPurposes {
+        int Id PK
+        int SocietyId FK
+        nvarchar Name
+        bit RequiresApproval
+        bit IsActive
+    }
+    Visitors {
+        int Id PK
+        int SocietyId FK
+        nvarchar Name
+        nvarchar MobileNumber
+        nvarchar PhotoUrl
+        nvarchar VehicleNumber
+    }
+    VisitorVisits {
+        int Id PK
+        int SocietyId FK
+        int VisitorId FK
+        int FlatId FK
+        int PurposeId FK
+        int GateId FK
+        int NumberOfVisitors
+        tinyint Status
+        int CreatedByUserId FK
+        datetime2 RequestedAt
+        datetime2 ApprovedAt "nullable"
+        datetime2 CheckInTime "nullable"
+        datetime2 CheckOutTime "nullable"
+    }
+    VisitorSettings {
+        int Id PK
+        int SocietyId FK UK
+        int ApprovalRequestExpiryMinutes
+    }
+```

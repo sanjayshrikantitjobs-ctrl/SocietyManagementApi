@@ -1,0 +1,91 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SocietyManagement.API.Authorization;
+using SocietyManagement.Application.Features.Visitors;
+using SocietyManagement.Domain.Enums;
+using SocietyManagement.Shared.Constants;
+using SocietyManagement.Shared.Wrappers;
+
+namespace SocietyManagement.API.Controllers;
+
+[Authorize]
+[Route("api/visitor-visits")]
+public class VisitorVisitsController : ApiControllerBase
+{
+    [HttpGet]
+    [HasPermission(Permissions.Visitors.View)]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int societyId, [FromQuery] VisitorVisitStatus? status, [FromQuery] int? gateId,
+        [FromQuery] int? flatId, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate,
+        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
+    {
+        var result = await Mediator.Send(new GetVisitsQuery(societyId, status, gateId, flatId, fromDate, toDate, pageNumber, pageSize));
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpGet("pending")]
+    [HasPermission(Permissions.Visitors.View)]
+    public async Task<IActionResult> GetPending()
+    {
+        var result = await Mediator.Send(new GetPendingApprovalsQuery());
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpGet("currently-inside")]
+    [HasPermission(Permissions.Visitors.View)]
+    public async Task<IActionResult> GetCurrentlyInside([FromQuery] int societyId)
+    {
+        var result = await Mediator.Send(new GetCurrentlyInsideQuery(societyId));
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpPost]
+    [HasPermission(Permissions.Visitors.Create)]
+    public async Task<IActionResult> Create(CreateVisitCommand command)
+    {
+        var result = await Mediator.Send(command);
+        return Ok(ApiResponse<object>.SuccessResponse(result, "Visitor request created."));
+    }
+
+    [HttpPost("{id:int}/approve")]
+    [HasPermission(Permissions.Visitors.Approve)]
+    public async Task<IActionResult> Approve(int id)
+    {
+        await Mediator.Send(new ApproveVisitCommand(id));
+        return Ok(ApiResponse.SuccessResponse("Visitor approved."));
+    }
+
+    [HttpPost("{id:int}/reject")]
+    [HasPermission(Permissions.Visitors.Reject)]
+    public async Task<IActionResult> Reject(int id, [FromBody] RejectVisitRequest request)
+    {
+        await Mediator.Send(new RejectVisitCommand(id, request.Reason));
+        return Ok(ApiResponse.SuccessResponse("Visitor rejected."));
+    }
+
+    [HttpPost("{id:int}/check-in")]
+    [HasPermission(Permissions.Visitors.CheckIn)]
+    public async Task<IActionResult> CheckIn(int id)
+    {
+        await Mediator.Send(new CheckInVisitCommand(id));
+        return Ok(ApiResponse.SuccessResponse("Visitor checked in."));
+    }
+
+    [HttpPost("{id:int}/check-out")]
+    [HasPermission(Permissions.Visitors.CheckOut)]
+    public async Task<IActionResult> CheckOut(int id)
+    {
+        await Mediator.Send(new CheckOutVisitCommand(id));
+        return Ok(ApiResponse.SuccessResponse("Visitor checked out."));
+    }
+
+    [HttpPost("{id:int}/cancel")]
+    [HasPermission(Permissions.Visitors.Create)]
+    public async Task<IActionResult> Cancel(int id)
+    {
+        await Mediator.Send(new CancelVisitCommand(id));
+        return Ok(ApiResponse.SuccessResponse("Visitor request cancelled."));
+    }
+}
+
+public record RejectVisitRequest(string? Reason);

@@ -12,6 +12,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.service';
+import { QuickAddFlatDialogComponent } from '../../residents/quick-add-flat/quick-add-flat-dialog.component';
 import { SocietyService } from '../services/society.service';
 import { FlatFormDialogComponent } from './flat-form-dialog.component';
 
@@ -94,6 +95,13 @@ export class FlatsListComponent implements OnInit {
         this.toast.success('Flat added.');
         this.load();
       });
+    });
+  }
+
+  addFlatWithResident(): void {
+    this.dialog.open(QuickAddFlatDialogComponent, { maxWidth: '95vw' }).afterClosed().subscribe((created) => {
+      if (!created) return;
+      this.load();
     });
   }
 

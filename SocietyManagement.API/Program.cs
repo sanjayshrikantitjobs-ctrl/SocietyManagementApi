@@ -69,10 +69,9 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles(); // serves wwwroot/uploads/** — see LocalFileStorageService
+app.UseCors("AngularClient");
 
 app.UseIpRateLimiting();
-
-app.UseCors("AngularClient");
 
 app.UseAuthentication();
 app.UseAuthorization();

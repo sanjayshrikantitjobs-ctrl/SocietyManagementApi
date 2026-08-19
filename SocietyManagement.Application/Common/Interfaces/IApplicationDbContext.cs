@@ -48,5 +48,14 @@ public interface IApplicationDbContext
     DbSet<EmergencyContact> EmergencyContacts { get; }
     DbSet<FlatResaleListing> FlatResaleListings { get; }
 
+    DbSet<Event> Events { get; }
+    DbSet<EventRsvp> EventRsvps { get; }
+
+    DbSet<Gate> Gates { get; }
+    DbSet<VisitorPurpose> VisitorPurposes { get; }
+    DbSet<Visitor> Visitors { get; }
+    DbSet<VisitorVisit> VisitorVisits { get; }
+    DbSet<VisitorSettings> VisitorSettings { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

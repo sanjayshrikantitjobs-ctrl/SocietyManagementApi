@@ -1,0 +1,72 @@
+namespace SocietyManagement.Domain.Enums;
+
+public enum FestivalStatus
+{
+    Planning = 1,
+    Ongoing = 2,
+    Completed = 3
+}
+
+public enum FestivalVisibility
+{
+    Public = 1,
+    MembersOnly = 2
+}
+
+public enum FestivalBudgetCategoryType
+{
+    Decoration = 1,
+    Lighting = 2,
+    Sound = 3,
+    Food = 4,
+    Idol = 5,
+    Pandal = 6,
+    Stage = 7,
+    Security = 8,
+    Cleaning = 9,
+    Generator = 10,
+    Photography = 11,
+    Miscellaneous = 12
+}
+
+public enum ContributionPaymentMethod
+{
+    Cash = 1,
+    UPI = 2,
+    BankTransfer = 3
+}
+
+/// <summary>Tier/type of sponsorship a company offers a festival.</summary>
+public enum SponsorshipType
+{
+    Title = 1,
+    Platinum = 2,
+    Gold = 3,
+    Silver = 4,
+    Bronze = 5,
+    InKind = 6,
+    Media = 7
+}
+
+/// <summary>State machine for FestivalExpense.ApprovalStatus:
+/// Draft -> Pending -> Approved -> Paid, or Pending -> Rejected.</summary>
+public enum ExpenseApprovalStatus
+{
+    Draft = 1,
+    Pending = 2,
+    Approved = 3,
+    Rejected = 4,
+    Paid = 5
+}
+
+public enum VendorCategory
+{
+    Decorator = 1,
+    Sound = 2,
+    Catering = 3,
+    Electrician = 4,
+    TentHouse = 5,
+    Generator = 6,
+    Photographer = 7,
+    Other = 8
+}

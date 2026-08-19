@@ -1,0 +1,32 @@
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
+}
+
+.chart-card {
+  padding: 20px;
+  min-height: 300px;
+
+  h3 {
+    margin: 0 0 16px;
+    font-size: 15px;
+  }
+
+  &--placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--app-text-muted);
+    text-align: center;
+    font-size: 13px;
+  }
+}

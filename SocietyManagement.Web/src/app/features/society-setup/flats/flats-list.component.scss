@@ -1,0 +1,18 @@
+.status-chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #ecfdf5;
+  color: #16a34a;
+}
+
+.status-occupied {
+  background: #eff6ff;
+  color: #1a56db;
+}
+
+.status-maintenance {
+  background: #fffbeb;
+  color: #f59e0b;
+}

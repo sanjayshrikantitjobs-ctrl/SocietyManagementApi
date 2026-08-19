@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>SocietyManagement.Domain</RootNamespace>
+    <AssemblyName>SocietyManagement.Domain</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Only MediatR.Contracts-level dependency (INotification) so BaseEvent can be
+         published through the same pipeline as CQRS messages. Domain stays free of
+         EF Core / ASP.NET Core references. -->
+    <PackageReference Include="MediatR.Contracts" Version="2.0.1" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,52 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sm-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Your_password123"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sm-sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: SocietyManagement.API/Dockerfile
+    container_name: sm-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=SocietyManagementDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True;MultipleActiveResultSets=true"
+      JwtSettings__Secret: "REPLACE_WITH_A_STRONG_RANDOM_SECRET_AT_LEAST_32_CHARS_LONG"
+      JwtSettings__Issuer: "SocietyManagement.API"
+      JwtSettings__Audience: "SocietyManagement.Web"
+      Cors__AllowedOrigins__0: "http://localhost:8080"
+      SeedDatabase: "true"
+    ports:
+      - "5000:8080"
+    volumes:
+      - sm-api-logs:/app/Logs
+
+  web:
+    build:
+      context: ./SocietyManagement.Web
+      dockerfile: Dockerfile
+    container_name: sm-web
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  sm-sqldata:
+  sm-api-logs:

@@ -1,0 +1,40 @@
+<div class="app-page">
+  <app-page-header title="Admin Dashboard" subtitle="Overview of your society's operations"
+                    [breadcrumbs]="[{ label: 'Dashboard' }]" />
+
+  @if (loading()) {
+    <app-skeleton-loader [rows]="4" [height]="90" />
+  } @else if (summary(); as s) {
+    <div class="stats-grid">
+      <app-stat-card label="Total Members" [value]="s.totalMembers" icon="people" />
+      <app-stat-card label="Total Flats" [value]="s.totalFlats" icon="apartment" />
+      <app-stat-card label="Occupied Flats" [value]="s.occupiedFlats" icon="home" iconColor="#16a34a" iconBg="#ecfdf5" />
+      <app-stat-card label="Vacant Flats" [value]="s.vacantFlats" icon="meeting_room" iconColor="#f59e0b" iconBg="#fffbeb" />
+      <app-stat-card label="Total Users" [value]="s.totalUsers" icon="group" />
+      <app-stat-card label="Parking Slots" [value]="s.totalParkingSlots" icon="local_parking" />
+      <app-stat-card label="Allocated Parking" [value]="s.allocatedParkingSlots" icon="directions_car" />
+      <app-stat-card label="Collected Maintenance" [value]="'₹' + (s.collectedMaintenance | number)" icon="payments" iconColor="#16a34a" iconBg="#ecfdf5" />
+      <app-stat-card label="Outstanding Amount" [value]="'₹' + (s.outstandingAmount | number)" icon="account_balance_wallet" iconColor="#dc2626" iconBg="#fef2f2" />
+    </div>
+
+    <div class="charts-grid">
+      <div class="app-card chart-card">
+        <h3>Flat Occupancy</h3>
+        <canvas baseChart [data]="occupancyChartData" [options]="occupancyChartOptions" type="doughnut"></canvas>
+      </div>
+      <div class="app-card chart-card">
+        <h3>Parking Utilization</h3>
+        <canvas baseChart [data]="parkingChartData" [options]="parkingChartOptions" type="bar"></canvas>
+      </div>
+      <div class="app-card chart-card chart-card--placeholder">
+        <h3>Monthly Collection</h3>
+        <p>See the full collection trend, paid vs pending, and outstanding-by-wing breakdown on the</p>
+        <a mat-button color="primary" routerLink="/maintenance/dashboard">Maintenance Dashboard</a>
+      </div>
+      <div class="app-card chart-card chart-card--placeholder">
+        <h3>Complaint Status</h3>
+        <p>Lights up once the Complaint Management module ships.</p>
+      </div>
+    </div>
+  }
+</div>

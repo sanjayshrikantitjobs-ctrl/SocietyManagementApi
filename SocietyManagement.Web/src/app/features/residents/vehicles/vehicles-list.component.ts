@@ -1,0 +1,178 @@
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTableModule } from '@angular/material/table';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { PromptDialogComponent } from '../../../shared/components/prompt-dialog/prompt-dialog.component';
+import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
+import { ToastService } from '../../../core/services/toast.service';
+import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.service';
+import { SocietyService } from '../../society-setup/services/society.service';
+import { VEHICLE_TYPE_LABELS, VehicleDto } from '../models/resident.model';
+import { ResidentService } from '../services/resident.service';
+
+@Component({
+  selector: 'app-vehicles-list',
+  standalone: true,
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatTableModule, EmptyStateComponent, SkeletonLoaderComponent],
+  template: `
+    <div class="tab-content">
+      <div class="toolbar">
+        <h3>Vehicles</h3>
+        <button mat-flat-button color="primary" (click)="add()" [disabled]="memberOptions.length === 0">
+          <mat-icon>add</mat-icon> Add Vehicle
+        </button>
+      </div>
+
+      @if (loading()) {
+        <app-skeleton-loader [rows]="3" [height]="60" />
+      } @else if (vehicles().length === 0) {
+        <app-empty-state icon="directions_car" title="No vehicles yet"
+          message="Register a member's two-wheeler or four-wheeler and optionally assign a parking slot."
+          actionLabel="Add Vehicle" (action)="add()" />
+      } @else {
+        <table mat-table [dataSource]="vehicles()" class="app-card">
+          <ng-container matColumnDef="registrationNumber">
+            <th mat-header-cell *matHeaderCellDef>Reg. No.</th>
+            <td mat-cell *matCellDef="let v"><strong>{{ v.registrationNumber }}</strong></td>
+          </ng-container>
+          <ng-container matColumnDef="memberName">
+            <th mat-header-cell *matHeaderCellDef>Owner</th>
+            <td mat-cell *matCellDef="let v">{{ v.memberName }}</td>
+          </ng-container>
+          <ng-container matColumnDef="vehicleType">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let v">{{ vehicleTypeLabels[v.vehicleType] }}</td>
+          </ng-container>
+          <ng-container matColumnDef="makeModel">
+            <th mat-header-cell *matHeaderCellDef>Make / Model</th>
+            <td mat-cell *matCellDef="let v">{{ v.make }} {{ v.model }}</td>
+          </ng-container>
+          <ng-container matColumnDef="parking">
+            <th mat-header-cell *matHeaderCellDef>Parking Slot</th>
+            <td mat-cell *matCellDef="let v">{{ v.parkingSlotNumber || '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let v">
+              <button mat-icon-button (click)="edit(v)"><mat-icon>edit</mat-icon></button>
+              <button mat-icon-button (click)="remove(v)"><mat-icon>delete_outline</mat-icon></button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      }
+    </div>
+  `,
+  styles: [`
+    .tab-content { padding: 20px 0; }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .toolbar h3 { margin: 0; font-size: 15px; }
+    table { width: 100%; }
+  `]
+})
+export class VehiclesListComponent implements OnInit {
+  private readonly residentService = inject(ResidentService);
+  private readonly societyService = inject(SocietyService);
+  private readonly dialog = inject(MatDialog);
+  private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly toast = inject(ToastService);
+
+  readonly loading = signal(true);
+  readonly vehicles = signal<VehicleDto[]>([]);
+  readonly displayedColumns = ['registrationNumber', 'memberName', 'vehicleType', 'makeModel', 'parking', 'actions'];
+  readonly vehicleTypeLabels: Record<number, string> = VEHICLE_TYPE_LABELS;
+
+  private societyId = 0;
+  private parkingSlotOptions: { value: number; label: string }[] = [];
+  memberOptions: { value: number; label: string }[] = [];
+
+  ngOnInit(): void {
+    this.societyService.getSocieties().subscribe((societies) => {
+      if (societies.length === 0) { this.loading.set(false); return; }
+      this.societyId = societies[0].id;
+      this.residentService.getMembers({ societyId: this.societyId, pageSize: 500 }).subscribe((result) => {
+        this.memberOptions = result.items.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }));
+      });
+      this.societyService.getParkingSlots(this.societyId).subscribe((slots) => {
+        this.parkingSlotOptions = slots.map((s) => ({ value: s.id, label: s.slotNumber }));
+      });
+      this.load();
+    });
+  }
+
+  load(): void {
+    this.loading.set(true);
+    this.residentService.getVehicles({ societyId: this.societyId }).subscribe((data) => {
+      this.vehicles.set(data);
+      this.loading.set(false);
+    });
+  }
+
+  private fields(vehicle?: VehicleDto) {
+    return [
+      { key: 'memberId', label: 'Owner', type: 'select' as const, options: this.memberOptions, defaultValue: vehicle?.memberId },
+      {
+        key: 'vehicleType', label: 'Vehicle Type', type: 'select' as const,
+        options: [{ value: 1, label: 'Two Wheeler' }, { value: 2, label: 'Four Wheeler' }],
+        defaultValue: vehicle?.vehicleType ?? 1
+      },
+      { key: 'registrationNumber', label: 'Registration Number', type: 'text' as const, defaultValue: vehicle?.registrationNumber ?? '' },
+      { key: 'make', label: 'Make', type: 'text' as const, required: false, defaultValue: vehicle?.make ?? '' },
+      { key: 'model', label: 'Model', type: 'text' as const, required: false, defaultValue: vehicle?.model ?? '' },
+      { key: 'color', label: 'Color', type: 'text' as const, required: false, defaultValue: vehicle?.color ?? '' },
+      {
+        key: 'parkingSlotId', label: 'Parking Slot (optional)', type: 'select' as const, required: false,
+        options: [{ value: '', label: 'None' }, ...this.parkingSlotOptions], defaultValue: vehicle?.parkingSlotId ?? ''
+      }
+    ];
+  }
+
+  add(): void {
+    const ref = this.dialog.open(PromptDialogComponent, { width: '460px', data: { title: 'Add Vehicle', fields: this.fields() } });
+    ref.afterClosed().subscribe((result) => {
+      if (!result) return;
+      this.residentService.createVehicle({
+        ...result, memberId: Number(result.memberId), vehicleType: Number(result.vehicleType),
+        parkingSlotId: result.parkingSlotId ? Number(result.parkingSlotId) : null,
+        make: result.make || null, model: result.model || null, color: result.color || null
+      }).subscribe(() => {
+        this.toast.success('Vehicle added.');
+        this.load();
+      });
+    });
+  }
+
+  edit(vehicle: VehicleDto): void {
+    const ref = this.dialog.open(PromptDialogComponent, {
+      width: '460px', data: { title: 'Edit Vehicle', submitLabel: 'Save', fields: this.fields(vehicle) }
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (!result) return;
+      this.residentService.updateVehicle(vehicle.id, {
+        ...result, vehicleType: Number(result.vehicleType),
+        parkingSlotId: result.parkingSlotId ? Number(result.parkingSlotId) : null,
+        make: result.make || null, model: result.model || null, color: result.color || null
+      }).subscribe(() => {
+        this.toast.success('Vehicle updated.');
+        this.load();
+      });
+    });
+  }
+
+  remove(vehicle: VehicleDto): void {
+    this.confirmDialog.confirm({
+      title: 'Delete Vehicle', destructive: true, message: `Delete vehicle "${vehicle.registrationNumber}"?`
+    }).subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.residentService.deleteVehicle(vehicle.id).subscribe(() => {
+        this.toast.success('Vehicle deleted.');
+        this.load();
+      });
+    });
+  }
+}

@@ -1,0 +1,73 @@
+<div class="app-page">
+  <app-page-header title="Society Structure" subtitle="Buildings, wings and floors"
+                    [breadcrumbs]="[{ label: 'Society Setup', link: '/society-setup/societies' }, { label: 'Structure' }]">
+    <a mat-stroked-button [routerLink]="['/society-setup/societies', societyId(), 'flats']">
+      <mat-icon>apartment</mat-icon> View Flats
+    </a>
+    <button mat-flat-button color="primary" (click)="addBuilding()">
+      <mat-icon>add</mat-icon> Add Building
+    </button>
+  </app-page-header>
+
+  @if (loading()) {
+    <mat-spinner diameter="32" />
+  } @else if (buildings().length === 0) {
+    <app-empty-state icon="apartment" title="No buildings yet" message="Add a building to start defining wings, floors and flats." />
+  } @else {
+    <mat-accordion multi>
+      @for (building of buildings(); track building.id) {
+        <mat-expansion-panel (opened)="loadWings(building)">
+          <mat-expansion-panel-header>
+            <mat-panel-title>{{ building.name }}</mat-panel-title>
+            <mat-panel-description>{{ building.wingCount }} wing(s)</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="panel-actions">
+            <button mat-button (click)="addWing(building)"><mat-icon>add</mat-icon> Add Wing</button>
+            <button mat-button color="warn" (click)="deleteBuilding(building)"><mat-icon>delete</mat-icon> Delete Building</button>
+          </div>
+
+          @if (building.wings?.length) {
+            <mat-accordion multi class="nested">
+              @for (wing of building.wings; track wing.id) {
+                <mat-expansion-panel (opened)="loadFloors(wing)">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>{{ wing.name }}</mat-panel-title>
+                    <mat-panel-description>{{ wing.floorCount }} floor(s)</mat-panel-description>
+                  </mat-expansion-panel-header>
+
+                  <div class="panel-actions">
+                    <button mat-button (click)="addFloor(wing)"><mat-icon>add</mat-icon> Add Floor</button>
+                    <button mat-button color="warn" (click)="deleteWing(building, wing)"><mat-icon>delete</mat-icon> Delete Wing</button>
+                  </div>
+
+                  @if (wing.floors?.length) {
+                    <table class="floor-table">
+                      <tbody>
+                        @for (floor of wing.floors; track floor.id) {
+                          <tr>
+                            <td>Floor {{ floor.floorNumber }} <span class="muted">{{ floor.name }}</span></td>
+                            <td>{{ floor.flatCount }} flat(s)</td>
+                            <td class="row-actions">
+                              <a mat-icon-button [routerLink]="['/society-setup/societies', societyId(), 'flats']"
+                                 [queryParams]="{ floorId: floor.id }" matTooltip="View flats">
+                                <mat-icon>apartment</mat-icon>
+                              </a>
+                              <button mat-icon-button color="warn" (click)="deleteFloor(wing, floor)">
+                                <mat-icon>delete</mat-icon>
+                              </button>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  }
+                </mat-expansion-panel>
+              }
+            </mat-accordion>
+          }
+        </mat-expansion-panel>
+      }
+    </mat-accordion>
+  }
+</div>

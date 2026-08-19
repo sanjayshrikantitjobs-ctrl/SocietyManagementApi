@@ -1,0 +1,23 @@
+.panel-actions {
+  display: flex;
+  gap: 8px;
+  padding: 8px 0 12px;
+}
+
+.nested {
+  margin-left: 8px;
+}
+
+.floor-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  td {
+    padding: 8px 4px;
+    border-top: 1px solid var(--app-border);
+  }
+}
+
+.row-actions {
+  text-align: right;
+}

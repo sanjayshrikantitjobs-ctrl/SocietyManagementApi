@@ -1,0 +1,49 @@
+<div class="app-page">
+  <app-page-header title="Parking Slots"
+    [breadcrumbs]="[{ label: 'Society Setup', link: '/society-setup/societies' }, { label: 'Parking' }]">
+    <button mat-flat-button color="primary" (click)="add()">
+      <mat-icon>add</mat-icon> Add Slot
+    </button>
+  </app-page-header>
+
+  <app-data-table
+    [loading]="loading()"
+    [totalCount]="slots().length"
+    [showSearch]="false"
+    [showPaginator]="false"
+    emptyTitle="No parking slots yet"
+    emptyMessage="Add a parking slot to start allocating it to flats or visitors.">
+    <table mat-table [dataSource]="slots()" table>
+      <ng-container matColumnDef="slotNumber">
+        <th mat-header-cell *matHeaderCellDef>Slot No.</th>
+        <td mat-cell *matCellDef="let s"><strong>{{ s.slotNumber }}</strong></td>
+      </ng-container>
+      <ng-container matColumnDef="type">
+        <th mat-header-cell *matHeaderCellDef>Type</th>
+        <td mat-cell *matCellDef="let s">{{ typeLabels[s.type] }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let s">{{ statusLabels[s.status] }}</td>
+      </ng-container>
+      <ng-container matColumnDef="allocatedFlatNumber">
+        <th mat-header-cell *matHeaderCellDef>Allocated To</th>
+        <td mat-cell *matCellDef="let s">{{ s.allocatedFlatNumber || '—' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let s">
+          @if (s.allocatedFlatId) {
+            <button mat-button (click)="vacate(s)">Vacate</button>
+          } @else {
+            <button mat-button (click)="allocate(s)">Allocate</button>
+          }
+          <button mat-icon-button color="warn" (click)="remove(s)"><mat-icon>delete</mat-icon></button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </app-data-table>
+</div>

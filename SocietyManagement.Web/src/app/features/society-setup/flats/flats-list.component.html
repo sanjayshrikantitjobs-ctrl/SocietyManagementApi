@@ -1,0 +1,57 @@
+<div class="app-page">
+  <app-page-header title="Flats" [subtitle]="floorId() ? ('Flats on floor #' + floorId()) : 'All flats'"
+    [breadcrumbs]="[
+      { label: 'Society Setup', link: '/society-setup/societies' },
+      { label: 'Structure', link: '/society-setup/societies/' + societyId() + '/structure' },
+      { label: 'Flats' }
+    ]">
+    <button mat-flat-button color="primary" (click)="add()">
+      <mat-icon>add</mat-icon> Add Flat
+    </button>
+  </app-page-header>
+
+  <app-data-table
+    [loading]="loading()"
+    [totalCount]="totalCount()"
+    [pageSize]="pageSize()"
+    [pageIndex]="pageIndex()"
+    searchPlaceholder="Search flat number..."
+    emptyTitle="No flats yet"
+    emptyMessage="Add a flat to this floor to get started."
+    (page)="onPage($event)"
+    (search)="onSearch($event)">
+    <table mat-table [dataSource]="flats()" table>
+      <ng-container matColumnDef="flatNumber">
+        <th mat-header-cell *matHeaderCellDef>Flat No.</th>
+        <td mat-cell *matCellDef="let f"><strong>{{ f.flatNumber }}</strong></td>
+      </ng-container>
+      <ng-container matColumnDef="flatType">
+        <th mat-header-cell *matHeaderCellDef>Type</th>
+        <td mat-cell *matCellDef="let f">{{ flatTypeLabels[f.flatType] }}</td>
+      </ng-container>
+      <ng-container matColumnDef="areaSqFt">
+        <th mat-header-cell *matHeaderCellDef>Area</th>
+        <td mat-cell *matCellDef="let f">{{ f.areaSqFt ? f.areaSqFt + ' sq.ft' : '—' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let f">
+          <span class="status-chip" [class.status-occupied]="f.status === 2" [class.status-maintenance]="f.status === 3">
+            {{ flatStatusLabels[f.status] }}
+          </span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let f">
+          <button mat-icon-button [routerLink]="['/residents/flat', f.id]" matTooltip="Residents"><mat-icon>people</mat-icon></button>
+          <button mat-icon-button (click)="edit(f)"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button color="warn" (click)="remove(f)"><mat-icon>delete</mat-icon></button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </app-data-table>
+</div>

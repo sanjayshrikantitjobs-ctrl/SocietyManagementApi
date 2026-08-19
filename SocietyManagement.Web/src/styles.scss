@@ -1,0 +1,94 @@
+// Global theme: white + blue primary, Material 3, dark mode via [data-theme="dark"]
+// on <html> (toggled by shared/services/theme.service.ts). See shared/_variables.scss
+// for the raw color tokens consumed here and in component-level SCSS.
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme((
+    color: (
+      theme-type: light,
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+html[data-theme='dark'] {
+  @include mat.theme((
+    color: (
+      theme-type: dark,
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+:root {
+  --app-primary: #1a56db;
+  --app-primary-light: #e8f0fe;
+  --app-surface: #ffffff;
+  --app-surface-alt: #f7f9fc;
+  --app-border: #e5e9f0;
+  --app-text: #1f2937;
+  --app-text-muted: #6b7280;
+  --app-success: #16a34a;
+  --app-warning: #f59e0b;
+  --app-danger: #dc2626;
+  --app-radius: 10px;
+  --app-shadow: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.06);
+}
+
+html[data-theme='dark'] {
+  --app-surface: #111827;
+  --app-surface-alt: #1a2233;
+  --app-border: #2a3345;
+  --app-text: #e5e7eb;
+  --app-text-muted: #9ca3af;
+  --app-primary-light: #16233f;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--app-surface-alt);
+  color: var(--app-text);
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+.app-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  box-shadow: var(--app-shadow);
+}
+
+.app-page {
+  padding: 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.app-fade-in {
+  animation: appFadeIn 0.25s ease-out;
+}
+
+@keyframes appFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--app-border); border-radius: 4px; }
+
+.muted { color: var(--app-text-muted); font-size: 12px; }
+
+// Toast (MatSnackBar) variants used by core/services/toast.service.ts
+.app-toast-success { --mdc-snackbar-container-color: #16a34a; --mdc-snackbar-supporting-text-color: #fff; }
+.app-toast-error { --mdc-snackbar-container-color: #dc2626; --mdc-snackbar-supporting-text-color: #fff; }
+.app-toast-info { --mdc-snackbar-container-color: #1a56db; --mdc-snackbar-supporting-text-color: #fff; }

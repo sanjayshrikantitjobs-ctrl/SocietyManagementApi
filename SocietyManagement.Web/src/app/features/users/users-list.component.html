@@ -1,0 +1,63 @@
+<div class="app-page">
+  <app-page-header title="User Management" subtitle="Create users, assign roles, lock accounts, reset passwords"
+                    [breadcrumbs]="[{ label: 'Users' }]">
+    <button mat-flat-button color="primary" (click)="add()">
+      <mat-icon>person_add</mat-icon> Create User
+    </button>
+  </app-page-header>
+
+  <app-data-table
+    [loading]="loading()"
+    [totalCount]="totalCount()"
+    [pageSize]="pageSize()"
+    [pageIndex]="pageIndex()"
+    searchPlaceholder="Search name, email or mobile..."
+    emptyTitle="No users found"
+    emptyMessage="Create a user to grant access to the system."
+    (page)="onPage($event)"
+    (search)="onSearch($event)">
+    <table mat-table [dataSource]="users()" table>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let u">
+          <strong>{{ u.firstName }} {{ u.lastName }}</strong><br />
+          <span class="muted">{{ u.email }} · {{ u.mobileNumber }}</span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="role">
+        <th mat-header-cell *matHeaderCellDef>Role</th>
+        <td mat-cell *matCellDef="let u"><mat-chip-set><mat-chip>{{ u.roleName }}</mat-chip></mat-chip-set></td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let u">
+          @if (u.isLocked) { <span class="badge badge-danger">Locked</span> }
+          @else if (!u.isActive) { <span class="badge badge-muted">Inactive</span> }
+          @else { <span class="badge badge-success">Active</span> }
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="lastLogin">
+        <th mat-header-cell *matHeaderCellDef>Last Login</th>
+        <td mat-cell *matCellDef="let u">{{ u.lastLoginAt ? (u.lastLoginAt | date:'medium') : 'Never' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let u">
+          <button mat-icon-button [matMenuTriggerFor]="menu"><mat-icon>more_vert</mat-icon></button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="edit(u)"><mat-icon>edit</mat-icon><span>Edit</span></button>
+            <button mat-menu-item (click)="toggleLock(u)">
+              <mat-icon>{{ u.isLocked ? 'lock_open' : 'lock' }}</mat-icon>
+              <span>{{ u.isLocked ? 'Unlock' : 'Lock' }}</span>
+            </button>
+            <button mat-menu-item (click)="resetPassword(u)"><mat-icon>vpn_key</mat-icon><span>Reset Password</span></button>
+            <button mat-menu-item (click)="remove(u)"><mat-icon>delete</mat-icon><span>Delete</span></button>
+          </mat-menu>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </app-data-table>
+</div>

@@ -1,0 +1,58 @@
+<div class="app-page">
+  <app-page-header title="Society Setup" subtitle="Manage societies, buildings, wings, floors, flats and parking"
+                    [breadcrumbs]="[{ label: 'Society Setup' }]">
+    <button mat-flat-button color="primary" (click)="add()">
+      <mat-icon>add</mat-icon> Add Society
+    </button>
+  </app-page-header>
+
+  <app-data-table
+    [loading]="loading()"
+    [totalCount]="societies().length"
+    [showSearch]="false"
+    [showPaginator]="false"
+    emptyTitle="No societies yet"
+    emptyMessage="Add your first society to start setting up buildings, wings, floors and flats.">
+    <table mat-table [dataSource]="societies()" table>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let s">
+          <strong>{{ s.name }}</strong><br />
+          <span class="muted">{{ s.registrationNumber }}</span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="city">
+        <th mat-header-cell *matHeaderCellDef>Location</th>
+        <td mat-cell *matCellDef="let s">{{ s.city }}, {{ s.state }} — {{ s.pincode }}</td>
+      </ng-container>
+      <ng-container matColumnDef="buildingCount">
+        <th mat-header-cell *matHeaderCellDef>Buildings</th>
+        <td mat-cell *matCellDef="let s">{{ s.buildingCount }}</td>
+      </ng-container>
+      <ng-container matColumnDef="contact">
+        <th mat-header-cell *matHeaderCellDef>Contact</th>
+        <td mat-cell *matCellDef="let s">{{ s.contactPhone || '—' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let s">
+          <button mat-icon-button [routerLink]="['/society-setup/societies', s.id, 'structure']"
+                  matTooltip="Manage buildings, wings, floors &amp; flats">
+            <mat-icon>account_tree</mat-icon>
+          </button>
+          <button mat-icon-button [routerLink]="['/society-setup/societies', s.id, 'parking']" matTooltip="Parking">
+            <mat-icon>local_parking</mat-icon>
+          </button>
+          <button mat-icon-button [matMenuTriggerFor]="menu"><mat-icon>more_vert</mat-icon></button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="edit(s)"><mat-icon>edit</mat-icon><span>Edit</span></button>
+            <button mat-menu-item (click)="remove(s)"><mat-icon>delete</mat-icon><span>Delete</span></button>
+          </mat-menu>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </app-data-table>
+</div>

@@ -1,0 +1,69 @@
+.auth-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--app-primary-light), var(--app-surface-alt));
+  padding: 24px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px 36px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+
+  mat-icon {
+    color: var(--app-primary);
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  h1 {
+    font-size: 20px;
+    margin: 0;
+  }
+}
+
+.subtitle {
+  text-align: center;
+  color: var(--app-text-muted);
+  margin: 4px 0 24px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+
+  a {
+    color: var(--app-primary);
+    font-size: 13px;
+    text-decoration: none;
+  }
+}
+
+.submit-btn {
+  height: 44px;
+}
+
+.error-banner {
+  background: #fef2f2;
+  color: var(--app-danger);
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}

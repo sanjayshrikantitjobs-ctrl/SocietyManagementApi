@@ -1,0 +1,28 @@
+# ---- .NET ----------------------------------------------------------------
+bin/
+obj/
+*.user
+*.suo
+.vs/
+Logs/
+*.log
+
+# ---- Angular / Node --------------------------------------------------------
+SocietyManagement.Web/node_modules/
+SocietyManagement.Web/dist/
+SocietyManagement.Web/.angular/
+SocietyManagement.Web/out-tsc/
+SocietyManagement.Web/npm-debug.log*
+
+# ---- Editors / OS ------------------------------------------------------------
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# ---- Secrets ------------------------------------------------------------------
+appsettings.*.local.json
+*.pfx
+.env
+.env.*

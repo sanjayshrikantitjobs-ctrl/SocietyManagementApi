@@ -8,13 +8,14 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader/skeleton-loader.component';
 import { SocietyService } from '../society-setup/services/society.service';
+import { AssetUrlPipe } from '../../shared/pipes/asset-url.pipe';
 import { VisitorVisitDto } from './models/visitor.model';
 import { VisitorService } from './services/visitor.service';
 
 @Component({
   selector: 'app-currently-inside',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatTableModule, PageHeaderComponent, SkeletonLoaderComponent, EmptyStateComponent],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatTableModule, AssetUrlPipe, PageHeaderComponent, SkeletonLoaderComponent, EmptyStateComponent],
   template: `
     <div class="app-page">
       <app-page-header title="Currently Inside" [breadcrumbs]="[{ label: 'Visitors', link: '/visitors' }, { label: 'Currently Inside' }]" />
@@ -25,6 +26,16 @@ import { VisitorService } from './services/visitor.service';
         <app-empty-state icon="how_to_reg" title="No one is currently inside" />
       } @else {
         <table mat-table [dataSource]="visits()" class="app-card">
+          <ng-container matColumnDef="photo">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let v">
+              @if (v.visitorPhotoUrl) {
+                <img [src]="v.visitorPhotoUrl | assetUrl" alt="" class="thumb" />
+              } @else {
+                <div class="thumb thumb-placeholder"><mat-icon>person</mat-icon></div>
+              }
+            </td>
+          </ng-container>
           <ng-container matColumnDef="visitor">
             <th mat-header-cell *matHeaderCellDef>Visitor</th>
             <td mat-cell *matCellDef="let v">{{ v.visitorName }}</td>
@@ -53,7 +64,12 @@ import { VisitorService } from './services/visitor.service';
       }
     </div>
   `,
-  styles: [`table { width: 100%; }`]
+  styles: [`
+    table { width: 100%; }
+    .thumb { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+    .thumb-placeholder { display: flex; align-items: center; justify-content: center; background: var(--app-primary-light); color: var(--app-primary); }
+    .thumb-placeholder mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  `]
 })
 export class CurrentlyInsideComponent implements OnInit {
   private readonly visitorService = inject(VisitorService);
@@ -62,7 +78,7 @@ export class CurrentlyInsideComponent implements OnInit {
 
   readonly loading = signal(true);
   readonly visits = signal<VisitorVisitDto[]>([]);
-  readonly displayedColumns = ['visitor', 'flat', 'purpose', 'checkedIn', 'actions'];
+  readonly displayedColumns = ['photo', 'visitor', 'flat', 'purpose', 'checkedIn', 'actions'];
 
   private societyId = 0;
 

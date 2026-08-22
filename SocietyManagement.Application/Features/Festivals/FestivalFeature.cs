@@ -164,13 +164,15 @@ public class FestivalCommandHandlers :
         var festival = await _context.Festivals
             .Include(f => f.Contributions)
             .Include(f => f.Expenses)
+            .Include(f => f.FlatTargets)
             .FirstOrDefaultAsync(f => f.Id == request.Id && !f.IsDeleted, ct)
             ?? throw new NotFoundException(nameof(Festival), request.Id);
 
-        if (festival.Contributions.Any(c => !c.IsDeleted) || festival.Expenses.Any(e => !e.IsDeleted))
+        if (festival.Contributions.Any(c => !c.IsDeleted) || festival.Expenses.Any(e => !e.IsDeleted)
+            || festival.FlatTargets.Any(t => !t.IsDeleted))
         {
             throw new ConflictAppException(
-                "Cannot delete a festival with recorded contributions or expenses. Mark it Completed instead.");
+                "Cannot delete a festival with recorded contributions, expenses or contribution targets. Mark it Completed instead.");
         }
 
         festival.IsDeleted = true;

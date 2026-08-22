@@ -53,4 +53,38 @@ public class FestivalContributionsController : ApiControllerBase
         var id = await Mediator.Send(command);
         return Created(string.Empty, ApiResponse<int>.SuccessResponse(id, "Contribution recorded."));
     }
+
+    [HttpGet("flat-summary")]
+    [HasPermission(Permissions.Festivals.View)]
+    public async Task<IActionResult> GetFlatSummary(
+        [FromQuery] int festivalId, [FromQuery] string? search, [FromQuery] FlatContributionStatus? status,
+        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
+    {
+        var result = await Mediator.Send(new GetFlatContributionsQuery(festivalId, search, status, pageNumber, pageSize));
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpGet("flat-summary/kpis")]
+    [HasPermission(Permissions.Festivals.View)]
+    public async Task<IActionResult> GetFlatSummaryKpis([FromQuery] int festivalId)
+    {
+        var result = await Mediator.Send(new GetFlatContributionKpisQuery(festivalId));
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpPost("targets")]
+    [HasPermission(Permissions.Festivals.Manage)]
+    public async Task<IActionResult> SetTargets(SetContributionTargetsCommand command)
+    {
+        var count = await Mediator.Send(command);
+        return Ok(ApiResponse<int>.SuccessResponse(count, $"Target set for {count} flat(s)."));
+    }
+
+    [HttpPut("targets")]
+    [HasPermission(Permissions.Festivals.Manage)]
+    public async Task<IActionResult> UpdateTarget(UpdateFlatContributionTargetCommand command)
+    {
+        await Mediator.Send(command);
+        return Ok(ApiResponse.SuccessResponse("Target updated."));
+    }
 }

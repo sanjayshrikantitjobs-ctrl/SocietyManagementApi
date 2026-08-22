@@ -33,6 +33,8 @@ public interface IApplicationDbContext
     DbSet<FestivalSponsor> FestivalSponsors { get; }
     DbSet<FestivalVendor> FestivalVendors { get; }
     DbSet<FestivalExpense> FestivalExpenses { get; }
+    DbSet<FestivalFlatTarget> FestivalFlatTargets { get; }
+    DbSet<WaterTankerCollection> WaterTankerCollections { get; }
 
     DbSet<MaintenanceCategory> MaintenanceCategories { get; }
     DbSet<MaintenanceSettings> MaintenanceSettings { get; }

@@ -25,6 +25,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
         <a mat-tab-link routerLink="categories" routerLinkActive #c="routerLinkActive" [active]="c.isActive">Categories</a>
         <a mat-tab-link routerLink="special-charges" routerLinkActive #sc="routerLinkActive" [active]="sc.isActive">Special Charges</a>
         <a mat-tab-link routerLink="fines" routerLinkActive #f="routerLinkActive" [active]="f.isActive">Fines</a>
+        <a mat-tab-link routerLink="water-tanker" routerLinkActive #wt="routerLinkActive" [active]="wt.isActive">Water Tanker</a>
         <a mat-tab-link routerLink="settings" routerLinkActive #s="routerLinkActive" [active]="s.isActive">Settings</a>
       </nav>
       <mat-tab-nav-panel #tabPanel>

@@ -15,6 +15,7 @@ import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
 import { SocietyService } from '../society-setup/services/society.service';
+import { AssetUrlPipe } from '../../shared/pipes/asset-url.pipe';
 import { VISIT_STATUS_LABELS, VisitorVisitDto } from './models/visitor.model';
 import { VisitorService } from './services/visitor.service';
 import { VisitorApprovalCardComponent } from './visitor-approval-card.component';
@@ -26,7 +27,7 @@ import { VisitorApprovalCardComponent } from './visitor-approval-card.component'
   selector: 'app-visitors-landing',
   standalone: true,
   imports: [
-    CommonModule, RouterLink, MatButtonModule, MatIconModule, MatTableModule,
+    CommonModule, RouterLink, MatButtonModule, MatIconModule, MatTableModule, AssetUrlPipe,
     PageHeaderComponent, StatCardComponent, SkeletonLoaderComponent, EmptyStateComponent, VisitorApprovalCardComponent
   ],
   template: `
@@ -72,6 +73,16 @@ import { VisitorApprovalCardComponent } from './visitor-approval-card.component'
             <app-empty-state icon="badge" title="No visitors yet today" />
           } @else {
             <table mat-table [dataSource]="recent()" class="app-card">
+              <ng-container matColumnDef="photo">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let v">
+                  @if (v.visitorPhotoUrl) {
+                    <img [src]="v.visitorPhotoUrl | assetUrl" alt="" class="thumb" />
+                  } @else {
+                    <div class="thumb thumb-placeholder"><mat-icon>person</mat-icon></div>
+                  }
+                </td>
+              </ng-container>
               <ng-container matColumnDef="visitor">
                 <th mat-header-cell *matHeaderCellDef>Visitor</th>
                 <td mat-cell *matCellDef="let v">{{ v.visitorName }}</td>
@@ -106,6 +117,9 @@ import { VisitorApprovalCardComponent } from './visitor-approval-card.component'
     h3 { margin: 24px 0 12px; font-size: 15px; }
     .pending-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 8px; }
     table { width: 100%; }
+    .thumb { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+    .thumb-placeholder { display: flex; align-items: center; justify-content: center; background: var(--app-primary-light); color: var(--app-primary); }
+    .thumb-placeholder mat-icon { font-size: 18px; width: 18px; height: 18px; }
   `]
 })
 export class VisitorsLandingComponent implements OnInit {
@@ -122,7 +136,7 @@ export class VisitorsLandingComponent implements OnInit {
   readonly recent = signal<VisitorVisitDto[]>([]);
   readonly currentlyInsideCount = signal(0);
   readonly statusLabels: Record<number, string> = VISIT_STATUS_LABELS;
-  readonly displayedColumns = ['visitor', 'flat', 'purpose', 'time', 'status'];
+  readonly displayedColumns = ['photo', 'visitor', 'flat', 'purpose', 'time', 'status'];
 
   private societyId = 0;
 

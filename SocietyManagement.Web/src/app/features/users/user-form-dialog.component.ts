@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -26,6 +26,16 @@ import { RoleService } from '../roles/role.service';
         @if (!data) {
           <mat-form-field appearance="outline" class="span-2"><mat-label>Email</mat-label><input matInput formControlName="email" /></mat-form-field>
         }
+        @if (!data) {
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Password (optional)</mat-label>
+            <input matInput type="password" formControlName="password" />
+            <mat-hint>Leave blank to auto-generate a temporary password and email it. If set, must be 8+ chars with upper, lower, digit and special character.</mat-hint>
+            @if (form.get('password')?.hasError('weak')) {
+              <mat-error>Password must be 8+ chars with an uppercase letter, a lowercase letter, a digit and a special character.</mat-error>
+            }
+          </mat-form-field>
+        }
         <mat-form-field appearance="outline" [class.span-2]="!!data"><mat-label>Mobile Number</mat-label><input matInput formControlName="mobileNumber" /></mat-form-field>
         <mat-form-field appearance="outline" class="span-2">
           <mat-label>Role</mat-label>
@@ -46,6 +56,13 @@ import { RoleService } from '../roles/role.service';
   styles: [`.grid { display:grid; grid-template-columns:1fr 1fr; gap:0 16px; } .span-2 { grid-column: span 2; }`]
 })
 export class UserFormDialogComponent implements OnInit {
+  private static passwordStrength(control: AbstractControl): ValidationErrors | null {
+    const value = control.value as string;
+    if (!value) return null;
+    const strong = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/.test(value);
+    return strong ? null : { weak: true };
+  }
+
   dialogRef = inject(MatDialogRef<UserFormDialogComponent>);
   data = inject<UserListItem | null>(MAT_DIALOG_DATA);
   private readonly fb = inject(FormBuilder);
@@ -57,6 +74,7 @@ export class UserFormDialogComponent implements OnInit {
     firstName: [this.data?.firstName ?? '', Validators.required],
     lastName: [this.data?.lastName ?? '', Validators.required],
     email: ['', this.data ? [] : [Validators.required, Validators.email]],
+    password: ['', this.data ? [] : [UserFormDialogComponent.passwordStrength]],
     mobileNumber: [this.data?.mobileNumber ?? '', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],
     roleId: [this.data?.roleId ?? null, Validators.required],
     isActive: [this.data?.isActive ?? true]

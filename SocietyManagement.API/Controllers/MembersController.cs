@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SocietyManagement.API.Authorization;
 using SocietyManagement.Application.Features.Residents;
 using SocietyManagement.Shared.Constants;
+using SocietyManagement.Shared.Exceptions;
 using SocietyManagement.Shared.Wrappers;
 
 namespace SocietyManagement.API.Controllers;
@@ -58,9 +59,32 @@ public class MembersController : ApiControllerBase
     [HasPermission(Permissions.Members.Update)]
     public async Task<IActionResult> CreateLogin(int id, [FromBody] CreateLoginRequest request)
     {
-        var userId = await Mediator.Send(new CreateUserForMemberCommand(id, request.RoleId));
-        return Ok(ApiResponse<int>.SuccessResponse(userId, "Login account created and emailed."));
+        var userId = await Mediator.Send(new CreateUserForMemberCommand(id, request.RoleId, request.Password));
+        return Ok(ApiResponse<int>.SuccessResponse(userId, "Login account created."));
+    }
+
+    [HttpGet("import/template")]
+    [HasPermission(Permissions.Members.Create)]
+    public async Task<IActionResult> DownloadImportTemplate()
+    {
+        var bytes = await Mediator.Send(new GetResidentImportTemplateQuery());
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "resident-import-template.xlsx");
+    }
+
+    [HttpPost("import")]
+    [HasPermission(Permissions.Members.Create)]
+    [RequestSizeLimit(10 * 1024 * 1024)]
+    public async Task<IActionResult> Import(IFormFile file, [FromForm] int societyId)
+    {
+        if (file.Length == 0) throw new BadRequestAppException("No file was uploaded.");
+
+        await using var stream = new MemoryStream();
+        await file.CopyToAsync(stream);
+
+        var result = await Mediator.Send(new ImportResidentsCommand(societyId, stream.ToArray()));
+        return Ok(ApiResponse<ResidentImportResultDto>.SuccessResponse(result,
+            $"{result.FlatsCreated} flat(s), {result.MembersCreated} owner(s) and {result.ResidenciesCreated} residency link(s) added."));
     }
 }
 
-public record CreateLoginRequest(int RoleId);
+public record CreateLoginRequest(int RoleId, string? Password = null);

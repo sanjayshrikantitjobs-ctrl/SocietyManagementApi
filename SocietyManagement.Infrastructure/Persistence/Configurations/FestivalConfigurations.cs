@@ -92,6 +92,27 @@ public class FestivalContributionConfiguration : IEntityTypeConfiguration<Festiv
     }
 }
 
+public class FestivalFlatTargetConfiguration : IEntityTypeConfiguration<FestivalFlatTarget>
+{
+    public void Configure(EntityTypeBuilder<FestivalFlatTarget> builder)
+    {
+        builder.ToTable("FestivalFlatTargets");
+        builder.HasQueryFilter(t => !t.IsDeleted);
+        builder.Property(t => t.TargetAmount).HasColumnType("decimal(12,2)");
+        builder.HasIndex(t => new { t.FestivalId, t.FlatId }).IsUnique().HasFilter("[IsDeleted] = 0");
+
+        builder.HasOne(t => t.Festival)
+            .WithMany(f => f.FlatTargets)
+            .HasForeignKey(t => t.FestivalId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(t => t.Flat)
+            .WithMany()
+            .HasForeignKey(t => t.FlatId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 public class FestivalSponsorConfiguration : IEntityTypeConfiguration<FestivalSponsor>
 {
     public void Configure(EntityTypeBuilder<FestivalSponsor> builder)

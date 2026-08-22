@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SocietyManagement.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using SocietyManagement.Infrastructure.Persistence;
 namespace SocietyManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260822141028_AddFestivalContributionTargets")]
+    partial class AddFestivalContributionTargets
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2567,70 +2570,6 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.ToTable("VisitorVisits", (string)null);
                 });
 
-            modelBuilder.Entity("SocietyManagement.Domain.Entities.WaterTankerCollection", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(12,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("FlatId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsPaid")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("ModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("Month")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime?>("PaymentDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("SocietyId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FlatId");
-
-                    b.HasIndex("SocietyId", "Month");
-
-                    b.HasIndex("SocietyId", "FlatId", "Month")
-                        .IsUnique()
-                        .HasFilter("[IsDeleted] = 0");
-
-                    b.ToTable("WaterTankerCollections", (string)null);
-                });
-
             modelBuilder.Entity("SocietyManagement.Domain.Entities.Wing", b =>
                 {
                     b.Property<int>("Id")
@@ -3268,25 +3207,6 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.Navigation("Society");
 
                     b.Navigation("Visitor");
-                });
-
-            modelBuilder.Entity("SocietyManagement.Domain.Entities.WaterTankerCollection", b =>
-                {
-                    b.HasOne("SocietyManagement.Domain.Entities.Flat", "Flat")
-                        .WithMany()
-                        .HasForeignKey("FlatId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("SocietyManagement.Domain.Entities.Society", "Society")
-                        .WithMany()
-                        .HasForeignKey("SocietyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Flat");
-
-                    b.Navigation("Society");
                 });
 
             modelBuilder.Entity("SocietyManagement.Domain.Entities.Wing", b =>

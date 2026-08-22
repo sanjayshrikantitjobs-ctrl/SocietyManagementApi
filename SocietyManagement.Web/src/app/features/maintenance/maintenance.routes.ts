@@ -34,6 +34,10 @@ export const MAINTENANCE_ROUTES: Routes = [
       {
         path: 'settings',
         loadComponent: () => import('./settings/maintenance-settings.component').then((m) => m.MaintenanceSettingsComponent)
+      },
+      {
+        path: 'water-tanker',
+        loadComponent: () => import('./water-tanker/water-tanker.component').then((m) => m.WaterTankerComponent)
       }
     ]
   }

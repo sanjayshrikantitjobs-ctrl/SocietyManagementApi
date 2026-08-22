@@ -79,8 +79,25 @@ public record DeleteMemberCommand(int Id) : IRequest<Unit>;
 
 /// <summary>Gives an existing Member login access — reuses CreateUserCommand's
 /// temp-password/email pattern (Features/Users/Commands/CreateUser) rather than
-/// building a separate invite-token system, then links Member.UserId.</summary>
-public record CreateUserForMemberCommand(int MemberId, int RoleId) : IRequest<int>;
+/// building a separate invite-token system, then links Member.UserId. Email is
+/// optional: a member with no email gets a placeholder login address (User.Email
+/// is NOT NULL in the schema) since login and notifications throughout this app
+/// already work off mobile number. If <see cref="Password"/> is supplied the
+/// admin's chosen password is used directly instead of an auto-generated one.</summary>
+public record CreateUserForMemberCommand(int MemberId, int RoleId, string? Password = null) : IRequest<int>;
+
+public class CreateUserForMemberCommandValidator : AbstractValidator<CreateUserForMemberCommand>
+{
+    public CreateUserForMemberCommandValidator()
+    {
+        RuleFor(x => x.MemberId).GreaterThan(0);
+        RuleFor(x => x.RoleId).GreaterThan(0);
+        RuleFor(x => x.Password)
+            .MinimumLength(8).Matches("[A-Z]").Matches("[a-z]").Matches("[0-9]").Matches("[^a-zA-Z0-9]")
+            .WithMessage("Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a digit and a special character.")
+            .When(x => !string.IsNullOrEmpty(x.Password));
+    }
+}
 
 public class MemberCommandHandlers :
     IRequestHandler<CreateMemberCommand, int>,
@@ -165,25 +182,28 @@ public class MemberCommandHandlers :
         {
             throw new ConflictAppException("This member already has login access.");
         }
-        if (string.IsNullOrWhiteSpace(member.Email))
-        {
-            throw new BadRequestAppException("This member needs an email address before a login can be created.");
-        }
-        if (await _context.Users.AnyAsync(u => u.Email == member.Email && !u.IsDeleted, ct))
-        {
-            throw new ConflictAppException("A user with this email already exists.");
-        }
         if (!await _context.Roles.AnyAsync(r => r.Id == request.RoleId && !r.IsDeleted, ct))
         {
             throw new NotFoundException(nameof(Role), request.RoleId);
         }
 
-        var temporaryPassword = GenerateTemporaryPassword();
+        var hasRealEmail = !string.IsNullOrWhiteSpace(member.Email);
+        var loginEmail = hasRealEmail ? member.Email! : $"{member.Phone}@no-email.societymanagement.local";
+        if (await _context.Users.AnyAsync(u => u.Email == loginEmail && !u.IsDeleted, ct))
+        {
+            throw new ConflictAppException(hasRealEmail
+                ? "A user with this email already exists."
+                : "This member already has a login (matched by mobile number).");
+        }
+
+        var adminSetPassword = !string.IsNullOrEmpty(request.Password);
+        var password = adminSetPassword ? request.Password! : GenerateTemporaryPassword();
+
         var user = new User
         {
-            FirstName = member.FirstName, LastName = member.LastName, Email = member.Email,
+            FirstName = member.FirstName, LastName = member.LastName, Email = loginEmail,
             MobileNumber = member.Phone, RoleId = request.RoleId,
-            PasswordHash = _passwordHasher.Hash(temporaryPassword), MustChangePassword = true, IsActive = true
+            PasswordHash = _passwordHasher.Hash(password), MustChangePassword = !adminSetPassword, IsActive = true
         };
         await _context.Users.AddAsync(user, ct);
         await _context.SaveChangesAsync(ct);
@@ -191,13 +211,19 @@ public class MemberCommandHandlers :
         member.UserId = user.Id;
         await _context.SaveChangesAsync(ct);
 
-        await _emailService.SendEmailAsync(
-            user.Email,
-            "Your Society Management account has been created",
-            $"<p>Hello {user.FirstName},</p>" +
-            $"<p>An account has been created for you. Your temporary password is: <b>{temporaryPassword}</b></p>" +
-            "<p>You will be asked to set a new password on first login.</p>",
-            ct);
+        // Only the auto-generated-password path needs emailing — an admin-set
+        // password is already known to the admin, and a placeholder login email
+        // (no real address on file) has nowhere to send to.
+        if (!adminSetPassword && hasRealEmail)
+        {
+            await _emailService.SendEmailAsync(
+                user.Email,
+                "Your Society Management account has been created",
+                $"<p>Hello {user.FirstName},</p>" +
+                $"<p>An account has been created for you. Your temporary password is: <b>{password}</b></p>" +
+                "<p>You will be asked to set a new password on first login.</p>",
+                ct);
+        }
 
         await _auditService.LogAsync(AuditAction.Create, "Residents", nameof(User), user.Id.ToString(), ct: ct);
         return user.Id;

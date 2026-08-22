@@ -17,6 +17,21 @@ export const LISTING_STATUS_LABELS: Record<ListingStatus, string> = {
   1: 'Available', 2: 'Under Negotiation', 3: 'Sold', 4: 'Withdrawn'
 };
 
+export interface ResidentImportRowResultDto {
+  rowNumber: number;
+  status: 'Created' | 'Updated' | 'Skipped' | 'Error';
+  message: string;
+}
+
+export interface ResidentImportResultDto {
+  totalRows: number;
+  flatsCreated: number;
+  membersCreated: number;
+  residenciesCreated: number;
+  rowsFailed: number;
+  rowResults: ResidentImportRowResultDto[];
+}
+
 export interface MemberDto {
   id: number;
   societyId: number;

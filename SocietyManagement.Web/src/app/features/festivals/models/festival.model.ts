@@ -5,6 +5,7 @@ export type ContributionPaymentMethod = 1 | 2 | 3; // Cash | UPI | BankTransfer
 export type SponsorshipType = 1 | 2 | 3 | 4 | 5 | 6 | 7; // Title..Media
 export type ExpenseApprovalStatus = 1 | 2 | 3 | 4 | 5; // Draft|Pending|Approved|Rejected|Paid
 export type VendorCategory = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type FlatContributionStatus = 0 | 1 | 2 | 3; // NoTarget|Pending|PartiallyPaid|Paid
 
 export const FESTIVAL_STATUS_LABELS: Record<FestivalStatus, string> = {
   1: 'Planning', 2: 'Ongoing', 3: 'Completed'
@@ -34,6 +35,10 @@ export const EXPENSE_STATUS_LABELS: Record<ExpenseApprovalStatus, string> = {
 export const VENDOR_CATEGORY_LABELS: Record<VendorCategory, string> = {
   1: 'Decorator', 2: 'Sound', 3: 'Catering', 4: 'Electrician', 5: 'Tent House',
   6: 'Generator', 7: 'Photographer', 8: 'Other'
+};
+
+export const FLAT_CONTRIBUTION_STATUS_LABELS: Record<FlatContributionStatus, string> = {
+  0: 'No Target', 1: 'Pending', 2: 'Partially Paid', 3: 'Paid'
 };
 
 export interface Festival {
@@ -107,6 +112,26 @@ export interface TopContributorDto {
 export interface PendingContributorDto {
   flatId: number;
   flatNumber: string;
+}
+
+export interface FlatContributionDto {
+  flatId: number;
+  flatNumber: string;
+  targetAmount: number;
+  paidAmount: number;
+  outstandingAmount: number;
+  status: FlatContributionStatus;
+}
+
+export interface FlatContributionKpisDto {
+  totalFlats: number;
+  totalTargetAmount: number;
+  totalPaidAmount: number;
+  totalOutstandingAmount: number;
+  flatsPaidCount: number;
+  flatsPartiallyPaidCount: number;
+  flatsPendingCount: number;
+  flatsNoTargetCount: number;
 }
 
 export interface FestivalSponsorDto {

@@ -5,7 +5,8 @@ import { environment } from '../../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../../../core/models/api-response.model';
 import {
   FineRecordDto, MaintenanceBillDetailDto, MaintenanceBillDto, MaintenanceCategoryDto,
-  MaintenanceDashboardDto, MaintenanceSettingsDto, SpecialChargeDto
+  MaintenanceDashboardDto, MaintenanceSettingsDto, SpecialChargeDto, WaterTankerCollectionDto,
+  WaterTankerMonthSummaryDto
 } from '../models/maintenance.model';
 
 function toHttpParams(params: Record<string, unknown>): HttpParams {
@@ -107,6 +108,34 @@ export class MaintenanceService {
   // ---- Dashboard -----------------------------------------------------------------
   getDashboard(societyId: number): Observable<MaintenanceDashboardDto> {
     return this.http.get<ApiResponse<MaintenanceDashboardDto>>(`${this.baseUrl}/maintenance/dashboard`, { params: { societyId } })
+      .pipe(map((r) => r.data!));
+  }
+
+  // ---- Water Tanker ----------------------------------------------------------------
+  getWaterTankerCollections(params: {
+    societyId: number; month: string; isPaid?: boolean; search?: string; pageNumber?: number; pageSize?: number;
+  }): Observable<PaginatedResult<WaterTankerCollectionDto>> {
+    return this.http.get<ApiResponse<PaginatedResult<WaterTankerCollectionDto>>>(`${this.baseUrl}/water-tanker`, { params: toHttpParams(params) })
+      .pipe(map((r) => r.data!));
+  }
+  getWaterTankerMonths(societyId: number): Observable<string[]> {
+    return this.http.get<ApiResponse<string[]>>(`${this.baseUrl}/water-tanker/months`, { params: { societyId } })
+      .pipe(map((r) => r.data!));
+  }
+  getWaterTankerSummary(societyId: number, month: string): Observable<WaterTankerMonthSummaryDto> {
+    return this.http.get<ApiResponse<WaterTankerMonthSummaryDto>>(`${this.baseUrl}/water-tanker/summary`, { params: { societyId, month } })
+      .pipe(map((r) => r.data!));
+  }
+  generateWaterTankerCharges(societyId: number, month: string, amount: number): Observable<number> {
+    return this.http.post<ApiResponse<number>>(`${this.baseUrl}/water-tanker/generate`, { societyId, month, amount })
+      .pipe(map((r) => r.data!));
+  }
+  recordWaterTankerPayment(id: number, paymentDate: string, notes?: string): Observable<void> {
+    return this.http.post<ApiResponse<void>>(`${this.baseUrl}/water-tanker/${id}/pay`, { paymentDate, notes })
+      .pipe(map(() => void 0));
+  }
+  getMyWaterTankerCollections(): Observable<WaterTankerCollectionDto[]> {
+    return this.http.get<ApiResponse<WaterTankerCollectionDto[]>>(`${this.baseUrl}/water-tanker/mine`)
       .pipe(map((r) => r.data!));
   }
 }

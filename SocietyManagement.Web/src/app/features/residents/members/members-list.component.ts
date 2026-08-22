@@ -13,6 +13,7 @@ import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.se
 import { RoleService } from '../../roles/role.service';
 import { SocietyService } from '../../society-setup/services/society.service';
 import { GENDER_LABELS, MemberDto } from '../models/resident.model';
+import { ImportResidentsDialogComponent } from '../import/import-residents-dialog.component';
 import { QuickAddFlatDialogComponent } from '../quick-add-flat/quick-add-flat-dialog.component';
 import { ResidentService } from '../services/resident.service';
 import { MemberDetailDialogComponent } from './member-detail-dialog.component';
@@ -29,6 +30,9 @@ import { MemberDetailDialogComponent } from './member-detail-dialog.component';
         </button>
         <button mat-flat-button color="primary" (click)="add()" [disabled]="societyId === 0">
           <mat-icon>person_add</mat-icon> Add Member
+        </button>
+        <button mat-stroked-button (click)="importFromExcel()" [disabled]="societyId === 0">
+          <mat-icon>upload_file</mat-icon> Import from Excel
         </button>
       </div>
 
@@ -204,6 +208,15 @@ export class MembersListComponent implements OnInit {
     });
   }
 
+  importFromExcel(): void {
+    this.dialog.open(ImportResidentsDialogComponent, {
+      maxWidth: '95vw', data: { societyId: this.societyId }
+    }).afterClosed().subscribe((imported) => {
+      if (!imported) return;
+      this.load();
+    });
+  }
+
   view(member: MemberDto): void {
     this.residentService.getMemberById(member.id).subscribe((detail) => {
       this.dialog.open(MemberDetailDialogComponent, { width: '480px', data: detail });
@@ -211,18 +224,24 @@ export class MembersListComponent implements OnInit {
   }
 
   createLogin(member: MemberDto): void {
-    if (!member.email) {
-      this.toast.info('This member needs an email address before a login can be created.');
-      return;
-    }
     const ref = this.dialog.open(PromptDialogComponent, {
       width: '380px',
-      data: { title: 'Create Login', submitLabel: 'Create', fields: [{ key: 'roleId', label: 'Role', type: 'select' as const, options: this.roleOptions }] }
+      data: {
+        title: 'Create Login', submitLabel: 'Create',
+        fields: [
+          { key: 'roleId', label: 'Role', type: 'select' as const, options: this.roleOptions },
+          { key: 'password', label: 'Password (optional)', type: 'password' as const, required: false, defaultValue: '' }
+        ]
+      }
     });
     ref.afterClosed().subscribe((result) => {
       if (!result) return;
-      this.residentService.createLogin(member.id, Number(result.roleId)).subscribe(() => {
-        this.toast.success('Login account created and emailed.');
+      this.residentService.createLogin(member.id, Number(result.roleId), result.password || undefined).subscribe(() => {
+        this.toast.success(
+          member.email
+            ? 'Login account created.'
+            : 'Login account created. This member has no email on file — share the password with them directly.'
+        );
         this.load();
       });
     });

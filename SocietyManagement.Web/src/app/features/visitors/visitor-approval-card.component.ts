@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { AssetUrlPipe } from '../../shared/pipes/asset-url.pipe';
 import { VisitorVisitDto } from './models/visitor.model';
 
 /** Reused both embedded on the Member Dashboard and on the resident's own
@@ -10,12 +11,12 @@ import { VisitorVisitDto } from './models/visitor.model';
 @Component({
   selector: 'app-visitor-approval-card',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, MatButtonModule, MatIconModule, AssetUrlPipe],
   template: `
     <div class="app-card approval-card">
       <div class="header">
         @if (visit().visitorPhotoUrl) {
-          <img [src]="visit().visitorPhotoUrl" alt="" class="photo" />
+          <img [src]="visit().visitorPhotoUrl | assetUrl" alt="" class="photo" />
         } @else {
           <div class="photo photo-placeholder"><mat-icon>person</mat-icon></div>
         }

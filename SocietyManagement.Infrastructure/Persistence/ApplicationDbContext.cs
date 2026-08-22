@@ -31,6 +31,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<FestivalSponsor> FestivalSponsors => Set<FestivalSponsor>();
     public DbSet<FestivalVendor> FestivalVendors => Set<FestivalVendor>();
     public DbSet<FestivalExpense> FestivalExpenses => Set<FestivalExpense>();
+    public DbSet<FestivalFlatTarget> FestivalFlatTargets => Set<FestivalFlatTarget>();
+    public DbSet<WaterTankerCollection> WaterTankerCollections => Set<WaterTankerCollection>();
 
     public DbSet<MaintenanceCategory> MaintenanceCategories => Set<MaintenanceCategory>();
     public DbSet<MaintenanceSettings> MaintenanceSettings => Set<MaintenanceSettings>();

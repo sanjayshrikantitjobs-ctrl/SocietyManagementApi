@@ -6,7 +6,8 @@ import { ApiResponse, PaginatedResult } from '../../../core/models/api-response.
 import {
   BudgetVsActualPointDto, Festival, FestivalBudgetCategoryDto, FestivalBudgetRevisionDto,
   FestivalContributionDto, FestivalDashboardDto, FestivalExpenseDto, FestivalSponsorDto,
-  FestivalVendorDto, PendingContributorDto, TopContributorDto
+  FestivalVendorDto, FlatContributionDto, FlatContributionKpisDto, FlatContributionStatus,
+  PendingContributorDto, TopContributorDto
 } from '../models/festival.model';
 
 function toHttpParams(params: Record<string, unknown>): HttpParams {
@@ -89,6 +90,24 @@ export class FestivalService {
   }
   downloadReceipt(id: number): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/festival-contributions/${id}/receipt`, { responseType: 'blob' });
+  }
+  getFlatContributions(params: {
+    festivalId: number; search?: string; status?: FlatContributionStatus; pageNumber?: number; pageSize?: number;
+  }): Observable<PaginatedResult<FlatContributionDto>> {
+    return this.http.get<ApiResponse<PaginatedResult<FlatContributionDto>>>(`${this.baseUrl}/festival-contributions/flat-summary`, { params: toHttpParams(params) })
+      .pipe(map((r) => r.data!));
+  }
+  getFlatContributionKpis(festivalId: number): Observable<FlatContributionKpisDto> {
+    return this.http.get<ApiResponse<FlatContributionKpisDto>>(`${this.baseUrl}/festival-contributions/flat-summary/kpis`, { params: { festivalId } })
+      .pipe(map((r) => r.data!));
+  }
+  setContributionTargets(festivalId: number, targetAmount: number): Observable<number> {
+    return this.http.post<ApiResponse<number>>(`${this.baseUrl}/festival-contributions/targets`, { festivalId, targetAmount })
+      .pipe(map((r) => r.data!));
+  }
+  updateFlatContributionTarget(festivalId: number, flatId: number, targetAmount: number): Observable<void> {
+    return this.http.put<ApiResponse<void>>(`${this.baseUrl}/festival-contributions/targets`, { festivalId, flatId, targetAmount })
+      .pipe(map(() => void 0));
   }
 
   // ---- Sponsors ------------------------------------------------------------------

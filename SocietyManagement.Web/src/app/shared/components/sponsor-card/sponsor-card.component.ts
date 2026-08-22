@@ -3,18 +3,19 @@ import { Component, computed, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { FestivalSponsorDto, SPONSORSHIP_TYPE_LABELS } from '../../../features/festivals/models/festival.model';
+import { AssetUrlPipe } from '../../pipes/asset-url.pipe';
 
 /** Reusable sponsor card for the sponsors tab grid — spec's "Sponsor Card"
  * reusable component. */
 @Component({
   selector: 'app-sponsor-card',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, MatButtonModule, MatIconModule, AssetUrlPipe],
   template: `
     <div class="sponsor-card app-card">
       <div class="logo">
         @if (sponsor().logoUrl) {
-          <img [src]="sponsor().logoUrl" [alt]="sponsor().companyName" />
+          <img [src]="sponsor().logoUrl | assetUrl" [alt]="sponsor().companyName" />
         } @else {
           <mat-icon>storefront</mat-icon>
         }

@@ -15,6 +15,7 @@ import { DataTableComponent } from '../../../shared/components/data-table/data-t
 import { PromptDialogComponent } from '../../../shared/components/prompt-dialog/prompt-dialog.component';
 import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.service';
 import { SocietyService } from '../../society-setup/services/society.service';
+import { AssetUrlPipe } from '../../../shared/pipes/asset-url.pipe';
 import { FlatResaleListingDto, LISTING_STATUS_LABELS } from '../models/resident.model';
 import { ResidentService } from '../services/resident.service';
 import { IssueNocDialogComponent } from './issue-noc-dialog.component';
@@ -24,7 +25,7 @@ import { IssueNocDialogComponent } from './issue-noc-dialog.component';
   standalone: true,
   imports: [
     CommonModule, FormsModule, MatButtonModule, MatChipsModule, MatFormFieldModule,
-    MatIconModule, MatSelectModule, MatTableModule, MatTooltipModule, DataTableComponent
+    MatIconModule, MatSelectModule, MatTableModule, MatTooltipModule, DataTableComponent, AssetUrlPipe
   ],
   template: `
     <div class="tab-content">
@@ -76,7 +77,7 @@ import { IssueNocDialogComponent } from './issue-noc-dialog.component';
               @if (!l.nocRequested) {
                 <span class="muted">Not requested</span>
               } @else if (l.nocIssuedDate) {
-                <a [href]="l.nocDocumentUrl" target="_blank" class="noc-link"><mat-icon>description</mat-icon> Issued {{ l.nocIssuedDate | date: 'mediumDate' }}</a>
+                <a [href]="l.nocDocumentUrl | assetUrl" target="_blank" class="noc-link"><mat-icon>description</mat-icon> Issued {{ l.nocIssuedDate | date: 'mediumDate' }}</a>
               } @else {
                 <span class="badge badge-pending">Pending</span>
               }

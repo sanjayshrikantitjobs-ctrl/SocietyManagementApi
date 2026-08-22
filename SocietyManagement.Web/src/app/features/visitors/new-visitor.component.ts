@@ -12,6 +12,7 @@ import { FileUploadService } from '../../core/services/file-upload.service';
 import { SignalrService } from '../../core/services/signalr.service';
 import { ToastService } from '../../core/services/toast.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { AssetUrlPipe } from '../../shared/pipes/asset-url.pipe';
 import { SocietyService } from '../society-setup/services/society.service';
 import { VisitorVisitDto } from './models/visitor.model';
 import { VisitorService } from './services/visitor.service';
@@ -25,7 +26,7 @@ import { VisitorService } from './services/visitor.service';
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatIconModule,
-    MatInputModule, MatProgressSpinnerModule, MatSelectModule, PageHeaderComponent
+    MatInputModule, MatProgressSpinnerModule, MatSelectModule, AssetUrlPipe, PageHeaderComponent
   ],
   template: `
     <div class="app-page new-visitor-page">
@@ -56,7 +57,7 @@ import { VisitorService } from './services/visitor.service';
         <form [formGroup]="form" (ngSubmit)="submit()" class="app-card visitor-form">
           <div class="photo-section">
             @if (photoUrl()) {
-              <img [src]="photoUrl()" alt="" class="photo-preview" />
+              <img [src]="photoUrl() | assetUrl" alt="" class="photo-preview" />
               <button mat-stroked-button type="button" (click)="photoInput.click()" [disabled]="uploadingPhoto()">Retake</button>
             } @else {
               <button mat-flat-button color="primary" type="button" class="capture-btn" (click)="photoInput.click()" [disabled]="uploadingPhoto()">

@@ -1,4 +1,6 @@
 using AspNetCoreRateLimit;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.FileProviders;
 using QuestPDF.Infrastructure;
 using Serilog;
 using SocietyManagement.API.Extensions;
@@ -10,6 +12,16 @@ using SocietyManagement.Infrastructure.Hubs;
 QuestPDF.Settings.License = LicenseType.Community; // free for this project's scale — see QuestPDF licensing terms
 
 var builder = WebApplication.CreateBuilder(args);
+
+// LocalFileStorageService writes uploads under AppContext.BaseDirectory/wwwroot
+// (the build/publish output dir), which is NOT the same as env.WebRootPath —
+// that defaults to ContentRootPath/wwwroot, the *project source* dir under
+// `dotnet run`. Serving from WebRootPath meant every uploaded photo 404'd
+// regardless of when the folder was created, since the two paths never
+// pointed at the same place. Must exist before Build() so the file provider
+// created below has somewhere real to bind to.
+var uploadsRoot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+Directory.CreateDirectory(Path.Combine(uploadsRoot, "uploads"));
 
 // ---- Serilog (spec: "Serilog Logging") --------------------------------------
 builder.Host.UseSerilog((context, services, configuration) => configuration
@@ -68,7 +80,13 @@ else
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles(); // serves wwwroot/uploads/** — see LocalFileStorageService
+// Explicit provider rooted at the same AppContext.BaseDirectory/wwwroot that
+// LocalFileStorageService writes to — see uploadsRoot comment above; plain
+// UseStaticFiles() follows env.WebRootPath instead, which points elsewhere.
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsRoot)
+});
 app.UseCors("AngularClient");
 
 app.UseIpRateLimiting();

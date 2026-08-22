@@ -23,7 +23,14 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      const isAuthEndpoint = req.url.includes('/auth/login') || req.url.includes('/auth/refresh-token');
+      // /auth/logout excluded too: without this, a 401 here (expired access
+      // token) triggers a refresh attempt; if the refresh token is also
+      // expired/invalid, the failure handler below calls auth.logout() again
+      // to force-clear the session — which re-POSTs /auth/logout, 401s again,
+      // and loops forever. A failed logout call means the session was already
+      // dead; just let AuthService.logout()'s own error handler clear it locally.
+      const isAuthEndpoint = req.url.includes('/auth/login') || req.url.includes('/auth/refresh-token')
+        || req.url.includes('/auth/logout');
 
       if (error.status !== 401 || isAuthEndpoint) {
         return throwError(() => error);

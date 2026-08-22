@@ -5,7 +5,7 @@ import { environment } from '../../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../../../core/models/api-response.model';
 import {
   EmergencyContactDto, FlatOccupancySummaryDto, FlatResaleListingDto, FlatResidencyDto,
-  MemberDetailDto, MemberDto, VehicleDto
+  MemberDetailDto, MemberDto, ResidentImportResultDto, VehicleDto
 } from '../models/resident.model';
 
 function toHttpParams(params: Record<string, unknown>): HttpParams {
@@ -43,8 +43,18 @@ export class ResidentService {
   deleteMember(id: number): Observable<void> {
     return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/members/${id}`).pipe(map(() => void 0));
   }
-  createLogin(memberId: number, roleId: number): Observable<number> {
-    return this.http.post<ApiResponse<number>>(`${this.baseUrl}/members/${memberId}/create-login`, { roleId })
+  createLogin(memberId: number, roleId: number, password?: string): Observable<number> {
+    return this.http.post<ApiResponse<number>>(`${this.baseUrl}/members/${memberId}/create-login`, { roleId, password })
+      .pipe(map((r) => r.data!));
+  }
+  downloadImportTemplate(): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/members/import/template`, { responseType: 'blob' });
+  }
+  importResidents(societyId: number, file: File): Observable<ResidentImportResultDto> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('societyId', String(societyId));
+    return this.http.post<ApiResponse<ResidentImportResultDto>>(`${this.baseUrl}/members/import`, formData)
       .pipe(map((r) => r.data!));
   }
 

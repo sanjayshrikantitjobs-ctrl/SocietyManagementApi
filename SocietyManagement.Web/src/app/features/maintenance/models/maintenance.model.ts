@@ -165,3 +165,22 @@ export interface MaintenanceDashboardDto {
   recentPayments: RecentPaymentDto[];
   overdueFlats: OverdueFlatDto[];
 }
+
+export interface WaterTankerCollectionDto {
+  id: number;
+  flatId: number;
+  flatNumber: string;
+  month: string;
+  amount: number;
+  isPaid: boolean;
+  paymentDate?: string | null;
+  notes?: string | null;
+}
+
+export interface WaterTankerMonthSummaryDto {
+  totalFlats: number;
+  flatsPaidCount: number;
+  flatsPendingCount: number;
+  totalCollected: number;
+  totalPending: number;
+}

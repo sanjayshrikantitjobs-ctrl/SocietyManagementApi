@@ -11,7 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 export interface PromptField {
   key: string;
   label: string;
-  type: 'text' | 'number' | 'select' | 'date' | 'datetime-local' | 'textarea' | 'checkbox';
+  type: 'text' | 'number' | 'select' | 'date' | 'datetime-local' | 'textarea' | 'checkbox' | 'password';
   required?: boolean;
   options?: { value: number | string; label: string }[];
   defaultValue?: string | number | boolean;

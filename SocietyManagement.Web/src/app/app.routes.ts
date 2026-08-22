@@ -50,6 +50,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/maintenance/my-bills/my-bills.component').then((m) => m.MyBillsComponent)
       },
       {
+        path: 'my-water-tanker',
+        loadComponent: () => import('./features/maintenance/my-water-tanker/my-water-tanker.component').then((m) => m.MyWaterTankerComponent)
+      },
+      {
         path: 'society-setup',
         canActivate: [roleGuard],
         data: { roles: ['Admin'] },

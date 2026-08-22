@@ -3,16 +3,17 @@ import { Component, input, output } from '@angular/core';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { Festival, FESTIVAL_STATUS_LABELS } from '../../../features/festivals/models/festival.model';
+import { AssetUrlPipe } from '../../pipes/asset-url.pipe';
 
 /** Reusable festival summary card for the festivals grid — spec's "Festival
  * Card" reusable component. */
 @Component({
   selector: 'app-festival-card',
   standalone: true,
-  imports: [CommonModule, MatChipsModule, MatIconModule],
+  imports: [CommonModule, MatChipsModule, MatIconModule, AssetUrlPipe],
   template: `
     <div class="festival-card app-card app-fade-in" (click)="open.emit()">
-      <div class="banner" [style.backgroundImage]="festival().bannerImageUrl ? 'url(' + festival().bannerImageUrl + ')' : null">
+      <div class="banner" [style.backgroundImage]="festival().bannerImageUrl ? 'url(' + (festival().bannerImageUrl | assetUrl) + ')' : null">
         @if (!festival().bannerImageUrl) { <mat-icon>celebration</mat-icon> }
         <span class="status-chip" [class]="'status-' + festival().status">{{ statusLabel() }}</span>
       </div>

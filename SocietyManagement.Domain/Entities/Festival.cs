@@ -42,4 +42,5 @@ public class Festival : BaseAuditableEntity
     public ICollection<FestivalContribution> Contributions { get; set; } = new List<FestivalContribution>();
     public ICollection<FestivalSponsor> Sponsors { get; set; } = new List<FestivalSponsor>();
     public ICollection<FestivalExpense> Expenses { get; set; } = new List<FestivalExpense>();
+    public ICollection<FestivalFlatTarget> FlatTargets { get; set; } = new List<FestivalFlatTarget>();
 }

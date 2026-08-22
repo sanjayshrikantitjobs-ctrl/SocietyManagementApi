@@ -30,6 +30,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Maintenance', icon: 'receipt_long', link: '/maintenance', adminOnly: true },
   { label: 'Residents', icon: 'people', link: '/residents', adminOnly: true },
   { label: 'My Bills', icon: 'payments', link: '/my-bills' },
+  { label: 'My Water Tanker', icon: 'water_drop', link: '/my-water-tanker' },
   { label: 'Society Setup', icon: 'apartment', link: '/society-setup', adminOnly: true },
   { label: 'Users', icon: 'group', link: '/users', adminOnly: true },
   { label: 'Roles & Permissions', icon: 'admin_panel_settings', link: '/roles', adminOnly: true }

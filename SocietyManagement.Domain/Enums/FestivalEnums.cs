@@ -70,3 +70,15 @@ public enum VendorCategory
     Photographer = 7,
     Other = 8
 }
+
+/// <summary>Per-flat status against a FestivalFlatTarget, derived at query
+/// time from TargetAmount vs the sum of that flat's FestivalContributions —
+/// never stored, same "compute don't denormalize" convention as
+/// Festival.Collected and FestivalBudgetCategory.ActualAmount.</summary>
+public enum FlatContributionStatus
+{
+    NoTarget = 0,
+    Pending = 1,
+    PartiallyPaid = 2,
+    Paid = 3
+}

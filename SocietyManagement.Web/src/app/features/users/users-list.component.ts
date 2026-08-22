@@ -74,7 +74,7 @@ export class UsersListComponent implements OnInit {
     this.dialog.open(UserFormDialogComponent, { width: '560px', data: null }).afterClosed().subscribe((result) => {
       if (!result) return;
       this.userService.createUser(result).subscribe(() => {
-        this.toast.success('User created and a temporary password emailed.');
+        this.toast.success(result.password ? 'User created with the password you set.' : 'User created and a temporary password emailed.');
         this.load();
       });
     });

@@ -16,20 +16,20 @@
     emptyMessage="Create a user to grant access to the system."
     (page)="onPage($event)"
     (search)="onSearch($event)">
-    <table mat-table [dataSource]="users()" table>
+    <table mat-table [dataSource]="users()" matSort (matSortChange)="onSort($event)" table>
       <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
         <td mat-cell *matCellDef="let u">
           <strong>{{ u.firstName }} {{ u.lastName }}</strong><br />
           <span class="muted">{{ u.email }} · {{ u.mobileNumber }}</span>
         </td>
       </ng-container>
       <ng-container matColumnDef="role">
-        <th mat-header-cell *matHeaderCellDef>Role</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Role</th>
         <td mat-cell *matCellDef="let u"><mat-chip-set><mat-chip>{{ u.roleName }}</mat-chip></mat-chip-set></td>
       </ng-container>
       <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
         <td mat-cell *matCellDef="let u">
           @if (u.isLocked) { <span class="badge badge-danger">Locked</span> }
           @else if (!u.isActive) { <span class="badge badge-muted">Inactive</span> }
@@ -37,7 +37,7 @@
         </td>
       </ng-container>
       <ng-container matColumnDef="lastLogin">
-        <th mat-header-cell *matHeaderCellDef>Last Login</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Login</th>
         <td mat-cell *matCellDef="let u">{{ u.lastLoginAt ? (u.lastLoginAt | date:'medium') : 'Never' }}</td>
       </ng-container>
       <ng-container matColumnDef="actions">

@@ -30,5 +30,11 @@ export const RESIDENTS_ROUTES: Routes = [
   {
     path: 'flat/:flatId',
     loadComponent: () => import('./flat-occupancy/flat-occupancy.component').then((m) => m.FlatOccupancyComponent)
+  },
+  {
+    path: 'occupancy/:flatId',
+    loadComponent: () =>
+      import('../occupancy/occupancy-overview/occupancy-overview.component').then((m) => m.OccupancyOverviewComponent)
   }
 ];
+

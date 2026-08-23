@@ -127,6 +127,11 @@ public class MemberCommandHandlers :
             throw new NotFoundException(nameof(Society), request.SocietyId);
         }
 
+        if (await _context.Members.AnyAsync(m => m.SocietyId == request.SocietyId && !m.IsDeleted && m.Phone == request.Phone, ct))
+        {
+            throw new ConflictAppException("A member with this phone number already exists in this society.");
+        }
+
         var member = new Member
         {
             SocietyId = request.SocietyId, FirstName = request.FirstName, LastName = request.LastName,
@@ -143,6 +148,11 @@ public class MemberCommandHandlers :
     {
         var member = await _context.Members.FirstOrDefaultAsync(m => m.Id == request.Id && !m.IsDeleted, ct)
             ?? throw new NotFoundException(nameof(Member), request.Id);
+
+        if (await _context.Members.AnyAsync(m => m.SocietyId == member.SocietyId && m.Id != member.Id && !m.IsDeleted && m.Phone == request.Phone, ct))
+        {
+            throw new ConflictAppException("A member with this phone number already exists in this society.");
+        }
 
         member.FirstName = request.FirstName;
         member.LastName = request.LastName;
@@ -244,7 +254,7 @@ public class MemberCommandHandlers :
 
 // ---- Queries -------------------------------------------------------------------
 public record GetMembersQuery(
-    int SocietyId, string? Search,
+    int SocietyId, string? Search, string? SortBy = null, bool SortDescending = false,
     int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<MemberDto>>;
 
 public record GetMemberByIdQuery(int Id) : IRequest<MemberDetailDto>;
@@ -277,8 +287,21 @@ public class MemberQueryHandlers :
         var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
         var pageNumber = Math.Max(request.PageNumber, 1);
 
+        query = (request.SortBy?.ToLowerInvariant(), request.SortDescending) switch
+        {
+            ("phone", false) => query.OrderBy(m => m.Phone),
+            ("phone", true) => query.OrderByDescending(m => m.Phone),
+            ("email", false) => query.OrderBy(m => m.Email),
+            ("email", true) => query.OrderByDescending(m => m.Email),
+            ("gender", false) => query.OrderBy(m => m.Gender),
+            ("gender", true) => query.OrderByDescending(m => m.Gender),
+            ("login", false) => query.OrderBy(m => m.UserId == null),
+            ("login", true) => query.OrderByDescending(m => m.UserId == null),
+            ("name", true) => query.OrderByDescending(m => m.FirstName).ThenByDescending(m => m.LastName),
+            _ => query.OrderBy(m => m.FirstName).ThenBy(m => m.LastName)
+        };
+
         var items = await query
-            .OrderBy(m => m.FirstName).ThenBy(m => m.LastName)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .Select(m => new MemberDto

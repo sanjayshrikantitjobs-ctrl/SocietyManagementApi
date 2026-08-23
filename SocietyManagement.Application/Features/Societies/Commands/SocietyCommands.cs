@@ -10,7 +10,7 @@ namespace SocietyManagement.Application.Features.Societies.Commands;
 // ---- Create ----------------------------------------------------------------
 public record CreateSocietyCommand(
     string Name, string? RegistrationNumber, string Address, string City, string State, string Pincode,
-    string? ContactEmail, string? ContactPhone, DateTime? EstablishedDate) : IRequest<int>;
+    string? ContactEmail, string? ContactPhone, DateTime? EstablishedDate, string? LogoUrl = null) : IRequest<int>;
 
 public class CreateSocietyCommandValidator : AbstractValidator<CreateSocietyCommand>
 {
@@ -48,7 +48,8 @@ public class CreateSocietyCommandHandler : IRequestHandler<CreateSocietyCommand,
             Pincode = request.Pincode,
             ContactEmail = request.ContactEmail,
             ContactPhone = request.ContactPhone,
-            EstablishedDate = request.EstablishedDate
+            EstablishedDate = request.EstablishedDate,
+            LogoUrl = request.LogoUrl
         };
         await _context.Societies.AddAsync(society, ct);
         await _context.SaveChangesAsync(ct);
@@ -61,7 +62,7 @@ public class CreateSocietyCommandHandler : IRequestHandler<CreateSocietyCommand,
 // ---- Update ----------------------------------------------------------------
 public record UpdateSocietyCommand(
     int Id, string Name, string? RegistrationNumber, string Address, string City, string State, string Pincode,
-    string? ContactEmail, string? ContactPhone, DateTime? EstablishedDate) : IRequest<Unit>;
+    string? ContactEmail, string? ContactPhone, DateTime? EstablishedDate, string? LogoUrl = null) : IRequest<Unit>;
 
 public class UpdateSocietyCommandValidator : AbstractValidator<UpdateSocietyCommand>
 {
@@ -99,6 +100,7 @@ public class UpdateSocietyCommandHandler : IRequestHandler<UpdateSocietyCommand,
         society.ContactEmail = request.ContactEmail;
         society.ContactPhone = request.ContactPhone;
         society.EstablishedDate = request.EstablishedDate;
+        society.LogoUrl = request.LogoUrl;
 
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(Domain.Enums.AuditAction.Update, "Society", nameof(Society),

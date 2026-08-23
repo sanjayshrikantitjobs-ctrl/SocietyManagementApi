@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,9 +13,11 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../../core/services/auth.service';
+import { CurrentSocietyService } from '../../../core/services/current-society.service';
 import { LoadingService } from '../../../core/services/loading.service';
 import { SignalrService } from '../../../core/services/signalr.service';
 import { ThemeService } from '../../../core/services/theme.service';
+import { AssetUrlPipe } from '../../pipes/asset-url.pipe';
 
 interface NavItem {
   label: string;
@@ -45,7 +49,7 @@ const NAV_ITEMS: NavItem[] = [
   imports: [
     CommonModule, RouterOutlet, RouterLink, RouterLinkActive, MatSidenavModule, MatToolbarModule,
     MatListModule, MatIconModule, MatButtonModule, MatMenuModule, MatDividerModule,
-    MatProgressBarModule, MatTooltipModule
+    MatProgressBarModule, MatTooltipModule, AssetUrlPipe
   ],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss'
@@ -54,16 +58,48 @@ export class MainLayoutComponent {
   readonly auth = inject(AuthService);
   readonly theme = inject(ThemeService);
   readonly loading = inject(LoadingService);
+  readonly currentSociety = inject(CurrentSocietyService);
   // Injected (not otherwise referenced) so the SignalR connection lifecycle —
   // driven by its internal `effect()` on auth.isAuthenticated() — starts as
   // soon as the authenticated app shell loads.
   private readonly signalr = inject(SignalrService);
 
-  readonly sidenavOpen = signal(true);
+  // Desktop: sidenav is always present, this only toggles icon-only vs full
+  // width. Mobile: sidenav is an overlay drawer, closed by default, and this
+  // is the only thing that controls whether it's on screen at all — two
+  // different behaviors behind the same hamburger button.
+  readonly desktopExpanded = signal(true);
+  readonly mobileOpen = signal(false);
+  readonly isHandset = signal(false);
+  readonly showLabels = computed(() => this.isHandset() || this.desktopExpanded());
   readonly navItems = NAV_ITEMS;
 
+  constructor() {
+    inject(BreakpointObserver)
+      .observe('(max-width: 768px)')
+      .pipe(takeUntilDestroyed())
+      .subscribe((result) => this.isHandset.set(result.matches));
+  }
+
   toggleSidenav(): void {
-    this.sidenavOpen.update((v) => !v);
+    if (this.isHandset()) {
+      this.mobileOpen.update((v) => !v);
+    } else {
+      this.desktopExpanded.update((v) => !v);
+    }
+  }
+
+  // Bound to the sidenav's (closed) event, which fires both on backdrop
+  // click and on Escape — keeps mobileOpen in sync so the hamburger's next
+  // click reopens it correctly instead of being one toggle out of phase.
+  onSidenavClosed(): void {
+    this.mobileOpen.set(false);
+  }
+
+  onNavItemClick(): void {
+    if (this.isHandset()) {
+      this.mobileOpen.set(false);
+    }
   }
 
   visibleNavItems(): NavItem[] {

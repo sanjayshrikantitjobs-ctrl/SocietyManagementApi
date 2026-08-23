@@ -4,11 +4,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { PageEvent } from '@angular/material/paginator';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { ToastService } from '../../../core/services/toast.service';
-import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { PromptDialogComponent } from '../../../shared/components/prompt-dialog/prompt-dialog.component';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.service';
 import { Society } from '../../../core/models/society.model';
 import { SocietyService } from '../../society-setup/services/society.service';
@@ -18,7 +19,7 @@ import { MaintenanceService } from '../services/maintenance.service';
 @Component({
   selector: 'app-special-charges',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatChipsModule, MatIconModule, MatTableModule, EmptyStateComponent, SkeletonLoaderComponent],
+  imports: [CommonModule, MatButtonModule, MatChipsModule, MatIconModule, MatSortModule, MatTableModule, DataTableComponent],
   template: `
     <div class="tab-content">
       <div class="toolbar">
@@ -26,31 +27,30 @@ import { MaintenanceService } from '../services/maintenance.service';
         <button mat-flat-button color="primary" (click)="add()" [disabled]="flatOptions.length === 0"><mat-icon>add</mat-icon> Add Special Charge</button>
       </div>
 
-      @if (loading()) {
-        <app-skeleton-loader [rows]="3" [height]="60" />
-      } @else if (charges().length === 0) {
-        <app-empty-state icon="request_quote" title="No special charges yet"
-          message="Assign Parking, Club House, Generator or custom charges to specific flats." actionLabel="Add Special Charge" (action)="add()" />
-      } @else {
-        <table mat-table [dataSource]="charges()" class="app-card">
+      <app-data-table
+        [loading]="loading()" [totalCount]="totalCount()" [pageSize]="pageSize()" [pageIndex]="pageIndex()"
+        searchPlaceholder="Search flat or charge name..." emptyIcon="request_quote" emptyTitle="No special charges yet"
+        emptyMessage="Assign Parking, Club House, Generator or custom charges to specific flats."
+        (page)="onPage($event)" (search)="onSearch($event)">
+        <table mat-table [dataSource]="charges()" matSort (matSortChange)="onSort($event)" table>
           <ng-container matColumnDef="flatNumber">
-            <th mat-header-cell *matHeaderCellDef>Flat</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="flatnumber">Flat</th>
             <td mat-cell *matCellDef="let c">{{ c.flatNumber }}</td>
           </ng-container>
           <ng-container matColumnDef="chargeName">
-            <th mat-header-cell *matHeaderCellDef>Charge</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="chargename">Charge</th>
             <td mat-cell *matCellDef="let c">{{ c.chargeName }}</td>
           </ng-container>
           <ng-container matColumnDef="amount">
-            <th mat-header-cell *matHeaderCellDef>Amount</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Amount</th>
             <td mat-cell *matCellDef="let c">₹{{ c.amount | number }}</td>
           </ng-container>
           <ng-container matColumnDef="frequency">
-            <th mat-header-cell *matHeaderCellDef>Frequency</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Frequency</th>
             <td mat-cell *matCellDef="let c"><mat-chip-set><mat-chip>{{ frequencyLabels[c.frequency] }}</mat-chip></mat-chip-set></td>
           </ng-container>
           <ng-container matColumnDef="period">
-            <th mat-header-cell *matHeaderCellDef>Period</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="startdate">Period</th>
             <td mat-cell *matCellDef="let c">{{ c.startDate | date: 'mediumDate' }} @if (c.endDate) { – {{ c.endDate | date: 'mediumDate' }} }</td>
           </ng-container>
           <ng-container matColumnDef="status">
@@ -70,7 +70,7 @@ import { MaintenanceService } from '../services/maintenance.service';
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
-      }
+      </app-data-table>
     </div>
   `,
   styles: [`
@@ -92,6 +92,11 @@ export class SpecialChargesComponent implements OnInit {
 
   readonly loading = signal(true);
   readonly charges = signal<SpecialChargeDto[]>([]);
+  readonly totalCount = signal(0);
+  readonly pageIndex = signal(0);
+  readonly pageSize = signal(10);
+  readonly searchTerm = signal('');
+  readonly sortState = signal<Sort | null>(null);
   readonly displayedColumns = ['flatNumber', 'chargeName', 'amount', 'frequency', 'period', 'status', 'actions'];
   readonly frequencyLabels: Record<number, string> = CHARGE_FREQUENCY_LABELS;
 
@@ -112,10 +117,34 @@ export class SpecialChargesComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.maintenanceService.getSpecialCharges(this.societyId).subscribe((data) => {
-      this.charges.set(data);
+    const sort = this.sortState();
+    this.maintenanceService.getSpecialCharges({
+      societyId: this.societyId, search: this.searchTerm() || undefined,
+      sortBy: sort?.direction ? sort.active : undefined, sortDescending: sort?.direction === 'desc',
+      pageNumber: this.pageIndex() + 1, pageSize: this.pageSize()
+    }).subscribe((result) => {
+      this.charges.set(result.items);
+      this.totalCount.set(result.totalCount);
       this.loading.set(false);
     });
+  }
+
+  onPage(event: PageEvent): void {
+    this.pageIndex.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+    this.load();
+  }
+
+  onSearch(term: string): void {
+    this.searchTerm.set(term);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
+  onSort(sort: Sort): void {
+    this.sortState.set(sort);
+    this.pageIndex.set(0);
+    this.load();
   }
 
   private fields(charge?: SpecialChargeDto) {

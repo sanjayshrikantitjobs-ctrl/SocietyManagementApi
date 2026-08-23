@@ -60,8 +60,10 @@ export class EventService {
     return this.http.get<ApiResponse<EventRsvpDto | null>>(`${this.baseUrl}/event-rsvps/mine`, { params: { eventId } })
       .pipe(map((r) => r.data ?? null));
   }
-  getRsvpsForEvent(eventId: number): Observable<EventRsvpDto[]> {
-    return this.http.get<ApiResponse<EventRsvpDto[]>>(`${this.baseUrl}/event-rsvps`, { params: { eventId } })
+  getRsvpsForEvent(params: {
+    eventId: number; search?: string; sortBy?: string; sortDescending?: boolean; pageNumber?: number; pageSize?: number;
+  }): Observable<PaginatedResult<EventRsvpDto>> {
+    return this.http.get<ApiResponse<PaginatedResult<EventRsvpDto>>>(`${this.baseUrl}/event-rsvps`, { params: toHttpParams(params) })
       .pipe(map((r) => r.data!));
   }
   createOrUpdateRsvp(eventId: number, headCount: number): Observable<EventRsvpDto> {

@@ -1,21 +1,33 @@
 <mat-sidenav-container class="shell">
   <mat-sidenav
     #sidenav
-    mode="side"
-    [opened]="sidenavOpen()"
+    [mode]="isHandset() ? 'over' : 'side'"
+    [opened]="isHandset() ? mobileOpen() : true"
+    (closed)="onSidenavClosed()"
     class="sidebar"
-    [class.sidebar--collapsed]="!sidenavOpen()">
+    [class.sidebar--collapsed]="!showLabels()">
     <div class="brand">
-      <mat-icon>apartment</mat-icon>
-      @if (sidenavOpen()) { <span>Society Mgmt</span> }
+      @if (currentSociety.society()?.logoUrl) {
+        <img class="brand-logo" [src]="currentSociety.society()!.logoUrl | assetUrl" alt="" />
+      } @else {
+        <mat-icon>apartment</mat-icon>
+      }
+      @if (showLabels()) {
+        <div class="brand-text">
+          <span class="brand-name">{{ currentSociety.society()?.name ?? 'Society Mgmt' }}</span>
+          @if (currentSociety.society(); as s) {
+            <span class="brand-address">{{ s.city }}, {{ s.state }}</span>
+          }
+        </div>
+      }
     </div>
 
     <mat-nav-list>
       @for (item of visibleNavItems(); track item.link) {
-        <a mat-list-item [routerLink]="item.link" routerLinkActive="active-link"
-           [matTooltip]="sidenavOpen() ? '' : item.label" matTooltipPosition="right">
+        <a mat-list-item [routerLink]="item.link" routerLinkActive="active-link" (click)="onNavItemClick()"
+           [matTooltip]="showLabels() ? '' : item.label" matTooltipPosition="right">
           <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-          @if (sidenavOpen()) { <span matListItemTitle>{{ item.label }}</span> }
+          @if (showLabels()) { <span matListItemTitle>{{ item.label }}</span> }
         </a>
       }
     </mat-nav-list>

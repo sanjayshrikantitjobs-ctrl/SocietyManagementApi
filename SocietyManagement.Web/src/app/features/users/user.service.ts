@@ -11,7 +11,8 @@ export class UserService {
   private readonly baseUrl = `${environment.apiUrl}/users`;
 
   getUsers(params: {
-    search?: string; roleId?: number; isActive?: boolean; pageNumber?: number; pageSize?: number;
+    search?: string; roleId?: number; isActive?: boolean; sortBy?: string; sortDescending?: boolean;
+    pageNumber?: number; pageSize?: number;
   }): Observable<PaginatedResult<UserListItem>> {
     let httpParams = new HttpParams();
     Object.entries(params).forEach(([key, value]) => {

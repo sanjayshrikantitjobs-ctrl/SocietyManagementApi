@@ -75,3 +75,40 @@ public enum AuditAction
     AccountUnlocked = 12,
     Export = 13
 }
+
+/// <summary>Owner-episode vs Tenant-episode — the discriminator that lets
+/// FlatOccupancy model both with one shared group/history mechanism.</summary>
+public enum OccupancyType
+{
+    Owner = 1,
+    Tenant = 2
+}
+
+/// <summary>How an OccupancyMember relates to the occupancy's primary
+/// person (the primary owner or primary tenant).</summary>
+public enum PersonRelationship
+{
+    Self = 1,
+    Spouse = 2,
+    Son = 3,
+    Daughter = 4,
+    Parent = 5,
+    Grandparent = 6,
+    Sibling = 7,
+    Other = 8
+}
+
+/// <summary>Is this occupancy member currently physically staying at the
+/// flat, independent of whether their OccupancyMember row has formally
+/// ended (LeftDate).</summary>
+public enum ResidentStatus
+{
+    Residing = 1,
+    NotResiding = 2
+}
+
+public enum PoliceVerificationStatus
+{
+    Pending = 1,
+    Done = 2
+}

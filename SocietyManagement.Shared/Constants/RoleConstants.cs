@@ -128,4 +128,15 @@ public static class Permissions
         public const string ManageExpectedVisitors = "visitors.manage_expected";
         public const string ScanQr = "visitors.scan_qr";
     }
+
+    /// <summary>The Owner/Tenant Occupancy module (Person/FlatOccupancy/
+    /// OccupancyMember/RentalAgreement) — a parallel model to Members.*,
+    /// deliberately its own permission group rather than reusing Members.*.</summary>
+    public static class Occupancy
+    {
+        public const string View = "occupancy.view";
+        public const string Manage = "occupancy.manage";
+        public const string ManageSettings = "occupancy.manage_settings";
+        public const string ViewHistory = "occupancy.view_history";
+    }
 }

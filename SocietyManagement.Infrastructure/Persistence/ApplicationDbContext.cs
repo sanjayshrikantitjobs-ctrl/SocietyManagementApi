@@ -57,6 +57,12 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<VisitorVisit> VisitorVisits => Set<VisitorVisit>();
     public DbSet<VisitorSettings> VisitorSettings => Set<VisitorSettings>();
 
+    public DbSet<Person> People => Set<Person>();
+    public DbSet<FlatOccupancy> FlatOccupancies => Set<FlatOccupancy>();
+    public DbSet<OccupancyMember> OccupancyMembers => Set<OccupancyMember>();
+    public DbSet<RentalAgreement> RentalAgreements => Set<RentalAgreement>();
+    public DbSet<OccupancySettings> OccupancySettings => Set<OccupancySettings>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         // BaseEntity.DomainEvents is an in-memory buffer (see

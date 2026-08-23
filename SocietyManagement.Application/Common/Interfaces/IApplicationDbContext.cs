@@ -59,5 +59,11 @@ public interface IApplicationDbContext
     DbSet<VisitorVisit> VisitorVisits { get; }
     DbSet<VisitorSettings> VisitorSettings { get; }
 
+    DbSet<Person> People { get; }
+    DbSet<FlatOccupancy> FlatOccupancies { get; }
+    DbSet<OccupancyMember> OccupancyMembers { get; }
+    DbSet<RentalAgreement> RentalAgreements { get; }
+    DbSet<OccupancySettings> OccupancySettings { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

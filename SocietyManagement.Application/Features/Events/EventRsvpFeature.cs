@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using SocietyManagement.Application.Common.Interfaces;
 using SocietyManagement.Domain.Entities;
 using SocietyManagement.Domain.Enums;
+using SocietyManagement.Shared.Constants;
 using SocietyManagement.Shared.Exceptions;
+using SocietyManagement.Shared.Wrappers;
 
 namespace SocietyManagement.Application.Features.Events;
 
@@ -182,7 +184,9 @@ public class EventRsvpCommandHandlers :
 // ---- Queries -------------------------------------------------------------------
 public record GetMyRsvpQuery(int EventId) : IRequest<EventRsvpDto?>;
 
-public record GetRsvpsForEventQuery(int EventId) : IRequest<List<EventRsvpDto>>;
+public record GetRsvpsForEventQuery(
+    int EventId, string? Search = null, string? SortBy = null, bool SortDescending = false,
+    int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<EventRsvpDto>>;
 
 /// <summary>Powers the phone-camera-landing check-in confirmation page —
 /// shown before the admin taps Confirm, so the QrToken lookup used by
@@ -191,7 +195,7 @@ public record GetRsvpByTokenQuery(string QrToken) : IRequest<EventRsvpDto>;
 
 public class EventRsvpQueryHandlers :
     IRequestHandler<GetMyRsvpQuery, EventRsvpDto?>,
-    IRequestHandler<GetRsvpsForEventQuery, List<EventRsvpDto>>,
+    IRequestHandler<GetRsvpsForEventQuery, PaginatedResult<EventRsvpDto>>,
     IRequestHandler<GetRsvpByTokenQuery, EventRsvpDto>
 {
     private readonly IApplicationDbContext _context;
@@ -228,10 +232,40 @@ public class EventRsvpQueryHandlers :
             .FirstOrDefaultAsync(ct);
     }
 
-    public async Task<List<EventRsvpDto>> Handle(GetRsvpsForEventQuery request, CancellationToken ct) =>
-        await Project(_context.EventRsvps.Where(r => r.EventId == request.EventId && !r.IsDeleted))
-            .OrderBy(r => r.FlatNumber)
+    public async Task<PaginatedResult<EventRsvpDto>> Handle(GetRsvpsForEventQuery request, CancellationToken ct)
+    {
+        var query = _context.EventRsvps.Where(r => r.EventId == request.EventId && !r.IsDeleted);
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var term = request.Search.Trim().ToLower();
+            query = query.Where(r => r.Flat.FlatNumber.ToLower().Contains(term)
+                || r.Member.FirstName.ToLower().Contains(term) || r.Member.LastName.ToLower().Contains(term));
+        }
+
+        var totalCount = await query.CountAsync(ct);
+        var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
+        var pageNumber = Math.Max(request.PageNumber, 1);
+
+        query = (request.SortBy?.ToLowerInvariant(), request.SortDescending) switch
+        {
+            ("member", false) => query.OrderBy(r => r.Member.FirstName).ThenBy(r => r.Member.LastName),
+            ("member", true) => query.OrderByDescending(r => r.Member.FirstName).ThenByDescending(r => r.Member.LastName),
+            ("headcount", false) => query.OrderBy(r => r.HeadCount),
+            ("headcount", true) => query.OrderByDescending(r => r.HeadCount),
+            ("status", false) => query.OrderBy(r => r.Status),
+            ("status", true) => query.OrderByDescending(r => r.Status),
+            ("flat", true) => query.OrderByDescending(r => r.Flat.FlatNumber),
+            _ => query.OrderBy(r => r.Flat.FlatNumber)
+        };
+
+        var items = await Project(query)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(ct);
+
+        return new PaginatedResult<EventRsvpDto>(items, totalCount, pageNumber, pageSize);
+    }
 
     public async Task<EventRsvpDto> Handle(GetRsvpByTokenQuery request, CancellationToken ct) =>
         await Project(_context.EventRsvps.Where(r => r.QrToken == request.QrToken && !r.IsDeleted)).FirstOrDefaultAsync(ct)

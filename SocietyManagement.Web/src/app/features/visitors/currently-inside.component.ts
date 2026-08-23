@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { ToastService } from '../../core/services/toast.service';
@@ -11,6 +12,7 @@ import { SocietyService } from '../society-setup/services/society.service';
 import { AssetUrlPipe } from '../../shared/pipes/asset-url.pipe';
 import { VisitorVisitDto } from './models/visitor.model';
 import { VisitorService } from './services/visitor.service';
+import { VisitorVisitDetailDialogComponent } from './visitor-visit-detail-dialog.component';
 
 @Component({
   selector: 'app-currently-inside',
@@ -55,11 +57,11 @@ import { VisitorService } from './services/visitor.service';
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let v">
-              <button mat-flat-button color="primary" (click)="checkOut(v)"><mat-icon>logout</mat-icon> Check Out</button>
+              <button mat-flat-button color="primary" (click)="$event.stopPropagation(); checkOut(v)"><mat-icon>logout</mat-icon> Check Out</button>
             </td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="clickable-row" (click)="openDetail(row)"></tr>
         </table>
       }
     </div>
@@ -69,12 +71,15 @@ import { VisitorService } from './services/visitor.service';
     .thumb { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
     .thumb-placeholder { display: flex; align-items: center; justify-content: center; background: var(--app-primary-light); color: var(--app-primary); }
     .thumb-placeholder mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .clickable-row { cursor: pointer; }
+    .clickable-row:hover { background: var(--app-primary-light); }
   `]
 })
 export class CurrentlyInsideComponent implements OnInit {
   private readonly visitorService = inject(VisitorService);
   private readonly societyService = inject(SocietyService);
   private readonly toast = inject(ToastService);
+  private readonly dialog = inject(MatDialog);
 
   readonly loading = signal(true);
   readonly visits = signal<VisitorVisitDto[]>([]);
@@ -103,5 +108,9 @@ export class CurrentlyInsideComponent implements OnInit {
       this.toast.success(`${visit.visitorName} checked out.`);
       this.load();
     });
+  }
+
+  openDetail(visit: VisitorVisitDto): void {
+    this.dialog.open(VisitorVisitDetailDialogComponent, { data: visit });
   }
 }

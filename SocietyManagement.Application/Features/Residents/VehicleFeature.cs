@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using SocietyManagement.Application.Common.Interfaces;
 using SocietyManagement.Domain.Entities;
 using SocietyManagement.Domain.Enums;
+using SocietyManagement.Shared.Constants;
 using SocietyManagement.Shared.Exceptions;
+using SocietyManagement.Shared.Wrappers;
 
 namespace SocietyManagement.Application.Features.Residents;
 
@@ -117,23 +119,50 @@ public class VehicleCommandHandlers :
 }
 
 // ---- Queries -------------------------------------------------------------------
-public record GetVehiclesQuery(int? MemberId, int? SocietyId) : IRequest<List<VehicleDto>>;
+public record GetVehiclesQuery(
+    int? MemberId, int? SocietyId, string? Search, string? SortBy = null, bool SortDescending = false,
+    int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<VehicleDto>>;
 
-public class VehicleQueryHandlers : IRequestHandler<GetVehiclesQuery, List<VehicleDto>>
+public class VehicleQueryHandlers : IRequestHandler<GetVehiclesQuery, PaginatedResult<VehicleDto>>
 {
     private readonly IApplicationDbContext _context;
 
     public VehicleQueryHandlers(IApplicationDbContext context) => _context = context;
 
-    public async Task<List<VehicleDto>> Handle(GetVehiclesQuery request, CancellationToken ct)
+    public async Task<PaginatedResult<VehicleDto>> Handle(GetVehiclesQuery request, CancellationToken ct)
     {
         var query = _context.Vehicles.Where(v => !v.IsDeleted);
 
         if (request.MemberId.HasValue) query = query.Where(v => v.MemberId == request.MemberId);
         if (request.SocietyId.HasValue) query = query.Where(v => v.Member.SocietyId == request.SocietyId);
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var term = request.Search.Trim().ToLower();
+            query = query.Where(v => v.RegistrationNumber.ToLower().Contains(term)
+                || v.Member.FirstName.ToLower().Contains(term) || v.Member.LastName.ToLower().Contains(term));
+        }
 
-        return await query
-            .OrderBy(v => v.RegistrationNumber)
+        var totalCount = await query.CountAsync(ct);
+        var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
+        var pageNumber = Math.Max(request.PageNumber, 1);
+
+        query = (request.SortBy?.ToLowerInvariant(), request.SortDescending) switch
+        {
+            ("membername", false) => query.OrderBy(v => v.Member.FirstName).ThenBy(v => v.Member.LastName),
+            ("membername", true) => query.OrderByDescending(v => v.Member.FirstName).ThenByDescending(v => v.Member.LastName),
+            ("vehicletype", false) => query.OrderBy(v => v.VehicleType),
+            ("vehicletype", true) => query.OrderByDescending(v => v.VehicleType),
+            ("makemodel", false) => query.OrderBy(v => v.Make).ThenBy(v => v.Model),
+            ("makemodel", true) => query.OrderByDescending(v => v.Make).ThenByDescending(v => v.Model),
+            ("parking", false) => query.OrderBy(v => v.ParkingSlot == null ? null : v.ParkingSlot.SlotNumber),
+            ("parking", true) => query.OrderByDescending(v => v.ParkingSlot == null ? null : v.ParkingSlot.SlotNumber),
+            ("registrationnumber", true) => query.OrderByDescending(v => v.RegistrationNumber),
+            _ => query.OrderBy(v => v.RegistrationNumber)
+        };
+
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .Select(v => new VehicleDto
             {
                 Id = v.Id, MemberId = v.MemberId, MemberName = v.Member.FirstName + " " + v.Member.LastName,
@@ -142,5 +171,7 @@ public class VehicleQueryHandlers : IRequestHandler<GetVehiclesQuery, List<Vehic
                 ParkingSlotNumber = v.ParkingSlot != null ? v.ParkingSlot.SlotNumber : null
             })
             .ToListAsync(ct);
+
+        return new PaginatedResult<VehicleDto>(items, totalCount, pageNumber, pageSize);
     }
 }

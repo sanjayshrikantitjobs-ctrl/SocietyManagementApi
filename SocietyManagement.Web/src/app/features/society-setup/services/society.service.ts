@@ -85,6 +85,9 @@ export class SocietyService {
   getFlat(id: number): Observable<Flat> {
     return this.http.get<ApiResponse<Flat>>(`${this.baseUrl}/flats/${id}`).pipe(map((r) => r.data!));
   }
+  getMyFlats(): Observable<Flat[]> {
+    return this.http.get<ApiResponse<Flat[]>>(`${this.baseUrl}/flats/mine`).pipe(map((r) => r.data!));
+  }
   createFlat(payload: {
     floorId: number; flatNumber: string; flatType: number; areaSqFt?: number;
     ownerName?: string; ownerPhone?: string; ownerEmail?: string;

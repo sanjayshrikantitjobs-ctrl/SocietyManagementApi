@@ -25,6 +25,38 @@
   color: var(--app-primary);
   white-space: nowrap;
   overflow: hidden;
+
+  mat-icon {
+    flex-shrink: 0;
+  }
+}
+
+.brand-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  line-height: 1.25;
+}
+
+.brand-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.brand-address {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--app-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .active-link {
@@ -67,9 +99,3 @@
   }
 }
 
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    z-index: 30;
-  }
-}

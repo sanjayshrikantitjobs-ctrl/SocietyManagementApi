@@ -47,7 +47,8 @@ public class DbSeeder
             Permissions.Festivals.View, Permissions.Festivals.Contribute, Permissions.Expenses.View,
             Permissions.Notices.View, Permissions.Complaints.View, Permissions.Complaints.Create,
             Permissions.Polls.View, Permissions.Polls.Vote, Permissions.Events.View, Permissions.Events.Rsvp,
-            Permissions.Visitors.View, Permissions.Visitors.Approve, Permissions.Visitors.Reject
+            Permissions.Visitors.View, Permissions.Visitors.Approve, Permissions.Visitors.Reject,
+            Permissions.Occupancy.View
         };
         await SeedRolePermissionsAsync(
             memberRole, allPermissions.Where(p => memberPermissionCodes.Contains(p.Code)).ToList());
@@ -130,7 +131,11 @@ public class DbSeeder
             ("Visitors", "ManageExpectedVisitors", Permissions.Visitors.ManageExpectedVisitors),
             ("Visitors", "ScanQr", Permissions.Visitors.ScanQr),
             ("Reports", "View", Permissions.Reports.View),
-            ("AuditLogs", "View", Permissions.AuditLogs.View)
+            ("AuditLogs", "View", Permissions.AuditLogs.View),
+            ("Occupancy", "View", Permissions.Occupancy.View),
+            ("Occupancy", "Manage", Permissions.Occupancy.Manage),
+            ("Occupancy", "ManageSettings", Permissions.Occupancy.ManageSettings),
+            ("Occupancy", "ViewHistory", Permissions.Occupancy.ViewHistory)
         };
 
         var existingCodes = await _context.Permissions.Select(p => p.Code).ToListAsync();

@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using SocietyManagement.Application.Common.Interfaces;
 using SocietyManagement.Domain.Entities;
 using SocietyManagement.Domain.Enums;
+using SocietyManagement.Shared.Constants;
 using SocietyManagement.Shared.Exceptions;
+using SocietyManagement.Shared.Wrappers;
 
 namespace SocietyManagement.Application.Features.Maintenance;
 
@@ -102,29 +104,58 @@ public class FineRecordCommandHandlers :
 }
 
 // ---- Queries -------------------------------------------------------------------
-public record GetFinesQuery(int SocietyId, int? FlatId, FineStatus? Status) : IRequest<List<FineRecordDto>>;
+public record GetFinesQuery(
+    int SocietyId, int? FlatId, FineStatus? Status, string? Search,
+    string? SortBy = null, bool SortDescending = false,
+    int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<FineRecordDto>>;
 
-public class FineRecordQueryHandlers : IRequestHandler<GetFinesQuery, List<FineRecordDto>>
+public class FineRecordQueryHandlers : IRequestHandler<GetFinesQuery, PaginatedResult<FineRecordDto>>
 {
     private readonly IApplicationDbContext _context;
 
     public FineRecordQueryHandlers(IApplicationDbContext context) => _context = context;
 
-    public async Task<List<FineRecordDto>> Handle(GetFinesQuery request, CancellationToken ct)
+    public async Task<PaginatedResult<FineRecordDto>> Handle(GetFinesQuery request, CancellationToken ct)
     {
         var query = _context.FineRecords
             .Where(f => !f.IsDeleted && f.Flat.Floor.Wing.Building.SocietyId == request.SocietyId);
 
         if (request.FlatId.HasValue) query = query.Where(f => f.FlatId == request.FlatId);
         if (request.Status.HasValue) query = query.Where(f => f.Status == request.Status);
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var term = request.Search.Trim().ToLower();
+            query = query.Where(f => f.Flat.FlatNumber.ToLower().Contains(term) || f.Reason.ToLower().Contains(term));
+        }
 
-        return await query
-            .OrderByDescending(f => f.FineDate)
+        var totalCount = await query.CountAsync(ct);
+        var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
+        var pageNumber = Math.Max(request.PageNumber, 1);
+
+        query = (request.SortBy?.ToLowerInvariant(), request.SortDescending) switch
+        {
+            ("flatnumber", false) => query.OrderBy(f => f.Flat.FlatNumber),
+            ("flatnumber", true) => query.OrderByDescending(f => f.Flat.FlatNumber),
+            ("reason", false) => query.OrderBy(f => f.Reason),
+            ("reason", true) => query.OrderByDescending(f => f.Reason),
+            ("amount", false) => query.OrderBy(f => f.Amount),
+            ("amount", true) => query.OrderByDescending(f => f.Amount),
+            ("status", false) => query.OrderBy(f => f.Status),
+            ("status", true) => query.OrderByDescending(f => f.Status),
+            ("finedate", false) => query.OrderBy(f => f.FineDate),
+            _ => query.OrderByDescending(f => f.FineDate)
+        };
+
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .Select(f => new FineRecordDto
             {
                 Id = f.Id, FlatId = f.FlatId, FlatNumber = f.Flat.FlatNumber, Reason = f.Reason,
                 Amount = f.Amount, FineDate = f.FineDate, Status = f.Status
             })
             .ToListAsync(ct);
+
+        return new PaginatedResult<FineRecordDto>(items, totalCount, pageNumber, pageSize);
     }
 }

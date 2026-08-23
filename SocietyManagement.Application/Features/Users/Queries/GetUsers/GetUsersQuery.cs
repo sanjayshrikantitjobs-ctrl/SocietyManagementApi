@@ -15,6 +15,8 @@ public record GetUsersQuery(
     string? Search,
     int? RoleId,
     bool? IsActive,
+    string? SortBy = null,
+    bool SortDescending = false,
     int PageNumber = 1,
     int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<UserDto>>;
 
@@ -58,8 +60,20 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PaginatedResu
         var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
         var pageNumber = Math.Max(request.PageNumber, 1);
 
+        query = (request.SortBy?.ToLowerInvariant(), request.SortDescending) switch
+        {
+            ("name", false) => query.OrderBy(u => u.FirstName).ThenBy(u => u.LastName),
+            ("name", true) => query.OrderByDescending(u => u.FirstName).ThenByDescending(u => u.LastName),
+            ("role", false) => query.OrderBy(u => u.Role.Name),
+            ("role", true) => query.OrderByDescending(u => u.Role.Name),
+            ("status", false) => query.OrderBy(u => u.IsLocked).ThenBy(u => u.IsActive),
+            ("status", true) => query.OrderByDescending(u => u.IsLocked).ThenByDescending(u => u.IsActive),
+            ("lastlogin", false) => query.OrderBy(u => u.LastLoginAt),
+            ("lastlogin", true) => query.OrderByDescending(u => u.LastLoginAt),
+            _ => query.OrderByDescending(u => u.CreatedAt)
+        };
+
         var items = await query
-            .OrderByDescending(u => u.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ProjectTo<UserDto>(_mapper.ConfigurationProvider)

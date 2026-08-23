@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { PageEvent } from '@angular/material/paginator';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { ToastService } from '../../../core/services/toast.service';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { PromptDialogComponent } from '../../../shared/components/prompt-dialog/prompt-dialog.component';
@@ -21,7 +22,7 @@ import { MemberDetailDialogComponent } from './member-detail-dialog.component';
 @Component({
   selector: 'app-members-list',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatTableModule, MatTooltipModule, DataTableComponent],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatSortModule, MatTableModule, MatTooltipModule, DataTableComponent],
   template: `
     <div class="tab-content">
       <div class="toolbar">
@@ -47,25 +48,25 @@ import { MemberDetailDialogComponent } from './member-detail-dialog.component';
         emptyMessage="Add a member to start tracking residents, vehicles, and occupancy."
         (page)="onPage($event)"
         (search)="onSearch($event)">
-        <table mat-table [dataSource]="members()" table>
+        <table mat-table [dataSource]="members()" matSort (matSortChange)="onSort($event)" table>
           <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
             <td mat-cell *matCellDef="let m">{{ m.firstName }} {{ m.lastName }}</td>
           </ng-container>
           <ng-container matColumnDef="phone">
-            <th mat-header-cell *matHeaderCellDef>Phone</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Phone</th>
             <td mat-cell *matCellDef="let m">{{ m.phone }}</td>
           </ng-container>
           <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
             <td mat-cell *matCellDef="let m">{{ m.email || '—' }}</td>
           </ng-container>
           <ng-container matColumnDef="gender">
-            <th mat-header-cell *matHeaderCellDef>Gender</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Gender</th>
             <td mat-cell *matCellDef="let m">{{ m.gender ? genderLabels[m.gender] : '—' }}</td>
           </ng-container>
           <ng-container matColumnDef="login">
-            <th mat-header-cell *matHeaderCellDef>Login</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Login</th>
             <td mat-cell *matCellDef="let m">
               <span class="badge" [class.badge-success]="m.userId" [class.badge-muted]="!m.userId">
                 {{ m.userId ? 'Active' : 'None' }}
@@ -113,6 +114,7 @@ export class MembersListComponent implements OnInit {
   readonly pageIndex = signal(0);
   readonly pageSize = signal(10);
   readonly searchTerm = signal('');
+  readonly sortState = signal<Sort | null>(null);
   readonly displayedColumns = ['name', 'phone', 'email', 'gender', 'login', 'actions'];
   readonly genderLabels: Record<number, string> = GENDER_LABELS;
 
@@ -132,9 +134,12 @@ export class MembersListComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
+    const sort = this.sortState();
     this.residentService.getMembers({
       societyId: this.societyId,
       search: this.searchTerm() || undefined,
+      sortBy: sort?.direction ? sort.active : undefined,
+      sortDescending: sort?.direction === 'desc',
       pageNumber: this.pageIndex() + 1,
       pageSize: this.pageSize()
     }).subscribe((result) => {
@@ -152,6 +157,12 @@ export class MembersListComponent implements OnInit {
 
   onSearch(term: string): void {
     this.searchTerm.set(term);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
+  onSort(sort: Sort): void {
+    this.sortState.set(sort);
     this.pageIndex.set(0);
     this.load();
   }

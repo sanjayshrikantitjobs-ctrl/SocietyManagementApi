@@ -22,9 +22,10 @@ public class UsersController : ApiControllerBase
     [HasPermission(Permissions.Users.View)]
     public async Task<IActionResult> GetUsers(
         [FromQuery] string? search, [FromQuery] int? roleId, [FromQuery] bool? isActive,
+        [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
-        var result = await Mediator.Send(new GetUsersQuery(search, roleId, isActive, pageNumber, pageSize));
+        var result = await Mediator.Send(new GetUsersQuery(search, roleId, isActive, sortBy, sortDescending, pageNumber, pageSize));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 

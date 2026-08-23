@@ -48,6 +48,7 @@
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let f">
           <button mat-icon-button [routerLink]="['/residents/flat', f.id]" matTooltip="Residents"><mat-icon>people</mat-icon></button>
+          <button mat-icon-button [routerLink]="['/residents/occupancy', f.id]" matTooltip="Owner/Tenant Occupancy"><mat-icon>home_work</mat-icon></button>
           <button mat-icon-button (click)="edit(f)"><mat-icon>edit</mat-icon></button>
           <button mat-icon-button color="warn" (click)="remove(f)"><mat-icon>delete</mat-icon></button>
         </td>

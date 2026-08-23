@@ -19,6 +19,7 @@ import { AssetUrlPipe } from '../../shared/pipes/asset-url.pipe';
 import { VISIT_STATUS_LABELS, VisitorVisitDto } from './models/visitor.model';
 import { VisitorService } from './services/visitor.service';
 import { VisitorApprovalCardComponent } from './visitor-approval-card.component';
+import { VisitorVisitDetailDialogComponent } from './visitor-visit-detail-dialog.component';
 
 /** Role-aware landing: Watchman sees the security dashboard (counts + New
  * Visitor CTA + recent list); Member sees their pending approvals +
@@ -104,7 +105,7 @@ import { VisitorApprovalCardComponent } from './visitor-approval-card.component'
                 <td mat-cell *matCellDef="let v">{{ statusLabels[v.status] }}</td>
               </ng-container>
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="clickable-row" (click)="openDetail(row)"></tr>
             </table>
           }
         }
@@ -114,6 +115,8 @@ import { VisitorApprovalCardComponent } from './visitor-approval-card.component'
   styles: [`
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; align-items: stretch; }
     .inside-link { height: auto; }
+    .clickable-row { cursor: pointer; }
+    .clickable-row:hover { background: var(--app-primary-light); }
     h3 { margin: 24px 0 12px; font-size: 15px; }
     .pending-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 8px; }
     table { width: 100%; }
@@ -200,5 +203,9 @@ export class VisitorsLandingComponent implements OnInit {
         this.loadPending();
       });
     });
+  }
+
+  openDetail(visit: VisitorVisitDto): void {
+    this.dialog.open(VisitorVisitDetailDialogComponent, { data: visit });
   }
 }

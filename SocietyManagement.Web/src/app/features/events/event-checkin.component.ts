@@ -4,9 +4,11 @@ import { ActivatedRoute } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { PageEvent } from '@angular/material/paginator';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { ToastService } from '../../core/services/toast.service';
-import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { DataTableComponent } from '../../shared/components/data-table/data-table.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PromptDialogComponent } from '../../shared/components/prompt-dialog/prompt-dialog.component';
 import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader/skeleton-loader.component';
@@ -21,15 +23,15 @@ import { EventService } from './services/event.service';
   selector: 'app-event-checkin',
   standalone: true,
   imports: [
-    CommonModule, MatButtonModule, MatIconModule, MatTableModule,
-    PageHeaderComponent, SkeletonLoaderComponent, EmptyStateComponent, StatCardComponent
+    CommonModule, MatButtonModule, MatIconModule, MatSortModule, MatTableModule,
+    PageHeaderComponent, SkeletonLoaderComponent, StatCardComponent, DataTableComponent
   ],
   template: `
     <div class="app-page">
       <app-page-header title="Check-in" [subtitle]="event()?.name ?? ''"
         [breadcrumbs]="[{ label: 'Events', link: '/events' }, { label: 'Check-in' }]" />
 
-      @if (loading()) {
+      @if (pageLoading()) {
         <app-skeleton-loader [rows]="4" [height]="70" />
       } @else {
         @if (capacity(); as c) {
@@ -45,24 +47,26 @@ import { EventService } from './services/event.service';
           </div>
         }
 
-        @if (rsvps().length === 0) {
-          <app-empty-state icon="how_to_reg" title="No RSVPs yet" message="Nobody has registered for this event yet." />
-        } @else {
-          <table mat-table [dataSource]="rsvps()" class="app-card">
+        <app-data-table
+          [loading]="rsvpsLoading()" [totalCount]="totalCount()" [pageSize]="pageSize()" [pageIndex]="pageIndex()"
+          searchPlaceholder="Search flat or member..." emptyIcon="how_to_reg" emptyTitle="No RSVPs yet"
+          emptyMessage="Nobody has registered for this event yet."
+          (page)="onPage($event)" (search)="onSearch($event)">
+          <table mat-table [dataSource]="rsvps()" matSort (matSortChange)="onSort($event)" table>
             <ng-container matColumnDef="flat">
-              <th mat-header-cell *matHeaderCellDef>Flat</th>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Flat</th>
               <td mat-cell *matCellDef="let r">{{ r.flatNumber }}</td>
             </ng-container>
             <ng-container matColumnDef="member">
-              <th mat-header-cell *matHeaderCellDef>Registered By</th>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Registered By</th>
               <td mat-cell *matCellDef="let r">{{ r.memberName }} — {{ r.memberPhone }}</td>
             </ng-container>
             <ng-container matColumnDef="headCount">
-              <th mat-header-cell *matHeaderCellDef>Registered</th>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="headcount">Registered</th>
               <td mat-cell *matCellDef="let r">{{ r.headCount }}</td>
             </ng-container>
             <ng-container matColumnDef="status">
-              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
               <td mat-cell *matCellDef="let r">
                 <span class="badge" [class.badge-success]="r.status === 2" [class.badge-muted]="r.status === 3" [class.badge-info]="r.status === 1">
                   {{ statusLabels[r.status] }}{{ r.status === 2 ? ' (' + r.checkedInCount + ')' : '' }}
@@ -81,7 +85,7 @@ import { EventService } from './services/event.service';
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
           </table>
-        }
+        </app-data-table>
       }
     </div>
   `,
@@ -100,10 +104,16 @@ export class EventCheckinComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
 
-  readonly loading = signal(true);
+  readonly pageLoading = signal(true);
+  readonly rsvpsLoading = signal(true);
   readonly event = signal<EventDto | null>(null);
   readonly capacity = signal<EventCapacitySummaryDto | null>(null);
   readonly rsvps = signal<EventRsvpDto[]>([]);
+  readonly totalCount = signal(0);
+  readonly pageIndex = signal(0);
+  readonly pageSize = signal(10);
+  readonly searchTerm = signal('');
+  readonly sortState = signal<Sort | null>(null);
   readonly statusLabels: Record<number, string> = EVENT_RSVP_STATUS_LABELS;
   readonly displayedColumns = ['flat', 'member', 'headCount', 'status', 'actions'];
 
@@ -111,21 +121,46 @@ export class EventCheckinComponent implements OnInit {
 
   ngOnInit(): void {
     this.eventId = Number(this.route.snapshot.paramMap.get('id'));
-    this.load();
-  }
-
-  private load(): void {
-    this.loading.set(true);
     this.eventService.getEventById(this.eventId).subscribe((e) => this.event.set(e));
     this.refresh();
+    this.pageLoading.set(false);
   }
 
   private refresh(): void {
     this.eventService.getCapacitySummary(this.eventId).subscribe((c) => this.capacity.set(c));
-    this.eventService.getRsvpsForEvent(this.eventId).subscribe((rsvps) => {
-      this.rsvps.set(rsvps);
-      this.loading.set(false);
+    this.loadRsvps();
+  }
+
+  private loadRsvps(): void {
+    this.rsvpsLoading.set(true);
+    const sort = this.sortState();
+    this.eventService.getRsvpsForEvent({
+      eventId: this.eventId, search: this.searchTerm() || undefined,
+      sortBy: sort?.direction ? sort.active : undefined, sortDescending: sort?.direction === 'desc',
+      pageNumber: this.pageIndex() + 1, pageSize: this.pageSize()
+    }).subscribe((result) => {
+      this.rsvps.set(result.items);
+      this.totalCount.set(result.totalCount);
+      this.rsvpsLoading.set(false);
     });
+  }
+
+  onPage(event: PageEvent): void {
+    this.pageIndex.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+    this.loadRsvps();
+  }
+
+  onSearch(term: string): void {
+    this.searchTerm.set(term);
+    this.pageIndex.set(0);
+    this.loadRsvps();
+  }
+
+  onSort(sort: Sort): void {
+    this.sortState.set(sort);
+    this.pageIndex.set(0);
+    this.loadRsvps();
   }
 
   checkIn(rsvp: EventRsvpDto): void {

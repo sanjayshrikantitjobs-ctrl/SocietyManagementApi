@@ -21,9 +21,12 @@ public class EventRsvpsController : ApiControllerBase
 
     [HttpGet]
     [HasPermission(Permissions.Events.Manage)]
-    public async Task<IActionResult> GetForEvent([FromQuery] int eventId)
+    public async Task<IActionResult> GetForEvent(
+        [FromQuery] int eventId, [FromQuery] string? search,
+        [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,
+        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
-        var result = await Mediator.Send(new GetRsvpsForEventQuery(eventId));
+        var result = await Mediator.Send(new GetRsvpsForEventQuery(eventId, search, sortBy, sortDescending, pageNumber, pageSize));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 

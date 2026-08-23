@@ -18,10 +18,11 @@ import { MyBillDetailDialogComponent } from './my-bill-detail-dialog.component';
 
 const MY_FLAT_STORAGE_KEY = 'societyManagement.myFlatId';
 
-/** Member-facing read-only bill view. There's no User->Flat link yet
- * (Member Management is a future module), so the member picks their flat
- * once and it's remembered locally — this swaps for a real auto-detected
- * flat once that module ships, with no change to the rest of this page. */
+/** Member-facing read-only bill view. The flat picker only ever lists
+ * flats the current user actually resides at (via GetMyFlatsQuery,
+ * resolved server-side from their Member/FlatResidency rows) — a person
+ * can legitimately own more than one flat, so it's still a picker, just
+ * never the whole society's flat list. Auto-selects when there's only one. */
 @Component({
   selector: 'app-my-bills',
   standalone: true,
@@ -112,13 +113,15 @@ export class MyBillsComponent implements OnInit {
     this.societyService.getSocieties().subscribe((societies: Society[]) => {
       this.societyId = societies[0]?.id ?? 0;
 
-      this.societyService.getFlats({ pageSize: 500 }).subscribe((result) => {
-        this.flatOptions = result.items.map((f) => ({ value: f.id, label: f.flatNumber }));
+      this.societyService.getMyFlats().subscribe((flats) => {
+        this.flatOptions = flats.map((f) => ({ value: f.id, label: f.flatNumber }));
 
         const stored = Number(localStorage.getItem(MY_FLAT_STORAGE_KEY));
         if (stored && this.flatOptions.some((o) => o.value === stored)) {
           this.selectedFlatId.set(stored);
           this.load();
+        } else if (this.flatOptions.length === 1) {
+          this.onFlatChange(this.flatOptions[0].value);
         } else {
           this.loading.set(false);
         }

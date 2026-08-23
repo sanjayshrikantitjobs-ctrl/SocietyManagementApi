@@ -6,6 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { UserListItem } from '../../core/models/user.model';
 import { ToastService } from '../../core/services/toast.service';
@@ -22,7 +23,7 @@ import { UserService } from './user.service';
   standalone: true,
   imports: [
     CommonModule, MatButtonModule, MatIconModule, MatMenuModule, MatChipsModule, MatPaginatorModule,
-    MatTableModule, DataTableComponent, PageHeaderComponent
+    MatSortModule, MatTableModule, DataTableComponent, PageHeaderComponent
   ],
   templateUrl: './users-list.component.html',
   styleUrl: './users-list.component.scss'
@@ -39,6 +40,7 @@ export class UsersListComponent implements OnInit {
   readonly pageIndex = signal(0);
   readonly pageSize = signal(10);
   readonly searchTerm = signal('');
+  readonly sortState = signal<Sort | null>(null);
   readonly displayedColumns = ['name', 'role', 'status', 'lastLogin', 'actions'];
 
   ngOnInit(): void {
@@ -47,8 +49,11 @@ export class UsersListComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
+    const sort = this.sortState();
     this.userService.getUsers({
       search: this.searchTerm() || undefined,
+      sortBy: sort?.direction ? sort.active : undefined,
+      sortDescending: sort?.direction === 'desc',
       pageNumber: this.pageIndex() + 1,
       pageSize: this.pageSize()
     }).subscribe((result) => {
@@ -66,6 +71,12 @@ export class UsersListComponent implements OnInit {
 
   onSearch(term: string): void {
     this.searchTerm.set(term);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
+  onSort(sort: Sort): void {
+    this.sortState.set(sort);
     this.pageIndex.set(0);
     this.load();
   }

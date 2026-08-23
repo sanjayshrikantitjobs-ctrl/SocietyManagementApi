@@ -14,9 +14,12 @@ public class FineRecordsController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Maintenance.View)]
-    public async Task<IActionResult> GetAll([FromQuery] int societyId, [FromQuery] int? flatId, [FromQuery] FineStatus? status)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int societyId, [FromQuery] int? flatId, [FromQuery] FineStatus? status, [FromQuery] string? search,
+        [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,
+        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
-        var result = await Mediator.Send(new GetFinesQuery(societyId, flatId, status));
+        var result = await Mediator.Send(new GetFinesQuery(societyId, flatId, status, search, sortBy, sortDescending, pageNumber, pageSize));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 

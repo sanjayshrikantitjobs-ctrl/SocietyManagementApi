@@ -27,7 +27,9 @@ export class ResidentService {
   private readonly baseUrl = environment.apiUrl;
 
   // ---- Members -------------------------------------------------------------
-  getMembers(params: { societyId: number; search?: string; pageNumber?: number; pageSize?: number }): Observable<PaginatedResult<MemberDto>> {
+  getMembers(params: {
+    societyId: number; search?: string; sortBy?: string; sortDescending?: boolean; pageNumber?: number; pageSize?: number;
+  }): Observable<PaginatedResult<MemberDto>> {
     return this.http.get<ApiResponse<PaginatedResult<MemberDto>>>(`${this.baseUrl}/members`, { params: toHttpParams(params) })
       .pipe(map((r) => r.data!));
   }
@@ -82,8 +84,11 @@ export class ResidentService {
   }
 
   // ---- Vehicles -------------------------------------------------------------------
-  getVehicles(params: { memberId?: number; societyId?: number }): Observable<VehicleDto[]> {
-    return this.http.get<ApiResponse<VehicleDto[]>>(`${this.baseUrl}/vehicles`, { params: toHttpParams(params) })
+  getVehicles(params: {
+    memberId?: number; societyId?: number; search?: string; sortBy?: string; sortDescending?: boolean;
+    pageNumber?: number; pageSize?: number;
+  }): Observable<PaginatedResult<VehicleDto>> {
+    return this.http.get<ApiResponse<PaginatedResult<VehicleDto>>>(`${this.baseUrl}/vehicles`, { params: toHttpParams(params) })
       .pipe(map((r) => r.data!));
   }
   createVehicle(payload: Record<string, unknown>): Observable<number> {

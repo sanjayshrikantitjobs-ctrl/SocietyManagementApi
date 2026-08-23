@@ -52,8 +52,11 @@ export class MaintenanceService {
   }
 
   // ---- Special Charges -----------------------------------------------------------
-  getSpecialCharges(societyId: number, flatId?: number): Observable<SpecialChargeDto[]> {
-    return this.http.get<ApiResponse<SpecialChargeDto[]>>(`${this.baseUrl}/special-charges`, { params: toHttpParams({ societyId, flatId }) })
+  getSpecialCharges(params: {
+    societyId: number; flatId?: number; search?: string; sortBy?: string; sortDescending?: boolean;
+    pageNumber?: number; pageSize?: number;
+  }): Observable<PaginatedResult<SpecialChargeDto>> {
+    return this.http.get<ApiResponse<PaginatedResult<SpecialChargeDto>>>(`${this.baseUrl}/special-charges`, { params: toHttpParams(params) })
       .pipe(map((r) => r.data!));
   }
   createSpecialCharge(payload: Record<string, unknown>): Observable<number> {
@@ -67,8 +70,11 @@ export class MaintenanceService {
   }
 
   // ---- Fines ---------------------------------------------------------------------
-  getFines(societyId: number, flatId?: number, status?: number): Observable<FineRecordDto[]> {
-    return this.http.get<ApiResponse<FineRecordDto[]>>(`${this.baseUrl}/fine-records`, { params: toHttpParams({ societyId, flatId, status }) })
+  getFines(params: {
+    societyId: number; flatId?: number; status?: number; search?: string; sortBy?: string; sortDescending?: boolean;
+    pageNumber?: number; pageSize?: number;
+  }): Observable<PaginatedResult<FineRecordDto>> {
+    return this.http.get<ApiResponse<PaginatedResult<FineRecordDto>>>(`${this.baseUrl}/fine-records`, { params: toHttpParams(params) })
       .pipe(map((r) => r.data!));
   }
   createFine(payload: Record<string, unknown>): Observable<number> {

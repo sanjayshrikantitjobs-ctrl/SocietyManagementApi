@@ -124,13 +124,43 @@ public record GetFlatsQuery(int? FloorId, FlatStatus? Status, string? Search, in
     int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<FlatDto>>;
 public record GetFlatByIdQuery(int Id) : IRequest<FlatDto>;
 
+/// <summary>Every flat the current user currently resides at (via their own
+/// Member/FlatResidency rows) — never a client-supplied filter, so this is
+/// safe to expose to any authenticated resident. A person can legitimately
+/// own more than one flat, hence a list rather than a single result — see
+/// My Bills / My Water Tanker, which both use this instead of showing every
+/// flat in the society.</summary>
+public record GetMyFlatsQuery : IRequest<List<FlatDto>>;
+
 public class FlatQueryHandlers :
     IRequestHandler<GetFlatsQuery, PaginatedResult<FlatDto>>,
-    IRequestHandler<GetFlatByIdQuery, FlatDto>
+    IRequestHandler<GetFlatByIdQuery, FlatDto>,
+    IRequestHandler<GetMyFlatsQuery, List<FlatDto>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public FlatQueryHandlers(IApplicationDbContext context) => _context = context;
+    public FlatQueryHandlers(IApplicationDbContext context, ICurrentUserService currentUserService)
+    {
+        _context = context;
+        _currentUserService = currentUserService;
+    }
+
+    public async Task<List<FlatDto>> Handle(GetMyFlatsQuery request, CancellationToken ct) =>
+        await _context.Members
+            .Where(m => m.UserId == _currentUserService.UserId && !m.IsDeleted)
+            .SelectMany(m => m.Residencies)
+            .Where(r => !r.IsDeleted && r.MoveOutDate == null)
+            .Select(r => r.Flat)
+            .Distinct()
+            .OrderBy(f => f.FlatNumber)
+            .Select(f => new FlatDto
+            {
+                Id = f.Id, FloorId = f.FloorId, FlatNumber = f.FlatNumber, FlatType = f.FlatType,
+                AreaSqFt = f.AreaSqFt, Status = f.Status,
+                OwnerName = f.OwnerName, OwnerPhone = f.OwnerPhone, OwnerEmail = f.OwnerEmail
+            })
+            .ToListAsync(ct);
 
     public async Task<PaginatedResult<FlatDto>> Handle(GetFlatsQuery request, CancellationToken ct)
     {

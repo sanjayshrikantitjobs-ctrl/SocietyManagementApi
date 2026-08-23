@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using SocietyManagement.Application.Common.Interfaces;
 using SocietyManagement.Domain.Entities;
 using SocietyManagement.Domain.Enums;
+using SocietyManagement.Shared.Constants;
 using SocietyManagement.Shared.Exceptions;
+using SocietyManagement.Shared.Wrappers;
 
 namespace SocietyManagement.Application.Features.Maintenance;
 
@@ -116,23 +118,50 @@ public class SpecialChargeCommandHandlers :
 }
 
 // ---- Queries -------------------------------------------------------------------
-public record GetSpecialChargesQuery(int SocietyId, int? FlatId) : IRequest<List<SpecialChargeDto>>;
+public record GetSpecialChargesQuery(
+    int SocietyId, int? FlatId, string? Search, string? SortBy = null, bool SortDescending = false,
+    int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<SpecialChargeDto>>;
 
-public class SpecialChargeQueryHandlers : IRequestHandler<GetSpecialChargesQuery, List<SpecialChargeDto>>
+public class SpecialChargeQueryHandlers : IRequestHandler<GetSpecialChargesQuery, PaginatedResult<SpecialChargeDto>>
 {
     private readonly IApplicationDbContext _context;
 
     public SpecialChargeQueryHandlers(IApplicationDbContext context) => _context = context;
 
-    public async Task<List<SpecialChargeDto>> Handle(GetSpecialChargesQuery request, CancellationToken ct)
+    public async Task<PaginatedResult<SpecialChargeDto>> Handle(GetSpecialChargesQuery request, CancellationToken ct)
     {
         var query = _context.SpecialCharges
             .Where(c => !c.IsDeleted && c.Flat.Floor.Wing.Building.SocietyId == request.SocietyId);
 
         if (request.FlatId.HasValue) query = query.Where(c => c.FlatId == request.FlatId);
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var term = request.Search.Trim().ToLower();
+            query = query.Where(c => c.Flat.FlatNumber.ToLower().Contains(term) || c.ChargeName.ToLower().Contains(term));
+        }
 
-        return await query
-            .OrderByDescending(c => c.CreatedAt)
+        var totalCount = await query.CountAsync(ct);
+        var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
+        var pageNumber = Math.Max(request.PageNumber, 1);
+
+        query = (request.SortBy?.ToLowerInvariant(), request.SortDescending) switch
+        {
+            ("flatnumber", false) => query.OrderBy(c => c.Flat.FlatNumber),
+            ("flatnumber", true) => query.OrderByDescending(c => c.Flat.FlatNumber),
+            ("chargename", false) => query.OrderBy(c => c.ChargeName),
+            ("chargename", true) => query.OrderByDescending(c => c.ChargeName),
+            ("amount", false) => query.OrderBy(c => c.Amount),
+            ("amount", true) => query.OrderByDescending(c => c.Amount),
+            ("frequency", false) => query.OrderBy(c => c.Frequency),
+            ("frequency", true) => query.OrderByDescending(c => c.Frequency),
+            ("startdate", false) => query.OrderBy(c => c.StartDate),
+            ("startdate", true) => query.OrderByDescending(c => c.StartDate),
+            _ => query.OrderByDescending(c => c.CreatedAt)
+        };
+
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .Select(c => new SpecialChargeDto
             {
                 Id = c.Id, FlatId = c.FlatId, FlatNumber = c.Flat.FlatNumber, ChargeName = c.ChargeName,
@@ -140,5 +169,7 @@ public class SpecialChargeQueryHandlers : IRequestHandler<GetSpecialChargesQuery
                 Notes = c.Notes, IsActive = c.IsActive
             })
             .ToListAsync(ct);
+
+        return new PaginatedResult<SpecialChargeDto>(items, totalCount, pageNumber, pageSize);
     }
 }

@@ -13,9 +13,12 @@ public class SpecialChargesController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Maintenance.View)]
-    public async Task<IActionResult> GetAll([FromQuery] int societyId, [FromQuery] int? flatId)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int societyId, [FromQuery] int? flatId, [FromQuery] string? search,
+        [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,
+        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
-        var result = await Mediator.Send(new GetSpecialChargesQuery(societyId, flatId));
+        var result = await Mediator.Send(new GetSpecialChargesQuery(societyId, flatId, search, sortBy, sortDescending, pageNumber, pageSize));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 

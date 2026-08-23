@@ -4,12 +4,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { PageEvent } from '@angular/material/paginator';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToastService } from '../../../core/services/toast.service';
-import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { PromptDialogComponent } from '../../../shared/components/prompt-dialog/prompt-dialog.component';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.service';
 import { Society } from '../../../core/models/society.model';
 import { SocietyService } from '../../society-setup/services/society.service';
@@ -19,7 +20,10 @@ import { MaintenanceService } from '../services/maintenance.service';
 @Component({
   selector: 'app-fines',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatButtonToggleModule, MatIconModule, MatTableModule, MatTooltipModule, EmptyStateComponent, SkeletonLoaderComponent],
+  imports: [
+    CommonModule, MatButtonModule, MatButtonToggleModule, MatIconModule, MatSortModule, MatTableModule,
+    MatTooltipModule, DataTableComponent
+  ],
   template: `
     <div class="tab-content">
       <div class="toolbar">
@@ -27,37 +31,38 @@ import { MaintenanceService } from '../services/maintenance.service';
         <button mat-flat-button color="primary" (click)="add()" [disabled]="flatOptions.length === 0"><mat-icon>add</mat-icon> Record Fine</button>
       </div>
 
-      <mat-button-toggle-group [value]="statusFilter()" (change)="onStatusFilterChange($event.value)" class="status-filter">
-        <mat-button-toggle [value]="null">All</mat-button-toggle>
-        <mat-button-toggle [value]="1">Pending</mat-button-toggle>
-        <mat-button-toggle [value]="2">Billed</mat-button-toggle>
-        <mat-button-toggle [value]="3">Waived</mat-button-toggle>
-      </mat-button-toggle-group>
-
-      @if (loading()) {
-        <app-skeleton-loader [rows]="3" [height]="60" />
-      } @else if (fines().length === 0) {
-        <app-empty-state icon="gavel" title="No fines recorded" message="Record fines for late payment or rule violations here." actionLabel="Record Fine" (action)="add()" />
-      } @else {
-        <table mat-table [dataSource]="fines()" class="app-card">
+      <app-data-table
+        [loading]="loading()" [totalCount]="totalCount()" [pageSize]="pageSize()" [pageIndex]="pageIndex()"
+        searchPlaceholder="Search flat or reason..." emptyIcon="gavel" emptyTitle="No fines recorded"
+        emptyMessage="Record fines for late payment or rule violations here."
+        (page)="onPage($event)" (search)="onSearch($event)">
+        <div toolbar>
+          <mat-button-toggle-group [value]="statusFilter()" (change)="onStatusFilterChange($event.value)" class="status-filter">
+            <mat-button-toggle [value]="null">All</mat-button-toggle>
+            <mat-button-toggle [value]="1">Pending</mat-button-toggle>
+            <mat-button-toggle [value]="2">Billed</mat-button-toggle>
+            <mat-button-toggle [value]="3">Waived</mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+        <table mat-table [dataSource]="fines()" matSort (matSortChange)="onSort($event)" table>
           <ng-container matColumnDef="flatNumber">
-            <th mat-header-cell *matHeaderCellDef>Flat</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="flatnumber">Flat</th>
             <td mat-cell *matCellDef="let f">{{ f.flatNumber }}</td>
           </ng-container>
           <ng-container matColumnDef="reason">
-            <th mat-header-cell *matHeaderCellDef>Reason</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Reason</th>
             <td mat-cell *matCellDef="let f">{{ f.reason }}</td>
           </ng-container>
           <ng-container matColumnDef="amount">
-            <th mat-header-cell *matHeaderCellDef>Amount</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Amount</th>
             <td mat-cell *matCellDef="let f">₹{{ f.amount | number }}</td>
           </ng-container>
           <ng-container matColumnDef="fineDate">
-            <th mat-header-cell *matHeaderCellDef>Date</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="finedate">Date</th>
             <td mat-cell *matCellDef="let f">{{ f.fineDate | date: 'mediumDate' }}</td>
           </ng-container>
           <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
             <td mat-cell *matCellDef="let f">
               <span class="badge" [class]="'status-' + f.status">{{ statusLabel(f.status) }}</span>
             </td>
@@ -75,14 +80,13 @@ import { MaintenanceService } from '../services/maintenance.service';
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
-      }
+      </app-data-table>
     </div>
   `,
   styles: [`
     .tab-content { padding: 20px 0; }
     .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .toolbar h3 { margin: 0; font-size: 15px; }
-    .status-filter { margin-bottom: 16px; }
     table { width: 100%; }
     .badge { padding: 2px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; }
     .status-1 { background: #fef3c7; color: #b45309; }
@@ -99,6 +103,11 @@ export class FinesComponent implements OnInit {
 
   readonly loading = signal(true);
   readonly fines = signal<FineRecordDto[]>([]);
+  readonly totalCount = signal(0);
+  readonly pageIndex = signal(0);
+  readonly pageSize = signal(10);
+  readonly searchTerm = signal('');
+  readonly sortState = signal<Sort | null>(null);
   readonly statusFilter = signal<FineStatus | null>(null);
   readonly displayedColumns = ['flatNumber', 'reason', 'amount', 'fineDate', 'status', 'actions'];
 
@@ -122,14 +131,39 @@ export class FinesComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.maintenanceService.getFines(this.societyId, undefined, this.statusFilter() ?? undefined).subscribe((data) => {
-      this.fines.set(data);
+    const sort = this.sortState();
+    this.maintenanceService.getFines({
+      societyId: this.societyId, status: this.statusFilter() ?? undefined, search: this.searchTerm() || undefined,
+      sortBy: sort?.direction ? sort.active : undefined, sortDescending: sort?.direction === 'desc',
+      pageNumber: this.pageIndex() + 1, pageSize: this.pageSize()
+    }).subscribe((result) => {
+      this.fines.set(result.items);
+      this.totalCount.set(result.totalCount);
       this.loading.set(false);
     });
   }
 
+  onPage(event: PageEvent): void {
+    this.pageIndex.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+    this.load();
+  }
+
+  onSearch(term: string): void {
+    this.searchTerm.set(term);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
+  onSort(sort: Sort): void {
+    this.sortState.set(sort);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
   onStatusFilterChange(status: FineStatus | null): void {
     this.statusFilter.set(status);
+    this.pageIndex.set(0);
     this.load();
   }
 

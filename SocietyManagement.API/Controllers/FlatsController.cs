@@ -29,6 +29,14 @@ public class FlatsController : ApiControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
+    [HttpGet("mine")]
+    [HasPermission(Permissions.Society.View)]
+    public async Task<IActionResult> GetMine()
+    {
+        var result = await Mediator.Send(new GetMyFlatsQuery());
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
     [HttpPost]
     [HasPermission(Permissions.Society.Manage)]
     public async Task<IActionResult> Create(CreateFlatCommand command)

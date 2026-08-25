@@ -31,6 +31,15 @@ public class VisitorVisitsController : ApiControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
+    [HttpGet("mine")]
+    [HasPermission(Permissions.Visitors.View)]
+    public async Task<IActionResult> GetMine(
+        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
+    {
+        var result = await Mediator.Send(new GetMyVisitsQuery(pageNumber, pageSize));
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
     [HttpGet("currently-inside")]
     [HasPermission(Permissions.Visitors.View)]
     public async Task<IActionResult> GetCurrentlyInside([FromQuery] int societyId)

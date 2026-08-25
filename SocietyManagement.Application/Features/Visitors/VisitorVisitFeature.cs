@@ -307,11 +307,15 @@ public record GetVisitsQuery(
 
 public record GetPendingApprovalsQuery : IRequest<List<VisitorVisitDto>>;
 
+public record GetMyVisitsQuery(
+    int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<VisitorVisitDto>>;
+
 public record GetCurrentlyInsideQuery(int SocietyId) : IRequest<List<VisitorVisitDto>>;
 
 public class VisitorVisitQueryHandlers :
     IRequestHandler<GetVisitsQuery, PaginatedResult<VisitorVisitDto>>,
     IRequestHandler<GetPendingApprovalsQuery, List<VisitorVisitDto>>,
+    IRequestHandler<GetMyVisitsQuery, PaginatedResult<VisitorVisitDto>>,
     IRequestHandler<GetCurrentlyInsideQuery, List<VisitorVisitDto>>
 {
     private readonly IApplicationDbContext _context;
@@ -366,6 +370,25 @@ public class VisitorVisitQueryHandlers :
                 .Where(v => flatIds.Contains(v.FlatId) && v.Status == VisitorVisitStatus.PendingApproval))
             .OrderBy(v => v.RequestedAt)
             .ToListAsync(ct);
+    }
+
+    public async Task<PaginatedResult<VisitorVisitDto>> Handle(GetMyVisitsQuery request, CancellationToken ct)
+    {
+        var flatIds = await _context.GetCurrentResidentFlatIdsAsync(_currentUserService.UserId, ct);
+        if (flatIds.Count == 0) return new PaginatedResult<VisitorVisitDto>(new List<VisitorVisitDto>(), 0, request.PageNumber, request.PageSize);
+
+        var query = _context.VisitorVisits.Where(v => flatIds.Contains(v.FlatId));
+
+        var totalCount = await query.CountAsync(ct);
+        var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
+        var pageNumber = Math.Max(request.PageNumber, 1);
+
+        var items = await Project(query.OrderByDescending(v => v.RequestedAt))
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return new PaginatedResult<VisitorVisitDto>(items, totalCount, pageNumber, pageSize);
     }
 
     public async Task<List<VisitorVisitDto>> Handle(GetCurrentlyInsideQuery request, CancellationToken ct) =>

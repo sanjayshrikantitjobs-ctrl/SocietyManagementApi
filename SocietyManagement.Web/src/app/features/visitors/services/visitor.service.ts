@@ -70,6 +70,10 @@ export class VisitorService {
     return this.http.get<ApiResponse<VisitorVisitDto[]>>(`${this.baseUrl}/visitor-visits/pending`)
       .pipe(map((r) => r.data!));
   }
+  getMyVisits(pageNumber = 1, pageSize = 10): Observable<PaginatedResult<VisitorVisitDto>> {
+    return this.http.get<ApiResponse<PaginatedResult<VisitorVisitDto>>>(`${this.baseUrl}/visitor-visits/mine`, { params: toHttpParams({ pageNumber, pageSize }) })
+      .pipe(map((r) => r.data!));
+  }
   getCurrentlyInside(societyId: number): Observable<VisitorVisitDto[]> {
     return this.http.get<ApiResponse<VisitorVisitDto[]>>(`${this.baseUrl}/visitor-visits/currently-inside`, { params: { societyId } })
       .pipe(map((r) => r.data!));

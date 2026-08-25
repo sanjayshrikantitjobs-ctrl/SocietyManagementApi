@@ -68,11 +68,10 @@ import { VisitorVisitDetailDialogComponent } from './visitor-visit-detail-dialog
           <app-empty-state icon="how_to_reg" title="No pending approvals" message="You'll see visitor requests for your flat here." />
         }
 
-        @if (isWatchman() || auth.isAdmin()) {
-          <h3>Recent Visitors</h3>
-          @if (recent().length === 0) {
-            <app-empty-state icon="badge" title="No visitors yet today" />
-          } @else {
+        <h3>Recent Visitors</h3>
+        @if (recent().length === 0) {
+          <app-empty-state icon="badge" title="No visitors yet" />
+        } @else {
             <table mat-table [dataSource]="recent()" class="app-card">
               <ng-container matColumnDef="photo">
                 <th mat-header-cell *matHeaderCellDef></th>
@@ -176,7 +175,10 @@ export class VisitorsLandingComponent implements OnInit {
         this.loading.set(false);
       });
     } else {
-      this.loading.set(false);
+      this.visitorService.getMyVisits(1, 10).subscribe((result) => {
+        this.recent.set(result.items);
+        this.loading.set(false);
+      });
     }
   }
 

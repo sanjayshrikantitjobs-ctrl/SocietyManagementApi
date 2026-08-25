@@ -358,13 +358,7 @@ public class VisitorVisitQueryHandlers :
 
     public async Task<List<VisitorVisitDto>> Handle(GetPendingApprovalsQuery request, CancellationToken ct)
     {
-        var flatIds = await _context.Members
-            .Where(m => m.UserId == _currentUserService.UserId && !m.IsDeleted)
-            .SelectMany(m => m.Residencies)
-            .Where(r => !r.IsDeleted && r.MoveOutDate == null)
-            .Select(r => r.FlatId)
-            .Distinct()
-            .ToListAsync(ct);
+        var flatIds = await _context.GetCurrentResidentFlatIdsAsync(_currentUserService.UserId, ct);
 
         if (flatIds.Count == 0) return new List<VisitorVisitDto>();
 

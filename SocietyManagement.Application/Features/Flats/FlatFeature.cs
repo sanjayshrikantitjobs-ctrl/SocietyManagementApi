@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using SocietyManagement.Application.Common.Helpers;
 using SocietyManagement.Application.Common.Interfaces;
 using SocietyManagement.Domain.Entities;
 using SocietyManagement.Domain.Enums;
@@ -159,20 +160,11 @@ public class FlatQueryHandlers :
     /// both paths and de-dupes by flat id.</summary>
     public async Task<List<FlatDto>> Handle(GetMyFlatsQuery request, CancellationToken ct)
     {
-        var viaMember = _context.Members
-            .Where(m => m.UserId == _currentUserService.UserId && !m.IsDeleted)
-            .SelectMany(m => m.Residencies)
-            .Where(r => !r.IsDeleted && r.MoveOutDate == null)
-            .Select(r => r.Flat);
+        var flatIds = await _context.GetCurrentResidentFlatIdsAsync(_currentUserService.UserId, ct);
+        if (flatIds.Count == 0) return new List<FlatDto>();
 
-        var viaPerson = _context.Users
-            .Where(u => u.Id == _currentUserService.UserId && u.PersonId != null)
-            .SelectMany(u => _context.OccupancyMembers
-                .Where(om => om.PersonId == u.PersonId && !om.IsDeleted && om.LeftDate == null))
-            .Where(om => !om.FlatOccupancy.IsDeleted && om.FlatOccupancy.EndDate == null)
-            .Select(om => om.FlatOccupancy.Flat);
-
-        var flats = await viaMember.Union(viaPerson)
+        return await _context.Flats
+            .Where(f => flatIds.Contains(f.Id))
             .OrderBy(f => f.Id)
             .Select(f => new FlatDto
             {
@@ -181,7 +173,6 @@ public class FlatQueryHandlers :
                 OwnerName = f.OwnerName, OwnerPhone = f.OwnerPhone, OwnerEmail = f.OwnerEmail
             })
             .ToListAsync(ct);
-        return flats;
     }
 
     public async Task<PaginatedResult<FlatDto>> Handle(GetFlatsQuery request, CancellationToken ct)

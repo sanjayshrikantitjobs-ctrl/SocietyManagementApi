@@ -28,4 +28,26 @@ public static class ResidencyHelper
                 .Where(om => om.PersonId == u.PersonId && !om.IsDeleted && om.LeftDate == null))
             .AnyAsync(om => !om.FlatOccupancy.IsDeleted && om.FlatOccupancy.EndDate == null && om.FlatOccupancy.FlatId == flatId, ct);
     }
+
+    /// <summary>Same two-model union as IsCurrentResidentOfFlatAsync, for callers
+    /// that need the caller's full set of current flat ids rather than a single
+    /// yes/no check (e.g. "pending approvals for my flats").</summary>
+    public static async Task<List<int>> GetCurrentResidentFlatIdsAsync(
+        this IApplicationDbContext context, int? userId, CancellationToken ct)
+    {
+        var viaMember = context.Members
+            .Where(m => m.UserId == userId && !m.IsDeleted)
+            .SelectMany(m => m.Residencies)
+            .Where(r => !r.IsDeleted && r.MoveOutDate == null)
+            .Select(r => r.FlatId);
+
+        var viaPerson = context.Users
+            .Where(u => u.Id == userId && u.PersonId != null)
+            .SelectMany(u => context.OccupancyMembers
+                .Where(om => om.PersonId == u.PersonId && !om.IsDeleted && om.LeftDate == null))
+            .Where(om => !om.FlatOccupancy.IsDeleted && om.FlatOccupancy.EndDate == null)
+            .Select(om => om.FlatOccupancy.FlatId);
+
+        return await viaMember.Union(viaPerson).ToListAsync(ct);
+    }
 }

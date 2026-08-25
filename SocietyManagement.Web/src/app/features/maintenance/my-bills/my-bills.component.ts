@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
+import { AuthService } from '../../../core/services/auth.service';
 import { Society } from '../../../core/models/society.model';
 import { SocietyService } from '../../society-setup/services/society.service';
 import { BILL_STATUS_LABELS, MaintenanceBillDto } from '../models/maintenance.model';
@@ -18,11 +19,13 @@ import { MyBillDetailDialogComponent } from './my-bill-detail-dialog.component';
 
 const MY_FLAT_STORAGE_KEY = 'societyManagement.myFlatId';
 
-/** Member-facing read-only bill view. The flat picker only ever lists
- * flats the current user actually resides at (via GetMyFlatsQuery,
- * resolved server-side from their Member/FlatResidency rows) — a person
- * can legitimately own more than one flat, so it's still a picker, just
- * never the whole society's flat list. Auto-selects when there's only one. */
+/** Two different pickers depending on who's looking: a resident
+ * (Owner/Tenant/Member) almost always has exactly one flat, so it's shown
+ * as a fixed label with bills auto-loaded — no dropdown needed, and the
+ * dropdown only survives as a fallback for the rare multi-flat owner. An
+ * Admin/Super Admin isn't necessarily a resident at all (GetMyFlats would
+ * return nothing for them), so they instead get a dropdown of every flat
+ * in the society to browse any flat's bill history from this same page. */
 @Component({
   selector: 'app-my-bills',
   standalone: true,
@@ -34,20 +37,31 @@ const MY_FLAT_STORAGE_KEY = 'societyManagement.myFlatId';
     <div class="app-page">
       <app-page-header title="My Bills" subtitle="View your maintenance bills, download invoices, and check payment history."
         [breadcrumbs]="[{ label: 'My Bills' }]">
-        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="flat-picker">
-          <mat-label>My Flat</mat-label>
-          <mat-select [value]="selectedFlatId()" (selectionChange)="onFlatChange($event.value)">
-            @for (opt of flatOptions; track opt.value) { <mat-option [value]="opt.value">{{ opt.label }}</mat-option> }
-          </mat-select>
-        </mat-form-field>
+        @if (auth.isAdmin()) {
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="flat-picker">
+            <mat-label>Flat</mat-label>
+            <mat-select [value]="selectedFlatId()" (selectionChange)="onFlatChange($event.value)">
+              @for (opt of flatOptions; track opt.value) { <mat-option [value]="opt.value">{{ opt.label }}</mat-option> }
+            </mat-select>
+          </mat-form-field>
+        } @else if (flatOptions.length === 1) {
+          <span class="flat-label"><mat-icon>apartment</mat-icon> Flat {{ flatOptions[0].label }}</span>
+        } @else if (flatOptions.length > 1) {
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="flat-picker">
+            <mat-label>My Flat</mat-label>
+            <mat-select [value]="selectedFlatId()" (selectionChange)="onFlatChange($event.value)">
+              @for (opt of flatOptions; track opt.value) { <mat-option [value]="opt.value">{{ opt.label }}</mat-option> }
+            </mat-select>
+          </mat-form-field>
+        }
       </app-page-header>
 
       @if (!selectedFlatId()) {
-        <app-empty-state icon="apartment" title="Select your flat" message="Choose your flat above to see your maintenance bills." />
+        <app-empty-state icon="apartment" title="Select your flat" message="Choose your flat above to see maintenance bills." />
       } @else if (loading()) {
         <app-skeleton-loader [rows]="3" [height]="60" />
       } @else if (bills().length === 0) {
-        <app-empty-state icon="receipt_long" title="No bills yet" message="Bills for your flat will appear here once generated." />
+        <app-empty-state icon="receipt_long" title="No bills yet" message="Bills for this flat will appear here once generated." />
       } @else {
         <table mat-table [dataSource]="bills()" class="app-card">
           <ng-container matColumnDef="invoice">
@@ -86,6 +100,7 @@ const MY_FLAT_STORAGE_KEY = 'societyManagement.myFlatId';
   `,
   styles: [`
     .flat-picker { width: 200px; }
+    .flat-label { display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--app-text); }
     table { width: 100%; }
     .muted { color: var(--app-text-muted); font-size: 12px; }
     .badge { padding: 2px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; }
@@ -99,6 +114,7 @@ export class MyBillsComponent implements OnInit {
   private readonly maintenanceService = inject(MaintenanceService);
   private readonly societyService = inject(SocietyService);
   private readonly dialog = inject(MatDialog);
+  readonly auth = inject(AuthService);
 
   readonly loading = signal(true);
   readonly bills = signal<MaintenanceBillDto[]>([]);
@@ -113,6 +129,14 @@ export class MyBillsComponent implements OnInit {
     this.societyService.getSocieties().subscribe((societies: Society[]) => {
       this.societyId = societies[0]?.id ?? 0;
 
+      if (this.auth.isAdmin()) {
+        this.societyService.getFlats({ societyId: this.societyId, pageSize: 500 }).subscribe((result) => {
+          this.flatOptions = result.items.map((f) => ({ value: f.id, label: f.flatNumber }));
+          this.loading.set(false);
+        });
+        return;
+      }
+
       this.societyService.getMyFlats().subscribe((flats) => {
         this.flatOptions = flats.map((f) => ({ value: f.id, label: f.flatNumber }));
 
@@ -120,7 +144,7 @@ export class MyBillsComponent implements OnInit {
         if (stored && this.flatOptions.some((o) => o.value === stored)) {
           this.selectedFlatId.set(stored);
           this.load();
-        } else if (this.flatOptions.length === 1) {
+        } else if (this.flatOptions.length >= 1) {
           this.onFlatChange(this.flatOptions[0].value);
         } else {
           this.loading.set(false);

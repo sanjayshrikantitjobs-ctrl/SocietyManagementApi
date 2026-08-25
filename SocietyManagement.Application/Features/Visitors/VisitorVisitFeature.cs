@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using SocietyManagement.Application.Common.Helpers;
 using SocietyManagement.Application.Common.Interfaces;
 using SocietyManagement.Domain.Entities;
 using SocietyManagement.Domain.Enums;
@@ -269,10 +270,7 @@ public class VisitorVisitCommandHandlers :
     /// FlatId for authorization — this is the actual check.</summary>
     private async Task EnsureCurrentUserResidesAtAsync(int flatId, CancellationToken ct)
     {
-        var resides = await _context.Members
-            .Where(m => m.UserId == _currentUserService.UserId && !m.IsDeleted)
-            .SelectMany(m => m.Residencies)
-            .AnyAsync(r => !r.IsDeleted && r.MoveOutDate == null && r.FlatId == flatId, ct);
+        var resides = await _context.IsCurrentResidentOfFlatAsync(_currentUserService.UserId, flatId, ct);
 
         if (!resides)
         {

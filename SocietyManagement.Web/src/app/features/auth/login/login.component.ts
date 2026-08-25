@@ -34,7 +34,8 @@ export class LoginComponent {
 
   form = this.fb.nonNullable.group({
     identifier: ['', [Validators.required]],
-    password: ['', [Validators.required]]
+    password: ['', [Validators.required]],
+    societyCode: ['']
   });
 
   submit(): void {
@@ -45,9 +46,9 @@ export class LoginComponent {
 
     this.errorMessage.set(null);
     this.submitting.set(true);
-    const { identifier, password } = this.form.getRawValue();
+    const { identifier, password, societyCode } = this.form.getRawValue();
 
-    this.auth.login(identifier, password)
+    this.auth.login(identifier, password, societyCode || undefined)
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: (res) => {

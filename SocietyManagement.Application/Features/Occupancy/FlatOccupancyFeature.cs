@@ -15,7 +15,7 @@ public class OccupancyMemberDto
     public int Id { get; set; }
     public int PersonId { get; set; }
     public string PersonName { get; set; } = default!;
-    public string Phone { get; set; } = default!;
+    public string? Phone { get; set; }
     public string? Email { get; set; }
     public string? WhatsAppNumber { get; set; }
     public string? PhotoUrl { get; set; }
@@ -95,8 +95,6 @@ public class AddOwnerMemberCommandValidator : AbstractValidator<AddOwnerMemberCo
             .WithMessage("First name is required for a new person.");
         RuleFor(x => x.LastName).NotEmpty().When(x => x.PersonId == null)
             .WithMessage("Last name is required for a new person.");
-        RuleFor(x => x.Phone).NotEmpty().When(x => x.PersonId == null)
-            .WithMessage("Phone is required for a new person.");
     }
 }
 
@@ -118,8 +116,6 @@ public class AddTenantOccupancyCommandValidator : AbstractValidator<AddTenantOcc
             .WithMessage("First name is required for a new person.");
         RuleFor(x => x.LastName).NotEmpty().When(x => x.PersonId == null)
             .WithMessage("Last name is required for a new person.");
-        RuleFor(x => x.Phone).NotEmpty().When(x => x.PersonId == null)
-            .WithMessage("Phone is required for a new person.");
     }
 }
 
@@ -138,8 +134,6 @@ public class AddTenantFamilyMemberCommandValidator : AbstractValidator<AddTenant
             .WithMessage("First name is required for a new person.");
         RuleFor(x => x.LastName).NotEmpty().When(x => x.PersonId == null)
             .WithMessage("Last name is required for a new person.");
-        RuleFor(x => x.Phone).NotEmpty().When(x => x.PersonId == null)
-            .WithMessage("Phone is required for a new person.");
     }
 }
 
@@ -147,6 +141,29 @@ public class AddTenantFamilyMemberCommandValidator : AbstractValidator<AddTenant
 /// every still-open member in one transaction — a tenant's family leaves
 /// together, not as N independent edits.</summary>
 public record EndOccupancyCommand(int FlatOccupancyId, DateTime EndDate) : IRequest<Unit>;
+
+/// <summary>Self-service equivalent of AddTenantFamilyMemberCommand/
+/// AddOwnerMemberCommand's "add to an existing episode" branch — deliberately
+/// takes no FlatId, and FlatOccupancyId is optional: the handler resolves
+/// the caller's own current occupancy from their identity (User.PersonId),
+/// never trusting a client-supplied flat/occupancy id as authoritative.
+/// Always non-Primary — residents can never self-designate primary owner/
+/// tenant.</summary>
+public record AddMyFamilyMemberCommand(
+    int? FlatOccupancyId, int? PersonId, string? FirstName, string? LastName, string? Phone, string? Email, string? WhatsAppNumber,
+    Gender? Gender, DateTime? DateOfBirth, string? PhotoUrl, string? AadhaarNumber, string? PanNumber,
+    PersonRelationship Relationship) : IRequest<int>;
+
+public class AddMyFamilyMemberCommandValidator : AbstractValidator<AddMyFamilyMemberCommand>
+{
+    public AddMyFamilyMemberCommandValidator()
+    {
+        RuleFor(x => x.FirstName).NotEmpty().When(x => x.PersonId == null)
+            .WithMessage("First name is required for a new person.");
+        RuleFor(x => x.LastName).NotEmpty().When(x => x.PersonId == null)
+            .WithMessage("Last name is required for a new person.");
+    }
+}
 
 /// <summary>One person leaving early while the rest of the episode stays open.</summary>
 public record RemoveOccupancyMemberCommand(int OccupancyMemberId, DateTime LeftDate) : IRequest<Unit>;
@@ -158,17 +175,23 @@ public class FlatOccupancyCommandHandlers :
     IRequestHandler<AddOwnerMemberCommand, int>,
     IRequestHandler<AddTenantOccupancyCommand, int>,
     IRequestHandler<AddTenantFamilyMemberCommand, int>,
+    IRequestHandler<AddMyFamilyMemberCommand, int>,
     IRequestHandler<EndOccupancyCommand, Unit>,
     IRequestHandler<RemoveOccupancyMemberCommand, Unit>,
     IRequestHandler<UpdateOccupancyMemberCommand, Unit>
 {
     private readonly IApplicationDbContext _context;
     private readonly IAuditService _auditService;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly IDateTime _dateTime;
 
-    public FlatOccupancyCommandHandlers(IApplicationDbContext context, IAuditService auditService)
+    public FlatOccupancyCommandHandlers(
+        IApplicationDbContext context, IAuditService auditService, ICurrentUserService currentUserService, IDateTime dateTime)
     {
         _context = context;
         _auditService = auditService;
+        _currentUserService = currentUserService;
+        _dateTime = dateTime;
     }
 
     private async Task<int> GetFlatSocietyIdAsync(int flatId, CancellationToken ct)
@@ -196,14 +219,15 @@ public class FlatOccupancyCommandHandlers :
             return person;
         }
 
-        if (await _context.People.AnyAsync(p => p.SocietyId == societyId && !p.IsDeleted && p.Phone == phone, ct))
+        if (!string.IsNullOrWhiteSpace(phone) &&
+            await _context.People.AnyAsync(p => p.SocietyId == societyId && !p.IsDeleted && p.Phone == phone, ct))
         {
             throw new ConflictAppException("A person with this phone number already exists in this society. Search for them instead of creating a new one.");
         }
 
         var newPerson = new Person
         {
-            SocietyId = societyId, FirstName = firstName!, LastName = lastName!, Phone = phone!, Email = email,
+            SocietyId = societyId, FirstName = firstName!, LastName = lastName!, Phone = phone, Email = email,
             WhatsAppNumber = whatsAppNumber, Gender = gender, DateOfBirth = dateOfBirth, PhotoUrl = photoUrl,
             AadhaarNumber = aadhaarNumber, PanNumber = panNumber
         };
@@ -336,6 +360,73 @@ public class FlatOccupancyCommandHandlers :
         return member.Id;
     }
 
+    public async Task<int> Handle(AddMyFamilyMemberCommand request, CancellationToken ct)
+    {
+        var callerPersonId = await _context.Users
+            .Where(u => u.Id == _currentUserService.UserId)
+            .Select(u => u.PersonId)
+            .FirstOrDefaultAsync(ct);
+        if (callerPersonId is null)
+        {
+            throw new ConflictAppException("Your account isn't linked to a resident profile.");
+        }
+
+        var myActiveOccupancyIds = await _context.OccupancyMembers
+            .Where(om => om.PersonId == callerPersonId && !om.IsDeleted && om.LeftDate == null
+                         && !om.FlatOccupancy.IsDeleted && om.FlatOccupancy.EndDate == null)
+            .Select(om => om.FlatOccupancyId)
+            .Distinct()
+            .ToListAsync(ct);
+
+        if (myActiveOccupancyIds.Count == 0)
+        {
+            throw new ConflictAppException("You are not currently listed as an active resident of any flat.");
+        }
+
+        int flatOccupancyId;
+        if (request.FlatOccupancyId.HasValue)
+        {
+            // Client may specify which of THEIR OWN flats — never trusted
+            // blindly, always checked against the caller's own active
+            // memberships resolved above.
+            if (!myActiveOccupancyIds.Contains(request.FlatOccupancyId.Value))
+            {
+                throw new ForbiddenAccessException("You can only add family members to your own flat.");
+            }
+            flatOccupancyId = request.FlatOccupancyId.Value;
+        }
+        else if (myActiveOccupancyIds.Count == 1)
+        {
+            flatOccupancyId = myActiveOccupancyIds[0];
+        }
+        else
+        {
+            throw new BadRequestAppException("You reside at more than one flat — specify which one.");
+        }
+
+        var occupancy = await _context.FlatOccupancies.FirstAsync(o => o.Id == flatOccupancyId, ct);
+        var societyId = await GetFlatSocietyIdAsync(occupancy.FlatId, ct);
+        var person = await ResolveOrCreatePersonAsync(
+            societyId, request.PersonId, request.FirstName, request.LastName, request.Phone, request.Email, request.WhatsAppNumber,
+            request.Gender, request.DateOfBirth, request.PhotoUrl, request.AadhaarNumber, request.PanNumber, ct);
+
+        if (await _context.OccupancyMembers.AnyAsync(
+            m => m.FlatOccupancyId == flatOccupancyId && m.PersonId == person.Id && m.LeftDate == null && !m.IsDeleted, ct))
+        {
+            throw new ConflictAppException("This person is already part of this occupancy.");
+        }
+
+        var member = new OccupancyMember
+        {
+            FlatOccupancyId = flatOccupancyId, PersonId = person.Id, Relationship = request.Relationship,
+            IsPrimary = false, JoinedDate = _dateTime.UtcNow.Date
+        };
+        await _context.OccupancyMembers.AddAsync(member, ct);
+        await _context.SaveChangesAsync(ct);
+        await _auditService.LogAsync(AuditAction.Create, "Occupancy", nameof(OccupancyMember), member.Id.ToString(), ct: ct);
+        return member.Id;
+    }
+
     public async Task<Unit> Handle(EndOccupancyCommand request, CancellationToken ct)
     {
         var occupancy = await _context.FlatOccupancies.Include(o => o.Members)
@@ -400,6 +491,12 @@ public record GetFlatOccupancyOverviewQuery(int FlatId) : IRequest<FlatOccupancy
 
 public record GetOccupancyMembersQuery(int FlatOccupancyId) : IRequest<List<OccupancyMemberDto>>;
 
+/// <summary>Resident self-service view — every active member of the
+/// caller's own current flat occupancy (Owner or Tenant, whichever
+/// applies), resolved the same way AddMyFamilyMemberCommand resolves
+/// "my flat".</summary>
+public record GetMyFamilyMembersQuery : IRequest<List<OccupancyMemberDto>>;
+
 /// <summary>All past+current episodes for a flat (optionally filtered by
 /// Type), each with its full — including departed — member list. Read-only:
 /// there is deliberately no delete endpoint for FlatOccupancy/OccupancyMember,
@@ -420,13 +517,19 @@ public record GetFlatsTenancyGridQuery(
 public class FlatOccupancyQueryHandlers :
     IRequestHandler<GetFlatOccupancyOverviewQuery, FlatOccupancyOverviewDto>,
     IRequestHandler<GetOccupancyMembersQuery, List<OccupancyMemberDto>>,
+    IRequestHandler<GetMyFamilyMembersQuery, List<OccupancyMemberDto>>,
     IRequestHandler<GetOccupancyHistoryQuery, List<FlatOccupancyDto>>,
     IRequestHandler<GetFlatsOwnershipGridQuery, PaginatedResult<FlatOwnershipGridDto>>,
     IRequestHandler<GetFlatsTenancyGridQuery, PaginatedResult<FlatTenancyGridDto>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public FlatOccupancyQueryHandlers(IApplicationDbContext context) => _context = context;
+    public FlatOccupancyQueryHandlers(IApplicationDbContext context, ICurrentUserService currentUserService)
+    {
+        _context = context;
+        _currentUserService = currentUserService;
+    }
 
     private static IQueryable<OccupancyMemberDto> ProjectMembers(IQueryable<OccupancyMember> query) =>
         query.OrderByDescending(m => m.IsPrimary).ThenBy(m => m.JoinedDate)
@@ -483,6 +586,27 @@ public class FlatOccupancyQueryHandlers :
         await ProjectMembers(_context.OccupancyMembers.Where(m => m.FlatOccupancyId == request.FlatOccupancyId && !m.IsDeleted))
             .ToListAsync(ct);
 
+    public async Task<List<OccupancyMemberDto>> Handle(GetMyFamilyMembersQuery request, CancellationToken ct)
+    {
+        var callerPersonId = await _context.Users
+            .Where(u => u.Id == _currentUserService.UserId)
+            .Select(u => u.PersonId)
+            .FirstOrDefaultAsync(ct);
+        if (callerPersonId is null) return new List<OccupancyMemberDto>();
+
+        var myOccupancyIds = await _context.OccupancyMembers
+            .Where(om => om.PersonId == callerPersonId && !om.IsDeleted && om.LeftDate == null
+                         && !om.FlatOccupancy.IsDeleted && om.FlatOccupancy.EndDate == null)
+            .Select(om => om.FlatOccupancyId)
+            .Distinct()
+            .ToListAsync(ct);
+        if (myOccupancyIds.Count == 0) return new List<OccupancyMemberDto>();
+
+        return await ProjectMembers(_context.OccupancyMembers.Where(
+            m => myOccupancyIds.Contains(m.FlatOccupancyId) && !m.IsDeleted && m.LeftDate == null))
+            .ToListAsync(ct);
+    }
+
     public async Task<List<FlatOccupancyDto>> Handle(GetOccupancyHistoryQuery request, CancellationToken ct)
     {
         var query = _context.FlatOccupancies.Where(o => o.FlatId == request.FlatId && !o.IsDeleted);
@@ -493,19 +617,11 @@ public class FlatOccupancyQueryHandlers :
         return await ProjectOccupancy(query.OrderByDescending(o => o.StartDate)).ToListAsync(ct);
     }
 
-    /// <summary>Flat numbers here are plain digit strings (101, 1001, ...)
-    /// where floor*100+unit already encodes the correct physical order, but
-    /// a plain string OrderBy sorts "1001" before "101" lexicographically.
-    /// Parse numerically so the default/flatnumber sort reads top-to-bottom
-    /// the way a resident would expect (101, 102, ..., 1001, 1002, ...).
-    /// Falls back to int.MaxValue (sorts last) for any non-numeric number.</summary>
-    private static int NaturalFlatOrder(string flatNumber) => int.TryParse(flatNumber, out var n) ? n : int.MaxValue;
-
     /// <summary>Shared by both grid queries: every current (LeftDate==null)
     /// member of a given occupancy Type across the whole society, grouped by
     /// flat — the building block both GetFlatsOwnershipGridQuery and
     /// GetFlatsTenancyGridQuery reduce down to their own DTO shape.</summary>
-    private async Task<Dictionary<int, List<(bool IsPrimary, string Name, string Phone, string? WhatsApp)>>> LoadCurrentMembersByFlatAsync(
+    private async Task<Dictionary<int, List<(bool IsPrimary, string Name, string? Phone, string? WhatsApp)>>> LoadCurrentMembersByFlatAsync(
         int societyId, OccupancyType type, CancellationToken ct)
     {
         var members = await _context.OccupancyMembers
@@ -553,8 +669,8 @@ public class FlatOccupancyQueryHandlers :
             ("ownername", true) => all.OrderByDescending(f => f.PrimaryOwnerName).ToList(),
             ("membercount", false) => all.OrderBy(f => f.MemberCount).ToList(),
             ("membercount", true) => all.OrderByDescending(f => f.MemberCount).ToList(),
-            ("flatnumber", true) => all.OrderByDescending(f => NaturalFlatOrder(f.FlatNumber)).ToList(),
-            _ => all.OrderBy(f => NaturalFlatOrder(f.FlatNumber)).ToList()
+            ("flatnumber", true) => all.OrderByDescending(f => f.FlatId).ToList(),
+            _ => all.OrderBy(f => f.FlatId).ToList()
         };
 
         var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
@@ -598,8 +714,8 @@ public class FlatOccupancyQueryHandlers :
             ("tenantname", true) => all.OrderByDescending(f => f.PrimaryTenantName).ToList(),
             ("membercount", false) => all.OrderBy(f => f.MemberCount).ToList(),
             ("membercount", true) => all.OrderByDescending(f => f.MemberCount).ToList(),
-            ("flatnumber", true) => all.OrderByDescending(f => NaturalFlatOrder(f.FlatNumber)).ToList(),
-            _ => all.OrderBy(f => NaturalFlatOrder(f.FlatNumber)).ToList()
+            ("flatnumber", true) => all.OrderByDescending(f => f.FlatId).ToList(),
+            _ => all.OrderBy(f => f.FlatId).ToList()
         };
 
         var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);

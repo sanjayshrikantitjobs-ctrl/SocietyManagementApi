@@ -6,15 +6,40 @@
     <app-skeleton-loader [rows]="4" [height]="90" />
   } @else if (summary(); as s) {
     <div class="stats-grid">
-      <app-stat-card label="Total Members" [value]="s.totalMembers" icon="people" />
       <app-stat-card label="Total Flats" [value]="s.totalFlats" icon="apartment" />
       <app-stat-card label="Occupied Flats" [value]="s.occupiedFlats" icon="home" iconColor="#16a34a" iconBg="#ecfdf5" />
-      <app-stat-card label="Vacant Flats" [value]="s.vacantFlats" icon="meeting_room" iconColor="#f59e0b" iconBg="#fffbeb" />
-      <app-stat-card label="Total Users" [value]="s.totalUsers" icon="group" />
-      <app-stat-card label="Parking Slots" [value]="s.totalParkingSlots" icon="local_parking" />
-      <app-stat-card label="Allocated Parking" [value]="s.allocatedParkingSlots" icon="directions_car" />
-      <app-stat-card label="Collected Maintenance" [value]="'₹' + (s.collectedMaintenance | number)" icon="payments" iconColor="#16a34a" iconBg="#ecfdf5" />
-      <app-stat-card label="Outstanding Amount" [value]="'₹' + (s.outstandingAmount | number)" icon="account_balance_wallet" iconColor="#dc2626" iconBg="#fef2f2" />
+      <app-stat-card label="Owners" [value]="s.ownersCount" icon="key" />
+      <app-stat-card label="Tenants" [value]="s.tenantsCount" icon="group" />
+      <app-stat-card label="Collected" [value]="'₹' + (s.collectedMaintenance | number)" icon="payments" iconColor="#16a34a" iconBg="#ecfdf5" />
+      <app-stat-card label="Outstanding" [value]="'₹' + (s.outstandingAmount | number)" icon="account_balance_wallet" iconColor="#dc2626" iconBg="#fef2f2" />
+      <app-stat-card label="Open Complaints" [value]="s.openComplaintsCount" icon="report_problem" iconColor="#f59e0b" iconBg="#fffbeb" />
+      <app-stat-card label="Visitors Today" [value]="s.visitorsToday" icon="badge" />
+    </div>
+
+    <div class="app-card attention-card">
+      <h3><mat-icon>warning</mat-icon> Requires Attention</h3>
+      <div class="attention-grid">
+        <div class="attention-row">
+          <div><span class="count">{{ s.pendingActions.outstandingBillsCount }}</span> Outstanding Maintenance Payments</div>
+          <a routerLink="/maintenance">View Defaulters</a>
+        </div>
+        <div class="attention-row">
+          <div><span class="count">{{ s.pendingActions.openComplaintsCount }}</span> Open Complaints</div>
+          <a routerLink="/complaints">View Complaints</a>
+        </div>
+        <div class="attention-row">
+          <div><span class="count">{{ s.pendingActions.vendorPaymentsDueCount }}</span> Vendor Payments Due</div>
+          <a routerLink="/services">View Payments</a>
+        </div>
+        <div class="attention-row">
+          <div><span class="count">{{ s.pendingActions.waterTankerPendingCount }}</span> Water Tanker Payment Pending</div>
+          <a routerLink="/maintenance">View Water Management</a>
+        </div>
+        <div class="attention-row">
+          <div><span class="count">{{ s.pendingActions.visitorRequestsWaitingCount }}</span> Visitor Requests Waiting</div>
+          <a routerLink="/visitors">View Visitors</a>
+        </div>
+      </div>
     </div>
 
     <div class="charts-grid">
@@ -26,15 +51,65 @@
         <h3>Parking Utilization</h3>
         <canvas baseChart [data]="parkingChartData" [options]="parkingChartOptions" type="bar"></canvas>
       </div>
-      <div class="app-card chart-card chart-card--placeholder">
-        <h3>Monthly Collection</h3>
-        <p>See the full collection trend, paid vs pending, and outstanding-by-wing breakdown on the</p>
-        <a mat-button color="primary" routerLink="/maintenance/dashboard">Maintenance Dashboard</a>
+      <div class="app-card chart-card">
+        <h3>Collected vs Pending — Last 6 Months</h3>
+        <canvas baseChart [data]="collectionChartData" [options]="collectionChartOptions" type="bar"></canvas>
       </div>
-      <div class="app-card chart-card chart-card--placeholder">
+      <div class="app-card chart-card">
         <h3>Complaint Status</h3>
-        <p>Lights up once the Complaint Management module ships.</p>
+        <canvas baseChart [data]="complaintChartData" [options]="complaintChartOptions" type="doughnut"></canvas>
       </div>
+    </div>
+
+    <div class="lists-grid">
+      <div class="app-card list-card">
+        <h3>Upcoming</h3>
+        @if (upcoming(); as u) {
+          @if (u.festival) {
+            <a class="upcoming-item" [routerLink]="['/festivals', u.festival.id]">
+              <strong>{{ u.festival.name }}</strong>
+              <span class="muted">{{ u.festival.startDate | date: 'MMM d' }} – {{ u.festival.endDate | date: 'MMM d' }}</span>
+              <span class="muted">₹{{ u.festival.collected | number }} collected · ₹{{ u.festival.budget | number }} budget</span>
+            </a>
+          }
+          @for (e of u.events; track e.id) {
+            <div class="upcoming-item">
+              <strong>{{ e.name }}</strong>
+              <span class="muted">{{ e.eventDateTime | date: 'MMM d, h:mm a' }}@if (e.venue) { · {{ e.venue }} }</span>
+            </div>
+          }
+          @if (!u.festival && u.events.length === 0) {
+            <p class="muted empty">Nothing upcoming right now.</p>
+          }
+        }
+      </div>
+
+      <div class="app-card list-card">
+        <h3>Recent Activity</h3>
+        @if (recentActivity().length === 0) {
+          <p class="muted empty">No recent activity.</p>
+        } @else {
+          @for (a of recentActivity(); track a.timestamp + a.title) {
+            <div class="activity-item">
+              <mat-icon>{{ activityIcon(a.type) }}</mat-icon>
+              <div>
+                <strong>{{ a.title }}</strong>
+                <span class="muted">{{ a.subtitle }} · {{ a.timestamp | date: 'short' }}</span>
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      @if (waterTanker(); as w) {
+        <div class="app-card list-card">
+          <h3>Water Tanker — This Month</h3>
+          <div class="wt-row"><span>Flats Paid</span><strong>{{ w.flatsPaidCount }}</strong></div>
+          <div class="wt-row"><span>Flats Pending</span><strong>{{ w.flatsPendingCount }}</strong></div>
+          <div class="wt-row"><span>Collected</span><strong>₹{{ w.totalCollected | number }}</strong></div>
+          <div class="wt-row"><span>Pending</span><strong>₹{{ w.totalPending | number }}</strong></div>
+        </div>
+      }
     </div>
   }
 </div>

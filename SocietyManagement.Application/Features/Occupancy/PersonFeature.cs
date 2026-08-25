@@ -15,7 +15,7 @@ public class PersonDto
     public int SocietyId { get; set; }
     public string FirstName { get; set; } = default!;
     public string LastName { get; set; } = default!;
-    public string Phone { get; set; } = default!;
+    public string? Phone { get; set; }
     public string? Email { get; set; }
     public string? WhatsAppNumber { get; set; }
     public Gender? Gender { get; set; }
@@ -288,6 +288,11 @@ public class PersonCommandHandlers :
     private async Task<User> CreateLoginForPersonAsync(
         Person person, string flatNumber, int roleId, string? requestedPassword, CancellationToken ct)
     {
+        if (string.IsNullOrWhiteSpace(person.Phone))
+        {
+            throw new ConflictAppException($"{person.FullName} has no phone number on file — a login account needs one. Add a phone number first.");
+        }
+
         var baseUsername = $"{flatNumber}_{person.FirstName.Trim().Replace(" ", "")}".ToLowerInvariant();
         var username = baseUsername;
         var suffix = 2;
@@ -303,7 +308,7 @@ public class PersonCommandHandlers :
         var user = new User
         {
             FirstName = person.FirstName, LastName = person.LastName, Email = username,
-            MobileNumber = person.Phone, RoleId = roleId, PersonId = person.Id,
+            MobileNumber = person.Phone, RoleId = roleId, PersonId = person.Id, SocietyId = person.SocietyId,
             PasswordHash = _passwordHasher.Hash(password), MustChangePassword = !adminSetPassword, IsActive = true
         };
         await _context.Users.AddAsync(user, ct);

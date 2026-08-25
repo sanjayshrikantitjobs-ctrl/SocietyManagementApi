@@ -158,7 +158,7 @@ export class MaintenanceDashboardComponent implements OnInit {
   private applyChartData(d: MaintenanceDashboardDto): void {
     this.collectionTrendData.set({
       labels: d.monthlyCollectionTrend.map((m) => m.monthLabel),
-      datasets: [{ label: 'Collected', data: d.monthlyCollectionTrend.map((m) => m.amount), borderColor: '#1a56db', backgroundColor: '#93c5fd', tension: 0.3, fill: true }]
+      datasets: [{ label: 'Collected', data: d.monthlyCollectionTrend.map((m) => m.amount), borderColor: '#4f6ef7', backgroundColor: '#93c5fd', tension: 0.3, fill: true }]
     });
 
     this.paidVsPendingData.set({

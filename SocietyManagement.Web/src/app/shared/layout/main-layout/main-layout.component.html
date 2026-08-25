@@ -23,17 +23,43 @@
     </div>
 
     <mat-nav-list>
-      @for (item of visibleNavItems(); track item.link) {
-        <a mat-list-item [routerLink]="item.link" routerLinkActive="active-link" (click)="onNavItemClick()"
-           [matTooltip]="showLabels() ? '' : item.label" matTooltipPosition="right">
-          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-          @if (showLabels()) { <span matListItemTitle>{{ item.label }}</span> }
-        </a>
+      @for (node of navNodes(); track node.type === 'item' ? node.item.link : node.name) {
+        @if (node.type === 'item') {
+          <a mat-list-item [routerLink]="node.item.link" routerLinkActive="active-link" (click)="onNavItemClick()"
+             [matTooltip]="showLabels() ? '' : node.item.label" matTooltipPosition="right">
+            <mat-icon matListItemIcon>{{ node.item.icon }}</mat-icon>
+            @if (showLabels()) { <span matListItemTitle>{{ node.item.label }}</span> }
+          </a>
+        } @else if (!showLabels()) {
+          <!-- Collapsed rail: no room for a submenu, fall back to a flat icon list. -->
+          @for (child of node.items; track child.link) {
+            <a mat-list-item [routerLink]="child.link" routerLinkActive="active-link" (click)="onNavItemClick()"
+               [matTooltip]="child.label" matTooltipPosition="right">
+              <mat-icon matListItemIcon>{{ child.icon }}</mat-icon>
+            </a>
+          }
+        } @else {
+          <button type="button" class="nav-group-header" (click)="toggleGroup(node.name)">
+            <mat-icon class="group-icon">{{ node.icon }}</mat-icon>
+            <span class="group-label">{{ node.name }}</span>
+            <mat-icon class="chevron" [class.chevron--open]="isGroupExpanded(node.name)">chevron_right</mat-icon>
+          </button>
+          @if (isGroupExpanded(node.name)) {
+            <div class="nav-group-children">
+              @for (child of node.items; track child.link) {
+                <a mat-list-item [routerLink]="child.link" routerLinkActive="active-link" (click)="onNavItemClick()">
+                  <mat-icon matListItemIcon>{{ child.icon }}</mat-icon>
+                  <span matListItemTitle>{{ child.label }}</span>
+                </a>
+              }
+            </div>
+          }
+        }
       }
     </mat-nav-list>
   </mat-sidenav>
 
-  <mat-sidenav-content>
+  <mat-sidenav-content #sidenavContent>
     @if (loading.isLoading()) { <mat-progress-bar mode="indeterminate" class="top-progress" /> }
 
     <mat-toolbar class="topbar">

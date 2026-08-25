@@ -113,6 +113,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, L
                 MobileNumber = user.MobileNumber,
                 ProfilePhotoUrl = user.ProfilePhotoUrl,
                 RoleName = user.Role.Name,
+                SocietyId = user.SocietyId,
                 Permissions = permissions,
                 MustChangePassword = user.MustChangePassword
             }

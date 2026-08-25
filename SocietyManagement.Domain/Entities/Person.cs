@@ -17,7 +17,9 @@ public class Person : BaseAuditableEntity
 
     public string LastName { get; set; } = default!;
 
-    public string Phone { get; set; } = default!;
+    /// <summary>Nullable — a family member (e.g. a young child) can
+    /// genuinely have no phone number of their own.</summary>
+    public string? Phone { get; set; }
 
     public string? Email { get; set; }
 

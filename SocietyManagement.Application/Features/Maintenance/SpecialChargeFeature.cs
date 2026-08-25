@@ -146,8 +146,8 @@ public class SpecialChargeQueryHandlers : IRequestHandler<GetSpecialChargesQuery
 
         query = (request.SortBy?.ToLowerInvariant(), request.SortDescending) switch
         {
-            ("flatnumber", false) => query.OrderBy(c => c.Flat.FlatNumber),
-            ("flatnumber", true) => query.OrderByDescending(c => c.Flat.FlatNumber),
+            ("flatnumber", false) => query.OrderBy(c => c.FlatId),
+            ("flatnumber", true) => query.OrderByDescending(c => c.FlatId),
             ("chargename", false) => query.OrderBy(c => c.ChargeName),
             ("chargename", true) => query.OrderByDescending(c => c.ChargeName),
             ("amount", false) => query.OrderBy(c => c.Amount),

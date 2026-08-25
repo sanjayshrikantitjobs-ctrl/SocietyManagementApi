@@ -20,7 +20,9 @@ import { FestivalContributionTargetsTabComponent } from './tabs/festival-contrib
 import { FestivalDashboardTabComponent } from './tabs/festival-dashboard-tab.component';
 import { FestivalExpensesTabComponent } from './tabs/festival-expenses-tab.component';
 import { FestivalSponsorsTabComponent } from './tabs/festival-sponsors-tab.component';
+import { FestivalTasksTabComponent } from './tabs/festival-tasks-tab.component';
 import { FestivalVendorsTabComponent } from './tabs/festival-vendors-tab.component';
+import { FestivalVolunteersTabComponent } from './tabs/festival-volunteers-tab.component';
 import { FestivalFormDialogComponent } from './festival-form-dialog.component';
 import {
   ChildPoolStatusDto, Festival, FESTIVAL_KIND_LABELS, FESTIVAL_STATUS_LABELS, FestivalKind, FestivalStatus, PoolSummaryDto
@@ -34,7 +36,7 @@ import { FestivalService } from './services/festival.service';
     CommonModule, MatButtonModule, MatIconModule, MatMenuModule, MatProgressSpinnerModule, MatTabsModule, AssetUrlPipe,
     PageHeaderComponent, FestivalDashboardTabComponent, FestivalBudgetTabComponent, FestivalContributionTargetsTabComponent,
     FestivalContributionLedgerTabComponent, FestivalSponsorsTabComponent, FestivalExpensesTabComponent,
-    FestivalVendorsTabComponent, FestivalChildFestivalsTabComponent
+    FestivalVendorsTabComponent, FestivalChildFestivalsTabComponent, FestivalVolunteersTabComponent, FestivalTasksTabComponent
   ],
   template: `
     @if (loading()) {
@@ -77,7 +79,7 @@ import { FestivalService } from './services/festival.service';
         <mat-tab-group animationDuration="150ms" preserveContent>
           @if (f.kind === 2) {
             <mat-tab label="Dashboard"><app-festival-dashboard-tab [festivalId]="f.id" /></mat-tab>
-            <mat-tab label="Child Festivals & Events"><app-festival-child-festivals-tab [festivalId]="f.id" [poolName]="f.name" [societyId]="f.societyId" /></mat-tab>
+            <mat-tab label="Child Festivals & Events"><app-festival-child-festivals-tab [festivalId]="f.id" [poolName]="f.name" [societyId]="f.societyId" [canManage]="canManage()" /></mat-tab>
             <mat-tab label="Contribution Targets"><app-festival-contribution-targets-tab [festivalId]="f.id" /></mat-tab>
             <mat-tab label="Contribution Ledger"><app-festival-contribution-ledger-tab [festivalId]="f.id" /></mat-tab>
           } @else if (f.kind === 3) {
@@ -86,6 +88,8 @@ import { FestivalService } from './services/festival.service';
             <mat-tab label="Sponsors"><app-festival-sponsors-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
             <mat-tab label="Expenses"><app-festival-expenses-tab [festivalId]="f.id" [societyId]="f.societyId" [canManage]="canManage()" [canApprove]="canApprove()" /></mat-tab>
             <mat-tab label="Vendors"><app-festival-vendors-tab [societyId]="f.societyId" [canManage]="canManage()" /></mat-tab>
+            <mat-tab label="Volunteers"><app-festival-volunteers-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
+            <mat-tab label="Tasks"><app-festival-tasks-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
           } @else {
             <mat-tab label="Dashboard"><app-festival-dashboard-tab [festivalId]="f.id" /></mat-tab>
             <mat-tab label="Budget"><app-festival-budget-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
@@ -94,6 +98,8 @@ import { FestivalService } from './services/festival.service';
             <mat-tab label="Sponsors"><app-festival-sponsors-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
             <mat-tab label="Expenses"><app-festival-expenses-tab [festivalId]="f.id" [societyId]="f.societyId" [canManage]="canManage()" [canApprove]="canApprove()" /></mat-tab>
             <mat-tab label="Vendors"><app-festival-vendors-tab [societyId]="f.societyId" [canManage]="canManage()" /></mat-tab>
+            <mat-tab label="Volunteers"><app-festival-volunteers-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
+            <mat-tab label="Tasks"><app-festival-tasks-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
           }
         </mat-tab-group>
       </div>

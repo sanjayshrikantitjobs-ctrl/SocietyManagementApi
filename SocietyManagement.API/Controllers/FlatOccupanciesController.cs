@@ -48,6 +48,14 @@ public class FlatOccupanciesController : ApiControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
+    [HttpGet("mine/members")]
+    [HasPermission(Permissions.Occupancy.ManageOwn)]
+    public async Task<IActionResult> GetMyMembers()
+    {
+        var result = await Mediator.Send(new GetMyFamilyMembersQuery());
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
     [HttpGet("history")]
     [HasPermission(Permissions.Occupancy.ViewHistory)]
     public async Task<IActionResult> GetHistory([FromQuery] int flatId, [FromQuery] OccupancyType? type)
@@ -80,6 +88,14 @@ public class FlatOccupanciesController : ApiControllerBase
             id, request.PersonId, request.FirstName, request.LastName, request.Phone, request.Email, request.WhatsAppNumber,
             request.Gender, request.DateOfBirth, request.PhotoUrl, request.AadhaarNumber, request.PanNumber,
             request.Relationship, request.MoveInDate);
+        var memberId = await Mediator.Send(command);
+        return Ok(ApiResponse<int>.SuccessResponse(memberId, "Family member added."));
+    }
+
+    [HttpPost("mine/members")]
+    [HasPermission(Permissions.Occupancy.ManageOwn)]
+    public async Task<IActionResult> AddMyFamilyMember(AddMyFamilyMemberCommand command)
+    {
         var memberId = await Mediator.Send(command);
         return Ok(ApiResponse<int>.SuccessResponse(memberId, "Family member added."));
     }

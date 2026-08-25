@@ -24,16 +24,25 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PaginatedResu
 {
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetUsersQueryHandler(IApplicationDbContext context, IMapper mapper)
+    public GetUsersQueryHandler(IApplicationDbContext context, IMapper mapper, ICurrentUserService currentUserService)
     {
         _context = context;
         _mapper = mapper;
+        _currentUserService = currentUserService;
     }
 
     public async Task<PaginatedResult<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
         var query = _context.Users.AsQueryable();
+
+        // A scoped Admin only ever sees users belonging to their own
+        // society; Super Admin (no SocietyId) sees everyone.
+        if (_currentUserService.SocietyId.HasValue)
+        {
+            query = query.Where(u => u.SocietyId == _currentUserService.SocietyId);
+        }
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {

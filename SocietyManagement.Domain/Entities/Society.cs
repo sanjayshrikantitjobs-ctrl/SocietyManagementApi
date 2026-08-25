@@ -7,6 +7,13 @@ public class Society : BaseAuditableEntity
 {
     public string Name { get; set; } = default!;
 
+    /// <summary>Short unique code a non-Super-Admin login must supply
+    /// alongside identifier+password, so it must match the caller's own
+    /// User.SocietyId at login time. Server-generated on create; nullable
+    /// because pre-existing societies get one via a startup backfill, not
+    /// at insert time.</summary>
+    public string? Code { get; set; }
+
     public string? RegistrationNumber { get; set; }
 
     public string Address { get; set; } = default!;

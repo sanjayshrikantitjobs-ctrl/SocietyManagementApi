@@ -388,7 +388,7 @@ public class MaintenanceBillQueryHandlers :
 
         var items = await query
             .Include(b => b.Flat).ThenInclude(f => f.Floor).ThenInclude(fl => fl.Wing).ThenInclude(w => w.Building)
-            .OrderByDescending(b => b.BillMonth).ThenBy(b => b.Flat.FlatNumber)
+            .OrderByDescending(b => b.BillMonth).ThenBy(b => b.FlatId)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(ct);

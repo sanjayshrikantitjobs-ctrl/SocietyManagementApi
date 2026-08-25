@@ -28,6 +28,13 @@
         }
       </mat-form-field>
 
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Society Code</mat-label>
+        <input matInput formControlName="societyCode" autocomplete="off" />
+        <mat-icon matPrefix>key</mat-icon>
+        <mat-hint>Not required for Super Admin login.</mat-hint>
+      </mat-form-field>
+
       @if (errorMessage()) {
         <div class="error-banner">{{ errorMessage() }}</div>
       }

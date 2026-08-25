@@ -41,7 +41,7 @@ import { BudgetRevisionsDialogComponent } from './budget-revisions-dialog.compon
       } @else {
         <div class="grid">
           @for (category of categories(); track category.id) {
-            <app-budget-card [category]="category"
+            <app-budget-card [category]="category" [canManage]="canManage()"
               (edit)="editCategory(category)" (remove)="removeCategory(category)" (viewHistory)="viewHistory(category)" />
           }
         </div>

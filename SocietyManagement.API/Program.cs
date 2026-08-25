@@ -30,7 +30,10 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
     .Enrich.FromLogContext());
 
 // ---- Services -----------------------------------------------------------------
-builder.Services.AddControllers();
+// SocietyScopeFilter: global multi-tenant enforcement — see its own doc
+// comment. Stateless (reads only from the request's ClaimsPrincipal), so a
+// plain instance is fine; no DI registration needed.
+builder.Services.AddControllers(options => options.Filters.Add(new SocietyManagement.API.Authorization.SocietyScopeFilter()));
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);

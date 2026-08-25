@@ -7,4 +7,6 @@ namespace SocietyManagement.Application.Common.Interfaces;
 public interface IPdfReceiptService
 {
     byte[] GenerateContributionReceipt(ContributionReceiptData data);
+
+    byte[] GenerateFinanceReceipt(FinanceReceiptData data);
 }

@@ -71,7 +71,7 @@ export class SocietyService {
 
   // ---- Flats -------------------------------------------------------------------
   getFlats(params: {
-    floorId?: number; status?: number; search?: string; pageNumber?: number; pageSize?: number;
+    floorId?: number; status?: number; search?: string; societyId?: number; pageNumber?: number; pageSize?: number;
   }): Observable<PaginatedResult<Flat>> {
     let httpParams = new HttpParams();
     Object.entries(params).forEach(([key, value]) => {

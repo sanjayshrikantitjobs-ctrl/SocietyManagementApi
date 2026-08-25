@@ -7,7 +7,7 @@ html {
   @include mat.theme((
     color: (
       theme-type: light,
-      primary: mat.$azure-palette,
+      primary: mat.$violet-palette,
       tertiary: mat.$blue-palette,
     ),
     typography: Roboto,
@@ -19,7 +19,7 @@ html[data-theme='dark'] {
   @include mat.theme((
     color: (
       theme-type: dark,
-      primary: mat.$azure-palette,
+      primary: mat.$violet-palette,
       tertiary: mat.$blue-palette,
     ),
     typography: Roboto,
@@ -28,27 +28,31 @@ html[data-theme='dark'] {
 }
 
 :root {
-  --app-primary: #1a56db;
-  --app-primary-light: #e8f0fe;
+  --app-primary: #4f6ef7;
+  --app-primary-dark: #3d56d6;
+  --app-primary-light: #eef1ff;
   --app-surface: #ffffff;
-  --app-surface-alt: #f7f9fc;
+  --app-surface-alt: #f6f7fb;
   --app-border: #e5e9f0;
   --app-text: #1f2937;
   --app-text-muted: #6b7280;
   --app-success: #16a34a;
   --app-warning: #f59e0b;
   --app-danger: #dc2626;
-  --app-radius: 10px;
+  --app-radius: 12px;
   --app-shadow: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.06);
+  --app-shadow-hover: 0 8px 20px rgba(79, 110, 247, 0.12), 0 2px 6px rgba(16, 24, 40, 0.08);
+  --app-gradient: linear-gradient(135deg, #4f6ef7 0%, #7c5cf0 100%);
 }
 
 html[data-theme='dark'] {
   --app-surface: #111827;
-  --app-surface-alt: #1a2233;
+  --app-surface-alt: #171f2f;
   --app-border: #2a3345;
   --app-text: #e5e7eb;
   --app-text-muted: #9ca3af;
-  --app-primary-light: #16233f;
+  --app-primary-light: #1c2444;
+  --app-shadow-hover: 0 8px 20px rgba(79, 110, 247, 0.2), 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 * { box-sizing: border-box; }
@@ -66,6 +70,11 @@ html, body {
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius);
   box-shadow: var(--app-shadow);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    box-shadow: var(--app-shadow-hover);
+  }
 }
 
 .app-page {
@@ -91,4 +100,4 @@ html, body {
 // Toast (MatSnackBar) variants used by core/services/toast.service.ts
 .app-toast-success { --mdc-snackbar-container-color: #16a34a; --mdc-snackbar-supporting-text-color: #fff; }
 .app-toast-error { --mdc-snackbar-container-color: #dc2626; --mdc-snackbar-supporting-text-color: #fff; }
-.app-toast-info { --mdc-snackbar-container-color: #1a56db; --mdc-snackbar-supporting-text-color: #fff; }
+.app-toast-info { --mdc-snackbar-container-color: #4f6ef7; --mdc-snackbar-supporting-text-color: #fff; }

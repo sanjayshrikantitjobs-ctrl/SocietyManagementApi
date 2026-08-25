@@ -195,7 +195,7 @@ public class WaterTankerQueryHandlers :
         var pageNumber = Math.Max(request.PageNumber, 1);
 
         var items = await query
-            .OrderBy(w => w.Flat.FlatNumber)
+            .OrderBy(w => w.FlatId)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .Select(w => new WaterTankerCollectionDto

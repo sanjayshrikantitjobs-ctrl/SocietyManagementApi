@@ -64,7 +64,7 @@ export interface FestivalFormDialogData {
 
         <mat-form-field appearance="outline">
           <mat-label>Festival Kind</mat-label>
-          <mat-select formControlName="kind" [disabled]="!!data.festival || !!data.lockedKind">
+          <mat-select formControlName="kind" [disabled]="!!data.lockedKind">
             <mat-option [value]="1">Standalone</mat-option>
             <mat-option [value]="2">Contribution Pool (collects a shared yearly amount)</mat-option>
             <mat-option [value]="3">Child Festival (draws from a pool)</mat-option>
@@ -76,7 +76,7 @@ export interface FestivalFormDialogData {
             @if (data.lockedPoolFestivalId) {
               <input matInput [value]="data.lockedPoolFestivalName" readonly />
             } @else {
-              <mat-select formControlName="contributionPoolFestivalId" [disabled]="!!data.festival">
+              <mat-select formControlName="contributionPoolFestivalId">
                 @for (p of pools(); track p.id) { <mat-option [value]="p.id">{{ p.name }} ({{ p.year }})</mat-option> }
               </mat-select>
             }

@@ -212,7 +212,7 @@ public class MemberCommandHandlers :
         var user = new User
         {
             FirstName = member.FirstName, LastName = member.LastName, Email = loginEmail,
-            MobileNumber = member.Phone, RoleId = request.RoleId,
+            MobileNumber = member.Phone, RoleId = request.RoleId, SocietyId = member.SocietyId,
             PasswordHash = _passwordHasher.Hash(password), MustChangePassword = !adminSetPassword, IsActive = true
         };
         await _context.Users.AddAsync(user, ct);

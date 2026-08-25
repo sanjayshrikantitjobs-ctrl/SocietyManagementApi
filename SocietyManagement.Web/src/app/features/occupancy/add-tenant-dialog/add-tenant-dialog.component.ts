@@ -110,7 +110,7 @@ export class AddTenantDialogComponent {
   readonly foundPerson = signal<PersonDto | null>(null);
 
   form = this.fb.nonNullable.group({
-    phone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+    phone: ['', [Validators.pattern(/^\d{10}$/)]],
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
     email: [''],

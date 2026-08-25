@@ -255,8 +255,8 @@ public class EventRsvpQueryHandlers :
             ("headcount", true) => query.OrderByDescending(r => r.HeadCount),
             ("status", false) => query.OrderBy(r => r.Status),
             ("status", true) => query.OrderByDescending(r => r.Status),
-            ("flat", true) => query.OrderByDescending(r => r.Flat.FlatNumber),
-            _ => query.OrderBy(r => r.Flat.FlatNumber)
+            ("flat", true) => query.OrderByDescending(r => r.Flat.Id),
+            _ => query.OrderBy(r => r.Flat.Id)
         };
 
         var items = await Project(query)

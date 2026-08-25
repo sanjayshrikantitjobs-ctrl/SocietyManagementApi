@@ -17,6 +17,7 @@ public class UserProfileDto
     public string MobileNumber { get; set; } = default!;
     public string? ProfilePhotoUrl { get; set; }
     public string RoleName { get; set; } = default!;
+    public int? SocietyId { get; set; }
     public List<string> Permissions { get; set; } = new();
     public bool MustChangePassword { get; set; }
 }

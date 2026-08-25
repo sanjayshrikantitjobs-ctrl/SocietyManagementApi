@@ -102,4 +102,72 @@ public class PdfReceiptService : IPdfReceiptService
 
         return document.GeneratePdf();
     }
+
+    public byte[] GenerateFinanceReceipt(FinanceReceiptData data)
+    {
+        byte[]? logoBytes = null;
+        if (!string.IsNullOrWhiteSpace(data.SocietyLogoUrl))
+        {
+            var logoPath = Path.Combine(AppContext.BaseDirectory, "wwwroot", data.SocietyLogoUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+            if (File.Exists(logoPath))
+            {
+                logoBytes = File.ReadAllBytes(logoPath);
+            }
+        }
+
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A5);
+                page.Margin(30);
+                page.DefaultTextStyle(x => x.FontSize(11));
+
+                page.Header().Column(headerColumn =>
+                {
+                    headerColumn.Item().Row(row =>
+                    {
+                        row.RelativeItem().Column(column =>
+                        {
+                            column.Item().Text(data.SocietyName).FontSize(16).Bold().FontColor(Colors.Blue.Darken2);
+                            column.Item().Text(data.SourceLabel + " Receipt").FontSize(13).SemiBold();
+                        });
+                        if (logoBytes is not null)
+                        {
+                            row.ConstantItem(60).Height(60).Image(logoBytes).FitArea();
+                        }
+                    });
+                    headerColumn.Item().PaddingTop(8).LineHorizontal(2).LineColor(Colors.Blue.Darken2);
+                });
+
+                page.Content().PaddingVertical(15).Column(column =>
+                {
+                    column.Spacing(8);
+
+                    void Row(string label, string value)
+                    {
+                        column.Item().Row(row =>
+                        {
+                            row.ConstantItem(120).Text(label).SemiBold();
+                            row.RelativeItem().Text(value);
+                        });
+                    }
+
+                    Row("Receipt No.", data.ReceiptNumber);
+                    Row("Paid By", data.PayerName);
+                    if (!string.IsNullOrWhiteSpace(data.FlatNumber)) Row("Flat", data.FlatNumber);
+                    Row("Description", data.Description);
+                    Row("Amount", $"Rs. {data.Amount:N2}");
+                    if (!string.IsNullOrWhiteSpace(data.PaymentMethod)) Row("Payment Method", data.PaymentMethod);
+                    Row("Payment Date", data.PaymentDate.ToString("dd MMM yyyy"));
+                });
+
+                page.Footer().AlignCenter().Text(
+                    "This is a system-generated receipt and does not require a signature.")
+                    .FontSize(9).FontColor(Colors.Grey.Darken1);
+            });
+        });
+
+        return document.GeneratePdf();
+    }
 }

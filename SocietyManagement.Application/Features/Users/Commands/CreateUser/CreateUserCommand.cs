@@ -13,14 +13,21 @@ namespace SocietyManagement.Application.Features.Users.Commands.CreateUser;
 /// and MustChangePassword is set so the new user is forced to set their own
 /// password on first login; if the admin supplies one directly it's used as-is
 /// and MustChangePassword is left false, since the admin already knows it and
-/// will hand it to the user out of band.</summary>
+/// will hand it to the user out of band.
+///
+/// <see cref="SocietyId"/> is only meaningful for a Super Admin caller —
+/// creating anything for a specific society requires picking one; a scoped
+/// Admin's own SocietyId is always used instead and any client-supplied
+/// value here is ignored for them (never trust client input for the tenant
+/// boundary). Creating a SuperAdmin- or Admin-role user is Super-Admin-only.</summary>
 public record CreateUserCommand(
     string FirstName,
     string LastName,
     string Email,
     string MobileNumber,
     int RoleId,
-    string? Password = null) : IRequest<int>;
+    string? Password = null,
+    int? SocietyId = null) : IRequest<int>;
 
 public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
 {
@@ -45,17 +52,20 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, int>
     private readonly IPasswordHasher _passwordHasher;
     private readonly IEmailService _emailService;
     private readonly IAuditService _auditService;
+    private readonly ICurrentUserService _currentUserService;
 
     public CreateUserCommandHandler(
         IApplicationDbContext context,
         IPasswordHasher passwordHasher,
         IEmailService emailService,
-        IAuditService auditService)
+        IAuditService auditService,
+        ICurrentUserService currentUserService)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _emailService = emailService;
         _auditService = auditService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<int> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -71,9 +81,46 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, int>
             throw new ConflictAppException("A user with this mobile number already exists.");
         }
 
-        if (!await _context.Roles.AnyAsync(r => r.Id == request.RoleId && !r.IsDeleted, cancellationToken))
+        var role = await _context.Roles.FirstOrDefaultAsync(r => r.Id == request.RoleId && !r.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException(nameof(Role), request.RoleId);
+
+        var callerIsSuperAdmin = _currentUserService.SocietyId is null;
+        int? resolvedSocietyId;
+
+        if (role.Name == Shared.Constants.Roles.SuperAdmin)
         {
-            throw new NotFoundException(nameof(Role), request.RoleId);
+            if (!callerIsSuperAdmin)
+            {
+                throw new ForbiddenAccessException("Only a Super Admin can create another Super Admin.");
+            }
+            resolvedSocietyId = null;
+        }
+        else if (role.Name == Shared.Constants.Roles.Admin)
+        {
+            if (!callerIsSuperAdmin)
+            {
+                throw new ForbiddenAccessException("Only a Super Admin can create an Admin account.");
+            }
+            if (!request.SocietyId.HasValue)
+            {
+                throw new BadRequestAppException("A society must be selected to create an Admin for it.");
+            }
+            if (!await _context.Societies.AnyAsync(s => s.Id == request.SocietyId && !s.IsDeleted, cancellationToken))
+            {
+                throw new NotFoundException(nameof(Society), request.SocietyId.Value);
+            }
+            resolvedSocietyId = request.SocietyId;
+        }
+        else
+        {
+            // Member/Watchman: a scoped Admin's own society is always used,
+            // never the client-supplied value — only Super Admin's explicit
+            // choice is trusted, since they have no implicit society of their own.
+            resolvedSocietyId = callerIsSuperAdmin ? request.SocietyId : _currentUserService.SocietyId;
+            if (!resolvedSocietyId.HasValue)
+            {
+                throw new BadRequestAppException("A society must be selected to create this user for it.");
+            }
         }
 
         var adminSetPassword = !string.IsNullOrEmpty(request.Password);
@@ -86,6 +133,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, int>
             Email = request.Email,
             MobileNumber = request.MobileNumber,
             RoleId = request.RoleId,
+            SocietyId = resolvedSocietyId,
             PasswordHash = _passwordHasher.Hash(password),
             MustChangePassword = !adminSetPassword,
             IsActive = true

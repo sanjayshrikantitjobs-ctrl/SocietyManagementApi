@@ -134,8 +134,8 @@ public class FineRecordQueryHandlers : IRequestHandler<GetFinesQuery, PaginatedR
 
         query = (request.SortBy?.ToLowerInvariant(), request.SortDescending) switch
         {
-            ("flatnumber", false) => query.OrderBy(f => f.Flat.FlatNumber),
-            ("flatnumber", true) => query.OrderByDescending(f => f.Flat.FlatNumber),
+            ("flatnumber", false) => query.OrderBy(f => f.Flat.Id),
+            ("flatnumber", true) => query.OrderByDescending(f => f.Flat.Id),
             ("reason", false) => query.OrderBy(f => f.Reason),
             ("reason", true) => query.OrderByDescending(f => f.Reason),
             ("amount", false) => query.OrderBy(f => f.Amount),

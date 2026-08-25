@@ -8,10 +8,8 @@ import { StatCardComponent } from '../../../shared/components/stat-card/stat-car
 import { FestivalDashboardDto } from '../models/festival.model';
 import { FestivalService } from '../services/festival.service';
 
-/** Festival Command Center — KPI cards + the 4 charts scoped to Phase 1
- * (Budget vs Actual, Collection Progress, Expense Category, Sponsor
- * Contribution). Volunteers/Tasks KPI tiles render at 0 until that module
- * ships, matching the existing admin/member dashboard "light up later" pattern. */
+/** Festival Command Center — KPI cards + the 4 charts (Budget vs Actual,
+ * Collection Progress, Expense Category, Sponsor Contribution). */
 @Component({
   selector: 'app-festival-dashboard-tab',
   standalone: true,
@@ -27,9 +25,9 @@ import { FestivalService } from '../services/festival.service';
           <app-stat-card label="Spent" [value]="'₹' + (d.kpis.spent | number)" icon="shopping_cart" iconColor="#f59e0b" iconBg="#fffbeb" />
           <app-stat-card label="Remaining" [value]="'₹' + (d.kpis.remaining | number)" icon="savings" />
           <app-stat-card label="Sponsors" [value]="d.kpis.sponsorsCount" icon="handshake" />
-          <app-stat-card label="Volunteers" value="Coming soon" subtext="Next phase" icon="groups" />
+          <app-stat-card label="Volunteers" [value]="d.kpis.volunteersCount" icon="groups" />
           <app-stat-card label="Pending Expenses" [value]="d.kpis.pendingExpensesCount" icon="pending_actions" iconColor="#dc2626" iconBg="#fef2f2" />
-          <app-stat-card label="Tasks Pending" value="Coming soon" subtext="Next phase" icon="checklist" />
+          <app-stat-card label="Tasks Pending" [value]="d.kpis.tasksPendingCount" icon="checklist" />
         </div>
 
         <div class="charts-grid">
@@ -113,7 +111,7 @@ export class FestivalDashboardTabComponent implements OnInit {
       labels: d.budgetVsActual.map((c) => c.categoryName),
       datasets: [
         { label: 'Estimated', data: d.budgetVsActual.map((c) => c.estimated), backgroundColor: '#93c5fd' },
-        { label: 'Approved', data: d.budgetVsActual.map((c) => c.approved), backgroundColor: '#1a56db' },
+        { label: 'Approved', data: d.budgetVsActual.map((c) => c.approved), backgroundColor: '#4f6ef7' },
         { label: 'Actual', data: d.budgetVsActual.map((c) => c.actual), backgroundColor: '#f59e0b' }
       ]
     });
@@ -128,7 +126,7 @@ export class FestivalDashboardTabComponent implements OnInit {
       labels: d.expenseByCategory.map((c) => c.categoryName),
       datasets: [{
         data: d.expenseByCategory.map((c) => c.amount),
-        backgroundColor: ['#1a56db', '#16a34a', '#f59e0b', '#dc2626', '#8b5cf6', '#ec4899', '#0891b2', '#65a30d', '#ea580c', '#475569', '#d946ef', '#0d9488']
+        backgroundColor: ['#4f6ef7', '#16a34a', '#f59e0b', '#dc2626', '#8b5cf6', '#ec4899', '#0891b2', '#65a30d', '#ea580c', '#475569', '#d946ef', '#0d9488']
       }]
     });
 

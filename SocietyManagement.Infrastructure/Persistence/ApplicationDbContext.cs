@@ -25,6 +25,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<ParkingSlot> ParkingSlots => Set<ParkingSlot>();
     public DbSet<Staff> Staff => Set<Staff>();
     public DbSet<SocietyService> SocietyServices => Set<SocietyService>();
+    public DbSet<Expense> Expenses => Set<Expense>();
+    public DbSet<Complaint> Complaints => Set<Complaint>();
+    public DbSet<CommitteeMember> CommitteeMembers => Set<CommitteeMember>();
 
     public DbSet<Festival> Festivals => Set<Festival>();
     public DbSet<FestivalBudgetCategory> FestivalBudgetCategories => Set<FestivalBudgetCategory>();
@@ -32,6 +35,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<FestivalContribution> FestivalContributions => Set<FestivalContribution>();
     public DbSet<FestivalSponsor> FestivalSponsors => Set<FestivalSponsor>();
     public DbSet<FestivalVendor> FestivalVendors => Set<FestivalVendor>();
+    public DbSet<FestivalVolunteer> FestivalVolunteers => Set<FestivalVolunteer>();
+    public DbSet<FestivalTask> FestivalTasks => Set<FestivalTask>();
     public DbSet<FestivalExpense> FestivalExpenses => Set<FestivalExpense>();
     public DbSet<FestivalFlatTarget> FestivalFlatTargets => Set<FestivalFlatTarget>();
     public DbSet<WaterTankerCollection> WaterTankerCollections => Set<WaterTankerCollection>();

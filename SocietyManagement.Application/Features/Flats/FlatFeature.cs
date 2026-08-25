@@ -120,7 +120,13 @@ public class FlatCommandHandlers :
     }
 }
 
-public record GetFlatsQuery(int? FloorId, FlatStatus? Status, string? Search, int PageNumber = 1,
+/// <summary><see cref="SocietyId"/> is optional only for backward
+/// compatibility with existing FloorId-scoped callers (a FloorId already
+/// implies one society) — any NEW caller that omits FloorId (e.g. "every
+/// flat in my society") must supply it, since without either filter this
+/// previously returned every flat across every society with no tenant
+/// boundary at all.</summary>
+public record GetFlatsQuery(int? FloorId, FlatStatus? Status, string? Search, int? SocietyId = null, int PageNumber = 1,
     int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<FlatDto>>;
 public record GetFlatByIdQuery(int Id) : IRequest<FlatDto>;
 
@@ -146,14 +152,28 @@ public class FlatQueryHandlers :
         _currentUserService = currentUserService;
     }
 
-    public async Task<List<FlatDto>> Handle(GetMyFlatsQuery request, CancellationToken ct) =>
-        await _context.Members
+    /// <summary>Two parallel resident models can both back a login (see
+    /// User.MemberId/User.PersonId doc comments) — a login created through
+    /// the newer Occupancy/Person flow has no Member row at all, so
+    /// querying Members alone silently returns zero flats for it. Unions
+    /// both paths and de-dupes by flat id.</summary>
+    public async Task<List<FlatDto>> Handle(GetMyFlatsQuery request, CancellationToken ct)
+    {
+        var viaMember = _context.Members
             .Where(m => m.UserId == _currentUserService.UserId && !m.IsDeleted)
             .SelectMany(m => m.Residencies)
             .Where(r => !r.IsDeleted && r.MoveOutDate == null)
-            .Select(r => r.Flat)
-            .Distinct()
-            .OrderBy(f => f.FlatNumber)
+            .Select(r => r.Flat);
+
+        var viaPerson = _context.Users
+            .Where(u => u.Id == _currentUserService.UserId && u.PersonId != null)
+            .SelectMany(u => _context.OccupancyMembers
+                .Where(om => om.PersonId == u.PersonId && !om.IsDeleted && om.LeftDate == null))
+            .Where(om => !om.FlatOccupancy.IsDeleted && om.FlatOccupancy.EndDate == null)
+            .Select(om => om.FlatOccupancy.Flat);
+
+        var flats = await viaMember.Union(viaPerson)
+            .OrderBy(f => f.Id)
             .Select(f => new FlatDto
             {
                 Id = f.Id, FloorId = f.FloorId, FlatNumber = f.FlatNumber, FlatType = f.FlatType,
@@ -161,6 +181,8 @@ public class FlatQueryHandlers :
                 OwnerName = f.OwnerName, OwnerPhone = f.OwnerPhone, OwnerEmail = f.OwnerEmail
             })
             .ToListAsync(ct);
+        return flats;
+    }
 
     public async Task<PaginatedResult<FlatDto>> Handle(GetFlatsQuery request, CancellationToken ct)
     {
@@ -169,6 +191,10 @@ public class FlatQueryHandlers :
         if (request.FloorId.HasValue)
         {
             query = query.Where(f => f.FloorId == request.FloorId);
+        }
+        if (request.SocietyId.HasValue)
+        {
+            query = query.Where(f => f.Floor.Wing.Building.SocietyId == request.SocietyId);
         }
         if (request.Status.HasValue)
         {
@@ -184,7 +210,7 @@ public class FlatQueryHandlers :
         var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
         var pageNumber = Math.Max(request.PageNumber, 1);
 
-        var items = await query.OrderBy(f => f.FlatNumber)
+        var items = await query.OrderBy(f => f.Id)
             .Skip((pageNumber - 1) * pageSize).Take(pageSize)
             .Select(f => new FlatDto
             {

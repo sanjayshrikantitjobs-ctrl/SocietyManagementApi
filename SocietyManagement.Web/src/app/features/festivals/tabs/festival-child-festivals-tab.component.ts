@@ -24,7 +24,9 @@ import { FestivalService } from '../services/festival.service';
     <div class="tab-content">
       <div class="toolbar">
         <h3>Child Festivals & Events</h3>
-        <button mat-flat-button color="primary" (click)="addChild()"><mat-icon>add</mat-icon> Add Child Festival</button>
+        @if (canManage()) {
+          <button mat-flat-button color="primary" (click)="addChild()"><mat-icon>add</mat-icon> Add Child Festival</button>
+        }
       </div>
 
       @if (loading()) {
@@ -32,7 +34,7 @@ import { FestivalService } from '../services/festival.service';
       } @else if (children().length === 0) {
         <app-empty-state icon="celebration" title="No child festivals yet"
           message="Add Ganpati, Navratri, or any other festival that should draw from this shared pool."
-          actionLabel="Add Child Festival" (action)="addChild()" />
+          [actionLabel]="canManage() ? 'Add Child Festival' : null" (action)="addChild()" />
       } @else {
         <table mat-table [dataSource]="children()" class="children-table">
           <ng-container matColumnDef="name">
@@ -73,6 +75,7 @@ export class FestivalChildFestivalsTabComponent implements OnInit {
   festivalId = input.required<number>();
   poolName = input.required<string>();
   societyId = input.required<number>();
+  canManage = input(false);
 
   private readonly festivalService = inject(FestivalService);
   private readonly dialog = inject(MatDialog);

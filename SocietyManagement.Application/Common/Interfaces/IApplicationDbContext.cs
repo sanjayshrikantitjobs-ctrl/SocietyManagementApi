@@ -32,6 +32,8 @@ public interface IApplicationDbContext
     DbSet<FestivalContribution> FestivalContributions { get; }
     DbSet<FestivalSponsor> FestivalSponsors { get; }
     DbSet<FestivalVendor> FestivalVendors { get; }
+    DbSet<FestivalVolunteer> FestivalVolunteers { get; }
+    DbSet<FestivalTask> FestivalTasks { get; }
     DbSet<FestivalExpense> FestivalExpenses { get; }
     DbSet<FestivalFlatTarget> FestivalFlatTargets { get; }
     DbSet<WaterTankerCollection> WaterTankerCollections { get; }
@@ -67,6 +69,9 @@ public interface IApplicationDbContext
 
     DbSet<Staff> Staff { get; }
     DbSet<SocietyService> SocietyServices { get; }
+    DbSet<Expense> Expenses { get; }
+    DbSet<Complaint> Complaints { get; }
+    DbSet<CommitteeMember> CommitteeMembers { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -11,6 +11,8 @@ public class SocietyConfiguration : IEntityTypeConfiguration<Society>
         builder.ToTable("Societies");
         builder.HasQueryFilter(s => !s.IsDeleted);
         builder.Property(s => s.Name).HasMaxLength(200).IsRequired();
+        builder.Property(s => s.Code).HasMaxLength(10);
+        builder.HasIndex(s => s.Code).IsUnique().HasFilter("[Code] IS NOT NULL");
         builder.Property(s => s.Address).HasMaxLength(500).IsRequired();
         builder.Property(s => s.City).HasMaxLength(100).IsRequired();
         builder.Property(s => s.State).HasMaxLength(100).IsRequired();

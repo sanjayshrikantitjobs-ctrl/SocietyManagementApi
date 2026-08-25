@@ -5,6 +5,13 @@ namespace SocietyManagement.Shared.Constants;
 /// Permission system in Constants.Permissions.</summary>
 public static class Roles
 {
+    /// <summary>Platform-wide — no SocietyId, sees/manages every society,
+    /// the only role that can create a Society or another Admin.</summary>
+    public const string SuperAdmin = "SuperAdmin";
+    /// <summary>Scoped to exactly one Society via User.SocietyId — same
+    /// permission set as SuperAdmin (see Permissions.Society.Create for the
+    /// one exception), enforced by SocietyScopeFilter rather than a smaller
+    /// permission grant.</summary>
     public const string Admin = "Admin";
     public const string Member = "Member";
     public const string Watchman = "Watchman";
@@ -29,7 +36,10 @@ public static class Permissions
     public static class Society
     {
         public const string View = "society.view";
-        public const string Manage = "society.manage"; // buildings/wings/floors/flats/parking CRUD
+        public const string Manage = "society.manage"; // buildings/wings/floors/flats/parking CRUD, own society only
+        /// <summary>Create a brand-new Society. Super Admin only — never
+        /// granted to the Admin role.</summary>
+        public const string Create = "society.create";
     }
 
     public static class Users
@@ -138,6 +148,11 @@ public static class Permissions
         public const string Manage = "occupancy.manage";
         public const string ManageSettings = "occupancy.manage_settings";
         public const string ViewHistory = "occupancy.view_history";
+        /// <summary>Self-service: a resident may add a family member to
+        /// their own flat, but the handler resolves "own flat" itself from
+        /// the caller's identity — never a blanket grant to manage any
+        /// flat's occupancy the way Manage is.</summary>
+        public const string ManageOwn = "occupancy.manage_own";
     }
 
     public static class Staff
@@ -150,5 +165,11 @@ public static class Permissions
     {
         public const string View = "services.view";
         public const string Manage = "services.manage";
+    }
+
+    public static class Committee
+    {
+        public const string View = "committee.view";
+        public const string Manage = "committee.manage";
     }
 }

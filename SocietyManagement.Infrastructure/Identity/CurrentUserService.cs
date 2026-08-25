@@ -26,6 +26,15 @@ public class CurrentUserService : ICurrentUserService
 
     public string? RoleName => User?.FindFirstValue(ClaimTypes.Role);
 
+    public int? SocietyId
+    {
+        get
+        {
+            var value = User?.FindFirstValue("society_id");
+            return int.TryParse(value, out var id) ? id : null;
+        }
+    }
+
     public IReadOnlyList<string> Permissions =>
         User?.FindAll("perm").Select(c => c.Value).ToList() ?? new List<string>();
 

@@ -31,7 +31,9 @@ public class DbSeeder
     {
         await _context.Database.MigrateAsync();
 
-        var adminRole = await SeedRoleAsync(Roles.Admin, "Full access to every module.", isSystemRole: true);
+        var superAdminRole = await SeedRoleAsync(Roles.SuperAdmin,
+            "Platform-wide — creates societies, creates Admins, sees every society's data.", isSystemRole: true);
+        var adminRole = await SeedRoleAsync(Roles.Admin, "Full access to every module, scoped to one society.", isSystemRole: true);
         var memberRole = await SeedRoleAsync(Roles.Member,
             "Read-only access; can manage own profile, RSVP, vote, raise complaints.", isSystemRole: true);
         var watchmanRole = await SeedRoleAsync(Roles.Watchman,
@@ -39,7 +41,15 @@ public class DbSeeder
 
         var allPermissions = await SeedPermissionsAsync();
 
-        await SeedRolePermissionsAsync(adminRole, allPermissions);
+        // Super Admin gets everything, including Society.Create. Admin gets
+        // everything EXCEPT Society.Create — the one capability reserved
+        // for Super Admin (creating new societies); every other permission
+        // is identical between the two tiers, since the actual boundary
+        // between them is SocietyScopeFilter + User.SocietyId, not a
+        // smaller permission grant.
+        await SeedRolePermissionsAsync(superAdminRole, allPermissions);
+        await SeedRolePermissionsAsync(
+            adminRole, allPermissions.Where(p => p.Code != Permissions.Society.Create).ToList());
 
         var memberPermissionCodes = new[]
         {
@@ -48,7 +58,7 @@ public class DbSeeder
             Permissions.Notices.View, Permissions.Complaints.View, Permissions.Complaints.Create,
             Permissions.Polls.View, Permissions.Polls.Vote, Permissions.Events.View, Permissions.Events.Rsvp,
             Permissions.Visitors.View, Permissions.Visitors.Approve, Permissions.Visitors.Reject,
-            Permissions.Occupancy.View
+            Permissions.Occupancy.View, Permissions.Committee.View, Permissions.Occupancy.ManageOwn
         };
         await SeedRolePermissionsAsync(
             memberRole, allPermissions.Where(p => memberPermissionCodes.Contains(p.Code)).ToList());
@@ -61,10 +71,131 @@ public class DbSeeder
         await SeedRolePermissionsAsync(
             watchmanRole, allPermissions.Where(p => watchmanPermissionCodes.Contains(p.Code)).ToList());
 
-        await SeedAdminUserAsync(adminRole);
+        await SeedAdminUserAsync(superAdminRole);
+        await PromoteExistingAdminsToSuperAdminAsync(adminRole, superAdminRole);
+        await BackfillUserSocietyIdAsync();
+        await BackfillSocietyCodesAsync();
 
         await _context.SaveChangesAsync();
         _logger.LogInformation("Database seeding completed.");
+    }
+
+    /// <summary>Member and Flat Owner/Tenant logins never had SocietyId
+    /// populated until now, even though both underlying records
+    /// (Member.SocietyId, Person.SocietyId) already carry it — every such
+    /// login was silently unscoped (indistinguishable from Super Admin to
+    /// SocietyScopeFilter). Backfills from the two source tables; naturally
+    /// idempotent since it only ever touches rows still null. Users has no
+    /// working reverse MemberId (never actually set anywhere in the
+    /// codebase — confirmed by grep), so the Member side must join from
+    /// Members, not from Users.</summary>
+    private async Task BackfillUserSocietyIdAsync()
+    {
+        var membersWithLogin = await _context.Members
+            .Where(m => m.UserId != null && !m.IsDeleted)
+            .Select(m => new { m.UserId, m.SocietyId })
+            .ToListAsync();
+
+        var usersById = await _context.Users
+            .Where(u => u.SocietyId == null && !u.IsDeleted)
+            .ToDictionaryAsync(u => u.Id);
+
+        var backfilledCount = 0;
+        foreach (var m in membersWithLogin)
+        {
+            if (m.UserId.HasValue && usersById.TryGetValue(m.UserId.Value, out var user))
+            {
+                user.SocietyId = m.SocietyId;
+                backfilledCount++;
+            }
+        }
+
+        var usersWithPerson = await _context.Users
+            .Where(u => u.SocietyId == null && u.PersonId != null && !u.IsDeleted)
+            .Include(u => u.Person)
+            .ToListAsync();
+        foreach (var user in usersWithPerson)
+        {
+            user.SocietyId = user.Person!.SocietyId;
+            backfilledCount++;
+        }
+
+        if (backfilledCount > 0)
+        {
+            await _context.SaveChangesAsync();
+            _logger.LogWarning("Backfilled SocietyId for {Count} pre-existing Member/Occupancy login(s).", backfilledCount);
+        }
+
+        var stillOrphaned = await _context.Users
+            .Include(u => u.Role)
+            .Where(u => u.SocietyId == null && !u.IsDeleted && u.Role.Name != Roles.SuperAdmin)
+            .ToListAsync();
+        if (stillOrphaned.Count > 0)
+        {
+            _logger.LogWarning(
+                "{Count} non-SuperAdmin user(s) still have no SocietyId (no Member/Person link to backfill from) " +
+                "and need manual reassignment via the Users screen: {Emails}",
+                stillOrphaned.Count, string.Join(", ", stillOrphaned.Select(u => u.Email)));
+        }
+    }
+
+    /// <summary>Every Society created before the Society Code login gate
+    /// existed has a null Code — generate one so login enforcement (and
+    /// the Admin UI) has something to show/validate against immediately.</summary>
+    private async Task BackfillSocietyCodesAsync()
+    {
+        var uncoded = await _context.Societies.Where(s => s.Code == null && !s.IsDeleted).ToListAsync();
+        if (uncoded.Count == 0) return;
+
+        var existingCodes = (await _context.Societies.Where(s => s.Code != null).Select(s => s.Code!).ToListAsync())
+            .ToHashSet();
+
+        foreach (var society in uncoded)
+        {
+            society.Code = GenerateUniqueSocietyCode(existingCodes);
+        }
+
+        await _context.SaveChangesAsync();
+        _logger.LogInformation("Generated Society codes for {Count} pre-existing society(ies).", uncoded.Count);
+    }
+
+    private static string GenerateUniqueSocietyCode(HashSet<string> existingCodes)
+    {
+        const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        string code;
+        do
+        {
+            var random = System.Security.Cryptography.RandomNumberGenerator.GetBytes(6);
+            code = new string(random.Select(b => chars[b % chars.Length]).ToArray());
+        } while (!existingCodes.Add(code));
+
+        return code;
+    }
+
+    /// <summary>One-time migration for databases seeded before Super Admin
+    /// existed: every user still holding the Admin role with no SocietyId
+    /// (impossible for a NEW Admin, who is always created with one via the
+    /// Create-Admin-for-Society flow) is a pre-existing admin and gets
+    /// promoted to Super Admin — matching "the admin role should be
+    /// modified as super admin" directly. Naturally idempotent: after the
+    /// first run, zero Admin-role users have a null SocietyId left to
+    /// match.</summary>
+    private async Task PromoteExistingAdminsToSuperAdminAsync(Role adminRole, Role superAdminRole)
+    {
+        var legacyAdmins = await _context.Users
+            .Where(u => u.RoleId == adminRole.Id && u.SocietyId == null && !u.IsDeleted)
+            .ToListAsync();
+
+        if (legacyAdmins.Count == 0) return;
+
+        foreach (var user in legacyAdmins)
+        {
+            user.RoleId = superAdminRole.Id;
+        }
+
+        _logger.LogWarning(
+            "Promoted {Count} pre-existing Admin-role user(s) with no SocietyId to Super Admin: {Emails}",
+            legacyAdmins.Count, string.Join(", ", legacyAdmins.Select(u => u.Email)));
     }
 
     private async Task<Role> SeedRoleAsync(string name, string description, bool isSystemRole)
@@ -88,6 +219,7 @@ public class DbSeeder
             ("Members", "Delete", Permissions.Members.Delete),
             ("Society", "View", Permissions.Society.View),
             ("Society", "Manage", Permissions.Society.Manage),
+            ("Society", "Create", Permissions.Society.Create),
             ("Users", "View", Permissions.Users.View),
             ("Users", "Create", Permissions.Users.Create),
             ("Users", "Update", Permissions.Users.Update),
@@ -136,10 +268,13 @@ public class DbSeeder
             ("Occupancy", "Manage", Permissions.Occupancy.Manage),
             ("Occupancy", "ManageSettings", Permissions.Occupancy.ManageSettings),
             ("Occupancy", "ViewHistory", Permissions.Occupancy.ViewHistory),
+            ("Occupancy", "ManageOwn", Permissions.Occupancy.ManageOwn),
             ("Staff", "View", Permissions.Staff.View),
             ("Staff", "Manage", Permissions.Staff.Manage),
             ("Services", "View", Permissions.Services.View),
-            ("Services", "Manage", Permissions.Services.Manage)
+            ("Services", "Manage", Permissions.Services.Manage),
+            ("Committee", "View", Permissions.Committee.View),
+            ("Committee", "Manage", Permissions.Committee.Manage)
         };
 
         var existingCodes = await _context.Permissions.Select(p => p.Code).ToListAsync();
@@ -174,7 +309,7 @@ public class DbSeeder
         }
     }
 
-    private async Task SeedAdminUserAsync(Role adminRole)
+    private async Task SeedAdminUserAsync(Role superAdminRole)
     {
         const string adminEmail = "admin@societymanagement.local";
 
@@ -190,7 +325,7 @@ public class DbSeeder
             Email = adminEmail,
             MobileNumber = "9999999999",
             PasswordHash = _passwordHasher.Hash("Admin@12345"),
-            RoleId = adminRole.Id,
+            RoleId = superAdminRole.Id,
             IsActive = true,
             EmailConfirmed = true,
             MobileConfirmed = true,

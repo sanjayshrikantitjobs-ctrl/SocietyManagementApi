@@ -15,10 +15,6 @@ public class FestivalKpisDto
     public decimal Remaining => Budget - Spent;
     public int SponsorsCount { get; set; }
     public int PendingExpensesCount { get; set; }
-
-    // Wired to 0 in Phase 1 (Foundation) — Volunteers/Tasks land in the next
-    // phase; kept here so the Angular KPI row can be laid out to the full
-    // spec now and simply "light up" once that module ships.
     public int VolunteersCount { get; set; }
     public int TasksPendingCount { get; set; }
 }
@@ -105,6 +101,10 @@ public class FestivalDashboardQueryHandler : IRequestHandler<GetFestivalDashboar
         var sponsorsCount = sponsors.Count;
         var pendingExpensesCount = await _context.FestivalExpenses
             .CountAsync(e => e.FestivalId == request.FestivalId && !e.IsDeleted && e.ApprovalStatus == ExpenseApprovalStatus.Pending, ct);
+        var volunteersCount = await _context.FestivalVolunteers
+            .CountAsync(v => v.FestivalId == request.FestivalId && !v.IsDeleted, ct);
+        var tasksPendingCount = await _context.FestivalTasks
+            .CountAsync(t => t.FestivalId == request.FestivalId && !t.IsDeleted && t.Status != FestivalTaskStatus.Completed, ct);
 
         return new FestivalDashboardDto
         {
@@ -114,7 +114,9 @@ public class FestivalDashboardQueryHandler : IRequestHandler<GetFestivalDashboar
                 Collected = collected,
                 Spent = spent,
                 SponsorsCount = sponsorsCount,
-                PendingExpensesCount = pendingExpensesCount
+                PendingExpensesCount = pendingExpensesCount,
+                VolunteersCount = volunteersCount,
+                TasksPendingCount = tasksPendingCount
             },
             BudgetVsActual = categories,
             ExpenseByCategory = expenseByCategory,

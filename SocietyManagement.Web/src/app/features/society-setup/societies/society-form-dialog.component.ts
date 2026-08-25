@@ -43,6 +43,13 @@ import { Society } from '../../../core/models/society.model';
         <mat-form-field appearance="outline"><mat-label>Pincode</mat-label><input matInput formControlName="pincode" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Contact Email</mat-label><input matInput formControlName="contactEmail" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Contact Phone</mat-label><input matInput formControlName="contactPhone" /></mat-form-field>
+        @if (data) {
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Society Code</mat-label>
+            <input matInput formControlName="code" />
+            <mat-hint>Residents enter this at login. Share it with them.</mat-hint>
+          </mat-form-field>
+        }
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button type="button" (click)="dialogRef.close()">Cancel</button>
@@ -69,6 +76,7 @@ export class SocietyFormDialogComponent {
 
   form = this.fb.nonNullable.group({
     name: [this.data?.name ?? '', Validators.required],
+    code: [this.data?.code ?? ''],
     registrationNumber: [this.data?.registrationNumber ?? ''],
     address: [this.data?.address ?? '', Validators.required],
     city: [this.data?.city ?? '', Validators.required],

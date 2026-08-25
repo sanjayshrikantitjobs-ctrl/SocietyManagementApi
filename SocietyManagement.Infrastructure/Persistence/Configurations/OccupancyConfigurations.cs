@@ -12,7 +12,7 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
         builder.HasQueryFilter(p => !p.IsDeleted);
         builder.Property(p => p.FirstName).HasMaxLength(100).IsRequired();
         builder.Property(p => p.LastName).HasMaxLength(100).IsRequired();
-        builder.Property(p => p.Phone).HasMaxLength(20).IsRequired();
+        builder.Property(p => p.Phone).HasMaxLength(20);
         builder.Property(p => p.Email).HasMaxLength(256);
         builder.Property(p => p.WhatsAppNumber).HasMaxLength(20);
         builder.Property(p => p.PhotoUrl).HasMaxLength(500);

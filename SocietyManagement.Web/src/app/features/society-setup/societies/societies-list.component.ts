@@ -31,7 +31,7 @@ export class SocietiesListComponent implements OnInit {
 
   readonly loading = signal(true);
   readonly societies = signal<Society[]>([]);
-  readonly displayedColumns = ['name', 'city', 'buildingCount', 'contact', 'actions'];
+  readonly displayedColumns = ['name', 'code', 'city', 'buildingCount', 'contact', 'actions'];
 
   ngOnInit(): void {
     this.load();

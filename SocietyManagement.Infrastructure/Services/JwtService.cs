@@ -31,6 +31,11 @@ public class JwtService : IJwtService
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
+        if (user.SocietyId.HasValue)
+        {
+            claims.Add(new Claim("society_id", user.SocietyId.Value.ToString()));
+        }
+
         claims.AddRange(permissions.Select(p => new Claim("perm", p)));
 
         var token = new JwtSecurityToken(

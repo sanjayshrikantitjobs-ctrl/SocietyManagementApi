@@ -66,7 +66,8 @@ public class CreateFestivalCommandValidator : AbstractValidator<CreateFestivalCo
 public record UpdateFestivalCommand(
     int Id, string Name, int Year, DateTime StartDate, DateTime EndDate,
     string? Description, string? BannerImageUrl, string? CoverPhotoUrl, string? Theme,
-    FestivalVisibility Visibility, bool IsRecurring) : IRequest<Unit>;
+    FestivalVisibility Visibility, bool IsRecurring,
+    FestivalKind Kind = FestivalKind.Standalone, int? ContributionPoolFestivalId = null) : IRequest<Unit>;
 
 public class UpdateFestivalCommandValidator : AbstractValidator<UpdateFestivalCommand>
 {
@@ -76,6 +77,8 @@ public class UpdateFestivalCommandValidator : AbstractValidator<UpdateFestivalCo
         RuleFor(x => x.Name).NotEmpty().MaximumLength(150);
         RuleFor(x => x.Year).InclusiveBetween(2000, 2100);
         RuleFor(x => x.EndDate).GreaterThanOrEqualTo(x => x.StartDate);
+        RuleFor(x => x.ContributionPoolFestivalId).Null().When(x => x.Kind != FestivalKind.Child)
+            .WithMessage("Only a Child festival can be linked to a contribution pool.");
     }
 }
 
@@ -156,6 +159,26 @@ public class FestivalCommandHandlers :
         var festival = await _context.Festivals.FirstOrDefaultAsync(f => f.Id == request.Id && !f.IsDeleted, ct)
             ?? throw new NotFoundException(nameof(Festival), request.Id);
 
+        if (request.ContributionPoolFestivalId.HasValue)
+        {
+            if (request.ContributionPoolFestivalId == festival.Id)
+            {
+                throw new ConflictAppException("A festival cannot be linked to itself as a contribution pool.");
+            }
+            var pool = await _context.Festivals.FirstOrDefaultAsync(
+                f => f.Id == request.ContributionPoolFestivalId && !f.IsDeleted, ct)
+                ?? throw new NotFoundException(nameof(Festival), request.ContributionPoolFestivalId.Value);
+
+            if (pool.Kind != FestivalKind.Pool)
+            {
+                throw new ConflictAppException("The linked festival must be a Contribution Pool.");
+            }
+            if (pool.SocietyId != festival.SocietyId)
+            {
+                throw new ConflictAppException("The contribution pool must belong to the same society.");
+            }
+        }
+
         festival.Name = request.Name;
         festival.Year = request.Year;
         festival.StartDate = request.StartDate;
@@ -166,6 +189,8 @@ public class FestivalCommandHandlers :
         festival.Theme = request.Theme;
         festival.Visibility = request.Visibility;
         festival.IsRecurring = request.IsRecurring;
+        festival.Kind = request.Kind;
+        festival.ContributionPoolFestivalId = request.ContributionPoolFestivalId;
 
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditAction.Update, "Festivals", nameof(Festival), festival.Id.ToString(), ct: ct);

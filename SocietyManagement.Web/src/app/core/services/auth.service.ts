@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { Observable, catchError, map, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/api-response.model';
@@ -15,20 +16,25 @@ import { TokenStorageService } from './token-storage.service';
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly tokenStorage = inject(TokenStorageService);
+  private readonly router = inject(Router);
   private readonly baseUrl = `${environment.apiUrl}/auth`;
 
   readonly currentUser = signal<UserProfile | null>(null);
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
   readonly permissions = computed(() => this.currentUser()?.permissions ?? []);
   readonly roleName = computed(() => this.currentUser()?.roleName ?? null);
-  readonly isAdmin = computed(() => this.roleName() === 'Admin');
+  readonly isSuperAdmin = computed(() => this.roleName() === 'SuperAdmin');
+  // Super Admin has every Admin capability and then some — every existing
+  // `adminOnly` nav/route gate should keep working for them unchanged,
+  // rather than needing every one updated to list both role names.
+  readonly isAdmin = computed(() => this.roleName() === 'Admin' || this.isSuperAdmin());
 
   hasPermission(code: string): boolean {
     return this.permissions().includes(code);
   }
 
-  login(identifier: string, password: string): Observable<LoginResponse> {
-    return this.http.post<ApiResponse<LoginResponse>>(`${this.baseUrl}/login`, { identifier, password }).pipe(
+  login(identifier: string, password: string, societyCode?: string): Observable<LoginResponse> {
+    return this.http.post<ApiResponse<LoginResponse>>(`${this.baseUrl}/login`, { identifier, password, societyCode }).pipe(
       map((res) => res.data!),
       tap((data) => this.applySession(data))
     );
@@ -98,5 +104,6 @@ export class AuthService {
   private clearSession(): void {
     this.tokenStorage.clear();
     this.currentUser.set(null);
+    this.router.navigate(['/auth/login']);
   }
 }

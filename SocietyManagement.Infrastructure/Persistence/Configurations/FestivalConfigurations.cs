@@ -196,3 +196,44 @@ public class FestivalExpenseConfiguration : IEntityTypeConfiguration<FestivalExp
             .OnDelete(DeleteBehavior.SetNull);
     }
 }
+
+public class FestivalVolunteerConfiguration : IEntityTypeConfiguration<FestivalVolunteer>
+{
+    public void Configure(EntityTypeBuilder<FestivalVolunteer> builder)
+    {
+        builder.ToTable("FestivalVolunteers");
+        builder.HasQueryFilter(v => !v.IsDeleted);
+        builder.Property(v => v.Name).HasMaxLength(150).IsRequired();
+        builder.Property(v => v.Phone).HasMaxLength(20);
+        builder.Property(v => v.Email).HasMaxLength(256);
+        builder.Property(v => v.Notes).HasMaxLength(500);
+        builder.HasIndex(v => v.FestivalId);
+
+        builder.HasOne(v => v.Festival)
+            .WithMany()
+            .HasForeignKey(v => v.FestivalId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class FestivalTaskConfiguration : IEntityTypeConfiguration<FestivalTask>
+{
+    public void Configure(EntityTypeBuilder<FestivalTask> builder)
+    {
+        builder.ToTable("FestivalTasks");
+        builder.HasQueryFilter(t => !t.IsDeleted);
+        builder.Property(t => t.Title).HasMaxLength(200).IsRequired();
+        builder.Property(t => t.Description).HasMaxLength(1000);
+        builder.HasIndex(t => new { t.FestivalId, t.Status });
+
+        builder.HasOne(t => t.Festival)
+            .WithMany()
+            .HasForeignKey(t => t.FestivalId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(t => t.AssignedVolunteer)
+            .WithMany(v => v.Tasks)
+            .HasForeignKey(t => t.AssignedVolunteerId)
+            .OnDelete(DeleteBehavior.SetNull);
+    }
+}

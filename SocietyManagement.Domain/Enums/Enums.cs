@@ -122,3 +122,52 @@ public enum StaffCategory
     Plumber = 5,
     Other = 6
 }
+
+/// <summary>General operating-expense bucket for the Finance module.
+/// Festival expenses are tracked separately (FestivalExpense, its own
+/// FestivalBudgetCategoryType) and are not re-categorized under this enum
+/// — Finance reads them alongside Expense rows rather than duplicating
+/// them into this table.</summary>
+public enum ExpenseCategory
+{
+    VendorPayment = 1,
+    StaffSalary = 2,
+    Electricity = 3,
+    Repairs = 4,
+    Other = 5
+}
+
+public enum ComplaintCategory
+{
+    Plumbing = 1,
+    Electrical = 2,
+    Housekeeping = 3,
+    Security = 4,
+    Parking = 5,
+    Structural = 6,
+    Noise = 7,
+    LiftElevator = 8,
+    WaterSupply = 9,
+    Other = 10
+}
+
+public enum ComplaintPriority
+{
+    Low = 1,
+    Medium = 2,
+    High = 3
+}
+
+/// <summary>Linear workflow, enforced by guard clauses in the command
+/// handlers — the same shape as VisitorVisitStatus/ExpenseApprovalStatus.
+/// Reopen sends a Resolved complaint back to Open (not a distinct
+/// "Reopened" state) so the same Assign→InProgress→Resolve pipeline
+/// handles the second pass.</summary>
+public enum ComplaintStatus
+{
+    Open = 1,
+    Assigned = 2,
+    InProgress = 3,
+    Resolved = 4,
+    Closed = 5
+}

@@ -122,7 +122,7 @@ export class AddOwnerMemberDialogComponent {
   readonly relationshipOptions = Object.entries(PERSON_RELATIONSHIP_LABELS).map(([value, label]) => ({ value: Number(value), label }));
 
   form = this.fb.nonNullable.group({
-    phone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+    phone: ['', [Validators.pattern(/^\d{10}$/)]],
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
     email: [''],

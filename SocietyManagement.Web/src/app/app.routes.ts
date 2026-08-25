@@ -58,6 +58,37 @@ export const routes: Routes = [
         loadChildren: () => import('./features/services/services.routes').then((m) => m.SERVICES_ROUTES)
       },
       {
+        path: 'finance',
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] },
+        loadChildren: () => import('./features/finance/finance.routes').then((m) => m.FINANCE_ROUTES)
+      },
+      {
+        path: 'complaints',
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] },
+        loadChildren: () => import('./features/complaints/complaints.routes').then((m) => m.COMPLAINTS_ROUTES)
+      },
+      {
+        path: 'societies',
+        canActivate: [roleGuard],
+        data: { roles: ['SuperAdmin'] },
+        loadChildren: () => import('./features/societies/societies.routes').then((m) => m.SOCIETIES_ROUTES)
+      },
+      {
+        path: 'committee',
+        loadChildren: () => import('./features/committee/committee.routes').then((m) => m.COMMITTEE_ROUTES)
+      },
+      {
+        path: 'my-family',
+        loadChildren: () => import('./features/occupancy/my-family/my-family.routes').then((m) => m.MY_FAMILY_ROUTES)
+      },
+      {
+        path: 'my-complaints',
+        loadComponent: () =>
+          import('./features/complaints/my-complaints/my-complaints.component').then((m) => m.MyComplaintsComponent)
+      },
+      {
         path: 'my-bills',
         loadComponent: () => import('./features/maintenance/my-bills/my-bills.component').then((m) => m.MyBillsComponent)
       },

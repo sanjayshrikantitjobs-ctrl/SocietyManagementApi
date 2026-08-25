@@ -82,6 +82,13 @@ public enum VendorCategory
     Other = 8
 }
 
+public enum FestivalTaskStatus
+{
+    Pending = 1,
+    InProgress = 2,
+    Completed = 3
+}
+
 /// <summary>Per-flat status against a FestivalFlatTarget, derived at query
 /// time from TargetAmount vs the sum of that flat's FestivalContributions —
 /// never stored, same "compute don't denormalize" convention as

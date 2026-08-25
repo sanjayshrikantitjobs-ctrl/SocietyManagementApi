@@ -6,6 +6,8 @@ export interface UserProfile {
   mobileNumber: string;
   profilePhotoUrl?: string | null;
   roleName: string;
+  /** Null for Super Admin (no tenant boundary). */
+  societyId?: number | null;
   permissions: string[];
   mustChangePassword: boolean;
 }
@@ -26,6 +28,8 @@ export interface UserListItem {
   profilePhotoUrl?: string | null;
   roleId: number;
   roleName: string;
+  societyId?: number | null;
+  societyName?: string | null;
   isActive: boolean;
   isLocked: boolean;
   lastLoginAt?: string | null;

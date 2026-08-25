@@ -20,12 +20,14 @@ import { BUDGET_CATEGORY_LABELS, FestivalBudgetCategoryDto } from '../../../feat
           <button mat-icon-button (click)="viewHistory.emit()" matTooltip="Revision history">
             <mat-icon>history</mat-icon>
           </button>
-          <button mat-icon-button (click)="edit.emit()">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button mat-icon-button (click)="remove.emit()">
-            <mat-icon>delete_outline</mat-icon>
-          </button>
+          @if (canManage()) {
+            <button mat-icon-button (click)="edit.emit()">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button (click)="remove.emit()">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          }
         </div>
       </div>
       <mat-progress-bar mode="determinate" [value]="spendPercent()" [color]="spendPercent() > 100 ? 'warn' : 'primary'" />
@@ -57,6 +59,7 @@ import { BUDGET_CATEGORY_LABELS, FestivalBudgetCategoryDto } from '../../../feat
 })
 export class BudgetCardComponent {
   category = input.required<FestivalBudgetCategoryDto>();
+  canManage = input(false);
   edit = output<void>();
   remove = output<void>();
   viewHistory = output<void>();

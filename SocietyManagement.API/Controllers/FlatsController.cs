@@ -14,10 +14,10 @@ public class FlatsController : ApiControllerBase
     [HttpGet]
     [HasPermission(Permissions.Society.View)]
     public async Task<IActionResult> GetAll(
-        [FromQuery] int? floorId, [FromQuery] FlatStatus? status, [FromQuery] string? search,
+        [FromQuery] int? floorId, [FromQuery] FlatStatus? status, [FromQuery] string? search, [FromQuery] int? societyId,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
-        var result = await Mediator.Send(new GetFlatsQuery(floorId, status, search, pageNumber, pageSize));
+        var result = await Mediator.Send(new GetFlatsQuery(floorId, status, search, societyId, pageNumber, pageSize));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 

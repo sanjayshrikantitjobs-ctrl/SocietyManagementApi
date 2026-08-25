@@ -6,8 +6,9 @@ import { ApiResponse, PaginatedResult } from '../../../core/models/api-response.
 import {
   BudgetVsActualPointDto, ChildPoolStatusDto, ContributableFlatDto, ContributionPoolDto, Festival,
   FestivalBudgetCategoryDto, FestivalBudgetRevisionDto, FestivalContributionDto, FestivalDashboardDto,
-  FestivalExpenseDto, FestivalSponsorDto, FestivalVendorDto, FlatContributionDto, FlatContributionKpisDto,
-  FlatContributionStatus, PendingContributorDto, PoolSummaryDto, TopContributorDto
+  FestivalExpenseDto, FestivalSponsorDto, FestivalTaskDto, FestivalVendorDto, FestivalVolunteerDto,
+  FlatContributionDto, FlatContributionKpisDto, FlatContributionStatus, PendingContributorDto, PoolSummaryDto,
+  TopContributorDto
 } from '../models/festival.model';
 
 function toHttpParams(params: Record<string, unknown>): HttpParams {
@@ -129,6 +130,36 @@ export class FestivalService {
   }
   deleteSponsor(id: number): Observable<void> {
     return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/festival-sponsors/${id}`).pipe(map(() => void 0));
+  }
+
+  // ---- Volunteers ----------------------------------------------------------------
+  getVolunteers(festivalId: number): Observable<FestivalVolunteerDto[]> {
+    return this.http.get<ApiResponse<FestivalVolunteerDto[]>>(`${this.baseUrl}/festival-volunteers`, { params: { festivalId } })
+      .pipe(map((r) => r.data!));
+  }
+  createVolunteer(payload: Record<string, unknown>): Observable<number> {
+    return this.http.post<ApiResponse<number>>(`${this.baseUrl}/festival-volunteers`, payload).pipe(map((r) => r.data!));
+  }
+  updateVolunteer(id: number, payload: Record<string, unknown>): Observable<void> {
+    return this.http.put<ApiResponse<void>>(`${this.baseUrl}/festival-volunteers/${id}`, { id, ...payload }).pipe(map(() => void 0));
+  }
+  deleteVolunteer(id: number): Observable<void> {
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/festival-volunteers/${id}`).pipe(map(() => void 0));
+  }
+
+  // ---- Tasks -----------------------------------------------------------------------
+  getTasks(festivalId: number): Observable<FestivalTaskDto[]> {
+    return this.http.get<ApiResponse<FestivalTaskDto[]>>(`${this.baseUrl}/festival-tasks`, { params: { festivalId } })
+      .pipe(map((r) => r.data!));
+  }
+  createTask(payload: Record<string, unknown>): Observable<number> {
+    return this.http.post<ApiResponse<number>>(`${this.baseUrl}/festival-tasks`, payload).pipe(map((r) => r.data!));
+  }
+  updateTask(id: number, payload: Record<string, unknown>): Observable<void> {
+    return this.http.put<ApiResponse<void>>(`${this.baseUrl}/festival-tasks/${id}`, { id, ...payload }).pipe(map(() => void 0));
+  }
+  deleteTask(id: number): Observable<void> {
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/festival-tasks/${id}`).pipe(map(() => void 0));
   }
 
   // ---- Vendors -------------------------------------------------------------------

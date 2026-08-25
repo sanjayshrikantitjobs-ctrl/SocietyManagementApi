@@ -26,6 +26,13 @@ public class User : BaseAuditableEntity
     public int RoleId { get; set; }
     public Role Role { get; set; } = default!;
 
+    /// <summary>Null = Super Admin (no tenant boundary, every request
+    /// bypasses SocietyScopeFilter). Set = the one Society this user's
+    /// requests are confined to, regardless of Role — enforced centrally,
+    /// not by a smaller permission grant.</summary>
+    public int? SocietyId { get; set; }
+    public Society? Society { get; set; }
+
     public int? MemberId { get; set; }
     public Member? Member { get; set; }
 

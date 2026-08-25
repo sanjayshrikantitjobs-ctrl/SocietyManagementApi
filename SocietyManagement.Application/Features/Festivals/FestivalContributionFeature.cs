@@ -167,7 +167,7 @@ public class ContributionQueryHandlers :
             ("receipt", false) => query.OrderBy(c => c.ReceiptNumber),
             ("receipt", true) => query.OrderByDescending(c => c.ReceiptNumber),
             // Default and "flat": guest/no-flat contributions (FlatId null) sort last.
-            _ => query.OrderBy(c => c.FlatId == null).ThenBy(c => c.Flat!.FlatNumber)
+            _ => query.OrderBy(c => c.FlatId == null).ThenBy(c => c.FlatId)
         };
 
         var items = await query

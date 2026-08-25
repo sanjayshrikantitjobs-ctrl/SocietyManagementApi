@@ -28,7 +28,7 @@ export class UserService {
     return this.http.post<ApiResponse<number>>(this.baseUrl, payload).pipe(map((r) => r.data!));
   }
 
-  updateUser(id: number, payload: { firstName: string; lastName: string; mobileNumber: string; roleId: number; isActive: boolean }): Observable<void> {
+  updateUser(id: number, payload: { firstName: string; lastName: string; mobileNumber: string; roleId: number; isActive: boolean; societyId?: number | null }): Observable<void> {
     return this.http.put<ApiResponse<void>>(`${this.baseUrl}/${id}`, { id, ...payload }).pipe(map(() => void 0));
   }
 

@@ -30,7 +30,7 @@ public class SocietiesController : ApiControllerBase
     }
 
     [HttpPost]
-    [HasPermission(Permissions.Society.Manage)]
+    [HasPermission(Permissions.Society.Create)]
     public async Task<IActionResult> Create(CreateSocietyCommand command)
     {
         var id = await Mediator.Send(command);

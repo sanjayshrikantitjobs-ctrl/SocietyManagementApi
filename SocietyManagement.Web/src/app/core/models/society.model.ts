@@ -1,6 +1,7 @@
 export interface Society {
   id: number;
   name: string;
+  code?: string | null;
   registrationNumber?: string | null;
   address: string;
   city: string;

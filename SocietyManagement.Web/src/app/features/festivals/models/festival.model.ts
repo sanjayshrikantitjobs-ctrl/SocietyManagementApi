@@ -196,6 +196,32 @@ export interface FestivalExpenseDto {
   rejectionReason?: string | null;
 }
 
+export interface FestivalVolunteerDto {
+  id: number;
+  festivalId: number;
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  notes?: string | null;
+}
+
+export type FestivalTaskStatus = 1 | 2 | 3;
+
+export const FESTIVAL_TASK_STATUS_LABELS: Record<FestivalTaskStatus, string> = {
+  1: 'Pending', 2: 'In Progress', 3: 'Completed'
+};
+
+export interface FestivalTaskDto {
+  id: number;
+  festivalId: number;
+  title: string;
+  description?: string | null;
+  assignedVolunteerId?: number | null;
+  assignedVolunteerName?: string | null;
+  status: FestivalTaskStatus;
+  dueDate?: string | null;
+}
+
 export interface FestivalKpisDto {
   budget: number;
   collected: number;

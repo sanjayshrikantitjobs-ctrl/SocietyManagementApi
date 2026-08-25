@@ -42,6 +42,7 @@ public class GetProfileQueryHandler : IRequestHandler<GetProfileQuery, UserProfi
             MobileNumber = user.MobileNumber,
             ProfilePhotoUrl = user.ProfilePhotoUrl,
             RoleName = user.Role.Name,
+            SocietyId = user.SocietyId,
             Permissions = permissions,
             MustChangePassword = user.MustChangePassword
         };

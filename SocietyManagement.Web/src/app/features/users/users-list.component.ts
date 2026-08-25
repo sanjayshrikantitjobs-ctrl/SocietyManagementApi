@@ -9,6 +9,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { UserListItem } from '../../core/models/user.model';
+import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { DataTableComponent } from '../../shared/components/data-table/data-table.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
@@ -33,6 +34,7 @@ export class UsersListComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly toast = inject(ToastService);
+  readonly auth = inject(AuthService);
 
   readonly loading = signal(true);
   readonly users = signal<UserListItem[]>([]);
@@ -41,7 +43,12 @@ export class UsersListComponent implements OnInit {
   readonly pageSize = signal(10);
   readonly searchTerm = signal('');
   readonly sortState = signal<Sort | null>(null);
-  readonly displayedColumns = ['name', 'role', 'status', 'lastLogin', 'actions'];
+
+  get displayedColumns(): string[] {
+    return this.auth.isSuperAdmin()
+      ? ['name', 'role', 'society', 'status', 'lastLogin', 'actions']
+      : ['name', 'role', 'status', 'lastLogin', 'actions'];
+  }
 
   ngOnInit(): void {
     this.load();

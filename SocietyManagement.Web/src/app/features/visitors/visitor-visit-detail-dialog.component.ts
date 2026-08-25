@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,8 +19,8 @@ import { VISIT_STATUS_LABELS, VisitorVisitDto } from './models/visitor.model';
     <h2 mat-dialog-title>Visitor Details</h2>
     <mat-dialog-content class="content">
       <div class="photo-wrap">
-        @if (visit.visitorPhotoUrl) {
-          <img [src]="visit.visitorPhotoUrl | assetUrl" alt="" class="photo" />
+        @if (visit.visitorPhotoUrl && !photoError()) {
+          <img [src]="visit.visitorPhotoUrl | assetUrl" alt="" class="photo" (error)="photoError.set(true)" />
         } @else {
           <div class="photo photo-placeholder"><mat-icon>person</mat-icon></div>
         }
@@ -75,6 +75,7 @@ import { VISIT_STATUS_LABELS, VisitorVisitDto } from './models/visitor.model';
 export class VisitorVisitDetailDialogComponent {
   dialogRef = inject(MatDialogRef<VisitorVisitDetailDialogComponent>);
   visit = inject<VisitorVisitDto>(MAT_DIALOG_DATA);
+  readonly photoError = signal(false);
 
   get statusLabel(): string {
     return VISIT_STATUS_LABELS[this.visit.status];

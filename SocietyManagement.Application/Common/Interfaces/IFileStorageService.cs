@@ -3,7 +3,7 @@ namespace SocietyManagement.Application.Common.Interfaces;
 /// <summary>Abstraction over on-disk/blob file storage so Application handlers
 /// (banner images, sponsor logos, bill uploads) don't depend on where files
 /// physically live. Implemented by Infrastructure.Services.AzureBlobFileStorageService
-/// when AzureBlobStorage:ConnectionString is configured, LocalFileStorageService
+/// when BlobStorage:ConnectionString is configured, LocalFileStorageService
 /// otherwise (see DependencyInjection.cs) — handlers never depend on which.</summary>
 public interface IFileStorageService
 {

@@ -53,13 +53,17 @@ public static class DependencyInjection
         services.AddSignalR();
         services.AddScoped<INotificationService, NotificationService>();
 
-        // Azure Blob Storage kicks in automatically once AzureBlobStorage:ConnectionString
+        // Azure Blob Storage kicks in automatically once BlobStorage:ConnectionString
         // is set (see appsettings.json) — falls back to local disk otherwise, so
-        // environments that haven't configured it yet keep working unchanged.
-        var blobConnectionString = configuration["AzureBlobStorage:ConnectionString"];
+        // environments that haven't configured it yet keep working unchanged. Deliberately
+        // not named "AzureBlobStorage..." — Azure App Service's Environment variables blade
+        // rejects app setting names starting with "Azure" as reserved for its own
+        // platform-managed connections (confirmed live: "AppSetting with name
+        // 'AzureBlobStorage__ConnectionString' is not allowed").
+        var blobConnectionString = configuration["BlobStorage:ConnectionString"];
         if (!string.IsNullOrWhiteSpace(blobConnectionString))
         {
-            var containerName = configuration["AzureBlobStorage:ContainerName"] ?? "uploads";
+            var containerName = configuration["BlobStorage:ContainerName"] ?? "uploads";
             services.AddSingleton(new BlobServiceClient(blobConnectionString));
             services.AddScoped<IFileStorageService>(provider =>
                 new AzureBlobFileStorageService(provider.GetRequiredService<BlobServiceClient>(), containerName));

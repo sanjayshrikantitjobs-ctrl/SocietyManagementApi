@@ -1,3 +1,4 @@
+using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -52,7 +53,21 @@ public static class DependencyInjection
         services.AddSignalR();
         services.AddScoped<INotificationService, NotificationService>();
 
-        services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        // Azure Blob Storage kicks in automatically once AzureBlobStorage:ConnectionString
+        // is set (see appsettings.json) — falls back to local disk otherwise, so
+        // environments that haven't configured it yet keep working unchanged.
+        var blobConnectionString = configuration["AzureBlobStorage:ConnectionString"];
+        if (!string.IsNullOrWhiteSpace(blobConnectionString))
+        {
+            var containerName = configuration["AzureBlobStorage:ContainerName"] ?? "uploads";
+            services.AddSingleton(new BlobServiceClient(blobConnectionString));
+            services.AddScoped<IFileStorageService>(provider =>
+                new AzureBlobFileStorageService(provider.GetRequiredService<BlobServiceClient>(), containerName));
+        }
+        else
+        {
+            services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        }
         services.AddScoped<IPdfReceiptService, PdfReceiptService>();
         services.AddScoped<IMaintenanceBillPdfService, MaintenanceBillPdfService>();
         services.AddScoped<IResidentImportService, ClosedXmlResidentImportService>();

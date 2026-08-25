@@ -1,9 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { Component, inject, input, output, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { AssetUrlPipe } from '../../shared/pipes/asset-url.pipe';
 import { VisitorVisitDto } from './models/visitor.model';
+import { VisitorVisitDetailDialogComponent } from './visitor-visit-detail-dialog.component';
 
 /** Reused both embedded on the Member Dashboard and on the resident's own
  * /visitors landing page — approval must take seconds, so this is
@@ -11,15 +14,17 @@ import { VisitorVisitDto } from './models/visitor.model';
 @Component({
   selector: 'app-visitor-approval-card',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, AssetUrlPipe],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatTooltipModule, AssetUrlPipe],
   template: `
     <div class="app-card approval-card">
       <div class="header">
-        @if (visit().visitorPhotoUrl) {
-          <img [src]="visit().visitorPhotoUrl | assetUrl" alt="" class="photo" />
-        } @else {
-          <div class="photo photo-placeholder"><mat-icon>person</mat-icon></div>
-        }
+        <button type="button" class="photo-btn" (click)="openDetails()" [matTooltip]="'View details'">
+          @if (visit().visitorPhotoUrl && !photoError()) {
+            <img [src]="visit().visitorPhotoUrl | assetUrl" alt="" class="photo" (error)="photoError.set(true)" />
+          } @else {
+            <div class="photo photo-placeholder"><mat-icon>person</mat-icon></div>
+          }
+        </button>
         <div class="details">
           <strong>{{ visit().visitorName }}</strong>
           <span class="muted">{{ visit().visitorMobile }}</span>
@@ -46,7 +51,8 @@ import { VisitorVisitDto } from './models/visitor.model';
   styles: [`
     .approval-card { padding: 16px; }
     .header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-    .photo { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .photo-btn { padding: 0; border: none; background: none; cursor: pointer; border-radius: 50%; flex-shrink: 0; }
+    .photo { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; display: block; }
     .photo-placeholder { display: flex; align-items: center; justify-content: center; background: var(--app-surface-alt); color: var(--app-text-muted); }
     .details { display: flex; flex-direction: column; }
     .muted { font-size: 12px; color: var(--app-text-muted); }
@@ -58,7 +64,15 @@ import { VisitorVisitDto } from './models/visitor.model';
   `]
 })
 export class VisitorApprovalCardComponent {
+  private readonly dialog = inject(MatDialog);
+
   visit = input.required<VisitorVisitDto>();
   approve = output<number>();
   reject = output<number>();
+
+  readonly photoError = signal(false);
+
+  openDetails(): void {
+    this.dialog.open(VisitorVisitDetailDialogComponent, { data: this.visit() });
+  }
 }

@@ -21,6 +21,10 @@ public class Person : BaseAuditableEntity
 
     public string? Email { get; set; }
 
+    /// <summary>Optional — often the same as Phone, but not assumed to be;
+    /// left null means "same as mobile" for messaging purposes.</summary>
+    public string? WhatsAppNumber { get; set; }
+
     public Gender? Gender { get; set; }
 
     public DateTime? DateOfBirth { get; set; }

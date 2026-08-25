@@ -52,6 +52,7 @@ export interface AddOccupancyFamilyMemberDialogData {
         <mat-form-field appearance="outline"><mat-label>First Name</mat-label><input matInput formControlName="firstName" [readonly]="!!foundPerson()" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Last Name</mat-label><input matInput formControlName="lastName" [readonly]="!!foundPerson()" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput formControlName="email" [readonly]="!!foundPerson()" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>WhatsApp (optional)</mat-label><input matInput formControlName="whatsAppNumber" [readonly]="!!foundPerson()" /></mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Relationship</mat-label>
           <mat-select formControlName="relationship">
@@ -113,6 +114,7 @@ export class AddOccupancyFamilyMemberDialogComponent {
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
     email: [''],
+    whatsAppNumber: [''],
     relationship: [2, Validators.required],
     dateOfBirth: [''],
     photoUrl: [''],
@@ -131,6 +133,7 @@ export class AddOccupancyFamilyMemberDialogComponent {
           this.foundPerson.set(person);
           this.form.patchValue({
             firstName: person.firstName, lastName: person.lastName, email: person.email ?? '',
+            whatsAppNumber: person.whatsAppNumber ?? '',
             dateOfBirth: person.dateOfBirth?.substring(0, 10) ?? '', photoUrl: person.photoUrl ?? ''
           });
         }
@@ -141,7 +144,7 @@ export class AddOccupancyFamilyMemberDialogComponent {
 
   clearFoundPerson(): void {
     this.foundPerson.set(null);
-    this.form.patchValue({ firstName: '', lastName: '', email: '', dateOfBirth: '', photoUrl: '' });
+    this.form.patchValue({ firstName: '', lastName: '', email: '', whatsAppNumber: '', dateOfBirth: '', photoUrl: '' });
   }
 
   onPhotoSelected(event: Event): void {
@@ -169,6 +172,7 @@ export class AddOccupancyFamilyMemberDialogComponent {
       lastName: found ? undefined : value.lastName,
       phone: found ? undefined : value.phone,
       email: found ? undefined : (value.email || null),
+      whatsAppNumber: found ? undefined : (value.whatsAppNumber || null),
       dateOfBirth: found ? undefined : (value.dateOfBirth || null),
       photoUrl: found ? undefined : (value.photoUrl || null),
       relationship: value.relationship as any,

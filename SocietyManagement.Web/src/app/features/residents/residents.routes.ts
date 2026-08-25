@@ -6,7 +6,20 @@ export const RESIDENTS_ROUTES: Routes = [
     path: '',
     component: ResidentsShellComponent,
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'members' },
+      { path: '', pathMatch: 'full', redirectTo: 'overview' },
+      {
+        path: 'overview',
+        loadComponent: () =>
+          import('../occupancy/residents-overview/residents-overview.component').then((m) => m.ResidentsOverviewComponent)
+      },
+      {
+        path: 'owners',
+        loadComponent: () => import('../occupancy/owners-tab/owners-tab.component').then((m) => m.OwnersTabComponent)
+      },
+      {
+        path: 'tenants',
+        loadComponent: () => import('../occupancy/tenants-tab/tenants-tab.component').then((m) => m.TenantsTabComponent)
+      },
       {
         path: 'members',
         loadComponent: () => import('./members/members-list.component').then((m) => m.MembersListComponent)
@@ -14,11 +27,6 @@ export const RESIDENTS_ROUTES: Routes = [
       {
         path: 'vehicles',
         loadComponent: () => import('./vehicles/vehicles-list.component').then((m) => m.VehiclesListComponent)
-      },
-      {
-        path: 'emergency-contacts',
-        loadComponent: () =>
-          import('./emergency-contacts/emergency-contacts-list.component').then((m) => m.EmergencyContactsListComponent)
       },
       {
         path: 'resale-listings',
@@ -32,9 +40,11 @@ export const RESIDENTS_ROUTES: Routes = [
     loadComponent: () => import('./flat-occupancy/flat-occupancy.component').then((m) => m.FlatOccupancyComponent)
   },
   {
-    path: 'occupancy/:flatId',
-    loadComponent: () =>
-      import('../occupancy/occupancy-overview/occupancy-overview.component').then((m) => m.OccupancyOverviewComponent)
+    path: 'owners/:flatId',
+    loadComponent: () => import('../occupancy/owner-flat-detail/owner-flat-detail.component').then((m) => m.OwnerFlatDetailComponent)
+  },
+  {
+    path: 'tenants/:flatId',
+    loadComponent: () => import('../occupancy/tenant-flat-detail/tenant-flat-detail.component').then((m) => m.TenantFlatDetailComponent)
   }
 ];
-

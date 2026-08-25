@@ -142,13 +142,29 @@ public class ContributionTargetCommandHandlers :
 // ---- Queries -------------------------------------------------------------------
 public record GetFlatContributionsQuery(
     int FestivalId, string? Search, FlatContributionStatus? Status,
+    string? SortBy = null, bool SortDescending = false,
     int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<FlatContributionDto>>;
 
 public record GetFlatContributionKpisQuery(int FestivalId) : IRequest<FlatContributionKpisDto>;
 
+/// <summary>Powers the "Record Contribution" flat dropdown — every flat in
+/// the festival's society whose contribution isn't fully settled yet
+/// (Pending, PartiallyPaid, or NoTarget), ordered by flat number. Unlike
+/// GetFlatContributionsQuery this is deliberately unpaginated (dropdowns
+/// need the whole list, not a page of it) but reuses the same status
+/// computation so the two never disagree about who's already paid.</summary>
+public record GetContributableFlatsQuery(int FestivalId) : IRequest<List<ContributableFlatDto>>;
+
+public class ContributableFlatDto
+{
+    public int FlatId { get; set; }
+    public string FlatNumber { get; set; } = default!;
+}
+
 public class FlatContributionQueryHandlers :
     IRequestHandler<GetFlatContributionsQuery, PaginatedResult<FlatContributionDto>>,
-    IRequestHandler<GetFlatContributionKpisQuery, FlatContributionKpisDto>
+    IRequestHandler<GetFlatContributionKpisQuery, FlatContributionKpisDto>,
+    IRequestHandler<GetContributableFlatsQuery, List<ContributableFlatDto>>
 {
     private readonly IApplicationDbContext _context;
 
@@ -195,7 +211,7 @@ public class FlatContributionQueryHandlers :
                 FlatId = fl.Id, FlatNumber = fl.FlatNumber, TargetAmount = target, PaidAmount = paid,
                 OutstandingAmount = outstanding, Status = status
             };
-        }).ToList();
+        }).OrderBy(a=>a.FlatId).ToList();
     }
 
     public async Task<PaginatedResult<FlatContributionDto>> Handle(GetFlatContributionsQuery request, CancellationToken ct)
@@ -213,7 +229,19 @@ public class FlatContributionQueryHandlers :
             all = all.Where(f => f.Status == request.Status.Value).ToList();
         }
 
-        all = all.OrderBy(f => f.FlatNumber).ToList();
+        all = (request.SortBy?.ToLowerInvariant(), request.SortDescending) switch
+        {
+            ("target", false) => all.OrderBy(f => f.TargetAmount).ToList(),
+            ("target", true) => all.OrderByDescending(f => f.TargetAmount).ToList(),
+            ("paid", false) => all.OrderBy(f => f.PaidAmount).ToList(),
+            ("paid", true) => all.OrderByDescending(f => f.PaidAmount).ToList(),
+            ("outstanding", false) => all.OrderBy(f => f.OutstandingAmount).ToList(),
+            ("outstanding", true) => all.OrderByDescending(f => f.OutstandingAmount).ToList(),
+            ("status", false) => all.OrderBy(f => f.Status).ToList(),
+            ("status", true) => all.OrderByDescending(f => f.Status).ToList(),
+            (_, true) => all.OrderByDescending(f => f.FlatId).ToList(),
+            _ => all.OrderBy(f => f.FlatId).ToList()
+        };
 
         var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
         var pageNumber = Math.Max(request.PageNumber, 1);
@@ -237,5 +265,15 @@ public class FlatContributionQueryHandlers :
             FlatsPendingCount = all.Count(f => f.Status == FlatContributionStatus.Pending),
             FlatsNoTargetCount = all.Count(f => f.Status == FlatContributionStatus.NoTarget)
         };
+    }
+
+    public async Task<List<ContributableFlatDto>> Handle(GetContributableFlatsQuery request, CancellationToken ct)
+    {
+        var all = await BuildFlatContributionsAsync(request.FestivalId, ct);
+
+        return all.Where(f => f.Status != FlatContributionStatus.Paid)
+            .OrderBy(f => f.FlatId)
+            .Select(f => new ContributableFlatDto { FlatId = f.FlatId, FlatNumber = f.FlatNumber })
+            .ToList();
     }
 }

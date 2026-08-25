@@ -139,4 +139,16 @@ public static class Permissions
         public const string ManageSettings = "occupancy.manage_settings";
         public const string ViewHistory = "occupancy.view_history";
     }
+
+    public static class Staff
+    {
+        public const string View = "staff.view";
+        public const string Manage = "staff.manage";
+    }
+
+    public static class Services
+    {
+        public const string View = "services.view";
+        public const string Manage = "services.manage";
+    }
 }

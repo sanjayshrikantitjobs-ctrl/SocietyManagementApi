@@ -23,6 +23,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Floor> Floors => Set<Floor>();
     public DbSet<Flat> Flats => Set<Flat>();
     public DbSet<ParkingSlot> ParkingSlots => Set<ParkingSlot>();
+    public DbSet<Staff> Staff => Set<Staff>();
+    public DbSet<SocietyService> SocietyServices => Set<SocietyService>();
 
     public DbSet<Festival> Festivals => Set<Festival>();
     public DbSet<FestivalBudgetCategory> FestivalBudgetCategories => Set<FestivalBudgetCategory>();

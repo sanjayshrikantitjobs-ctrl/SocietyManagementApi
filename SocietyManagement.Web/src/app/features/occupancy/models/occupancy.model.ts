@@ -21,6 +21,7 @@ export interface PersonDto {
   lastName: string;
   phone: string;
   email?: string | null;
+  whatsAppNumber?: string | null;
   gender?: Gender | null;
   dateOfBirth?: string | null;
   photoUrl?: string | null;
@@ -49,6 +50,7 @@ export interface OccupancyMemberDto {
   personName: string;
   phone: string;
   email?: string | null;
+  whatsAppNumber?: string | null;
   photoUrl?: string | null;
   relationship: PersonRelationship;
   isPrimary: boolean;
@@ -100,9 +102,69 @@ export interface PersonFieldsPayload {
   lastName?: string | null;
   phone?: string | null;
   email?: string | null;
+  whatsAppNumber?: string | null;
   gender?: Gender | null;
   dateOfBirth?: string | null;
   photoUrl?: string | null;
   aadhaarNumber?: string | null;
   panNumber?: string | null;
+}
+
+export interface ResidentsOverviewSummaryDto {
+  totalFlats: number;
+  ownerOccupiedFlats: number;
+  tenantOccupiedFlats: number;
+  vacantFlats: number;
+  totalMembers: number;
+  totalOwners: number;
+  totalTenants: number;
+}
+
+export interface RecentOccupancyChangeDto {
+  flatId: number;
+  flatNumber: string;
+  type: OccupancyType;
+  movedIn: boolean;
+  personName: string;
+  changeDate: string;
+}
+
+export interface FlatOwnershipGridDto {
+  flatId: number;
+  flatNumber: string;
+  buildingName?: string | null;
+  wingName?: string | null;
+  hasOwner: boolean;
+  primaryOwnerName?: string | null;
+  primaryOwnerPhone?: string | null;
+  primaryOwnerWhatsApp?: string | null;
+  memberCount: number;
+}
+
+export interface FlatTenancyGridDto {
+  flatId: number;
+  flatNumber: string;
+  buildingName?: string | null;
+  wingName?: string | null;
+  hasTenant: boolean;
+  primaryTenantName?: string | null;
+  primaryTenantPhone?: string | null;
+  primaryTenantWhatsApp?: string | null;
+  memberCount: number;
+}
+
+export interface PersonLoginDto {
+  userId: number;
+  email: string;
+  mobileNumber: string;
+  roleName: string;
+  isActive: boolean;
+}
+
+export interface BulkLoginResultDto {
+  flatId: number;
+  flatNumber: string;
+  personName?: string | null;
+  created: boolean;
+  skipReason?: string | null;
 }

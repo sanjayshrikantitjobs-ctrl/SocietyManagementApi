@@ -54,6 +54,7 @@ export interface AddOwnerMemberDialogData {
         <mat-form-field appearance="outline"><mat-label>First Name</mat-label><input matInput formControlName="firstName" [readonly]="!!foundPerson()" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Last Name</mat-label><input matInput formControlName="lastName" [readonly]="!!foundPerson()" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput formControlName="email" [readonly]="!!foundPerson()" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>WhatsApp (optional)</mat-label><input matInput formControlName="whatsAppNumber" [readonly]="!!foundPerson()" /></mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Gender</mat-label>
           <mat-select formControlName="gender" [disabled]="!!foundPerson()">
@@ -125,6 +126,7 @@ export class AddOwnerMemberDialogComponent {
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
     email: [''],
+    whatsAppNumber: [''],
     gender: [null as number | null],
     dateOfBirth: [''],
     relationship: [1, Validators.required],
@@ -147,7 +149,8 @@ export class AddOwnerMemberDialogComponent {
           this.foundPerson.set(person);
           this.form.patchValue({
             firstName: person.firstName, lastName: person.lastName, email: person.email ?? '',
-            gender: person.gender ?? null, dateOfBirth: person.dateOfBirth?.substring(0, 10) ?? '',
+            whatsAppNumber: person.whatsAppNumber ?? '', gender: person.gender ?? null,
+            dateOfBirth: person.dateOfBirth?.substring(0, 10) ?? '',
             aadhaarNumber: person.aadhaarNumber ?? '', panNumber: person.panNumber ?? '', photoUrl: person.photoUrl ?? ''
           });
         }
@@ -158,7 +161,7 @@ export class AddOwnerMemberDialogComponent {
 
   clearFoundPerson(): void {
     this.foundPerson.set(null);
-    this.form.patchValue({ firstName: '', lastName: '', email: '', gender: null, dateOfBirth: '', aadhaarNumber: '', panNumber: '', photoUrl: '' });
+    this.form.patchValue({ firstName: '', lastName: '', email: '', whatsAppNumber: '', gender: null, dateOfBirth: '', aadhaarNumber: '', panNumber: '', photoUrl: '' });
   }
 
   onPhotoSelected(event: Event): void {
@@ -187,6 +190,7 @@ export class AddOwnerMemberDialogComponent {
       lastName: found ? undefined : value.lastName,
       phone: found ? undefined : value.phone,
       email: found ? undefined : (value.email || null),
+      whatsAppNumber: found ? undefined : (value.whatsAppNumber || null),
       gender: found ? undefined : value.gender,
       dateOfBirth: found ? undefined : (value.dateOfBirth || null),
       photoUrl: found ? undefined : (value.photoUrl || null),

@@ -46,6 +46,18 @@ export const routes: Routes = [
         loadChildren: () => import('./features/residents/residents.routes').then((m) => m.RESIDENTS_ROUTES)
       },
       {
+        path: 'staff',
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] },
+        loadChildren: () => import('./features/staff/staff.routes').then((m) => m.STAFF_ROUTES)
+      },
+      {
+        path: 'services',
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] },
+        loadChildren: () => import('./features/services/services.routes').then((m) => m.SERVICES_ROUTES)
+      },
+      {
         path: 'my-bills',
         loadComponent: () => import('./features/maintenance/my-bills/my-bills.component').then((m) => m.MyBillsComponent)
       },

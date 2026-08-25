@@ -29,6 +29,14 @@ public class User : BaseAuditableEntity
     public int? MemberId { get; set; }
     public Member? Member { get; set; }
 
+    /// <summary>The Owner/Tenant Occupancy model's equivalent of MemberId —
+    /// deliberately single-source-of-truth (unlike Member.UserId/User.MemberId's
+    /// existing dual-column pattern): "does this Person have a login" is
+    /// answered by querying Users.Any(u => u.PersonId == personId), no
+    /// mirrored column on Person to keep in sync.</summary>
+    public int? PersonId { get; set; }
+    public Person? Person { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     public bool IsLocked { get; set; }

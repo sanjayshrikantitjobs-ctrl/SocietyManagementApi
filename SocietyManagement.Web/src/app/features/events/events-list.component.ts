@@ -14,6 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { DataTableComponent } from '../../shared/components/data-table/data-table.component';
+import { FestivalsEventsTabsComponent } from '../../shared/components/festivals-events-tabs/festivals-events-tabs.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PromptDialogComponent } from '../../shared/components/prompt-dialog/prompt-dialog.component';
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
@@ -27,7 +28,8 @@ import { EventService } from './services/event.service';
   standalone: true,
   imports: [
     CommonModule, FormsModule, RouterLink, MatButtonModule, MatChipsModule, MatFormFieldModule,
-    MatIconModule, MatSelectModule, MatTableModule, MatTooltipModule, DataTableComponent, PageHeaderComponent
+    MatIconModule, MatSelectModule, MatTableModule, MatTooltipModule, DataTableComponent,
+    FestivalsEventsTabsComponent, PageHeaderComponent
   ],
   template: `
     <div class="app-page">
@@ -39,6 +41,8 @@ import { EventService } from './services/event.service';
           </button>
         }
       </app-page-header>
+
+      <app-festivals-events-tabs />
 
       <div class="toolbar">
         <mat-form-field appearance="outline" subscriptSizing="dynamic" class="status-filter">

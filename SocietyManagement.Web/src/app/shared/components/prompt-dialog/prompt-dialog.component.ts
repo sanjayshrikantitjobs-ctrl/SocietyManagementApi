@@ -35,9 +35,9 @@ export interface PromptDialogData {
     MatFormFieldModule, MatInputModule, MatSelectModule
   ],
   template: `
-    <h2 mat-dialog-title>{{ data.title }}</h2>
+    <h2 mat-dialog-title class="dialog-title">{{ data.title }}</h2>
     <form [formGroup]="form" (ngSubmit)="submit()">
-      <mat-dialog-content>
+      <mat-dialog-content class="dialog-content">
         @for (field of data.fields; track field.key) {
           @if (field.type === 'checkbox') {
             <mat-checkbox [formControlName]="field.key" class="checkbox-field">{{ field.label }}</mat-checkbox>
@@ -59,7 +59,7 @@ export interface PromptDialogData {
           }
         }
       </mat-dialog-content>
-      <mat-dialog-actions align="end">
+      <mat-dialog-actions align="end" class="dialog-actions">
         <button mat-button type="button" (click)="dialogRef.close()">Cancel</button>
         <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">
           {{ data.submitLabel ?? 'Save' }}
@@ -67,7 +67,13 @@ export interface PromptDialogData {
       </mat-dialog-actions>
     </form>
   `,
-  styles: [`.full-width { width: 100%; } .checkbox-field { display: block; margin: 8px 0 16px; }`]
+  styles: [`
+    .dialog-title { padding: 0 24px; margin: 0; }
+    .dialog-content { padding: 8px 24px 4px !important; }
+    .dialog-actions { padding: 8px 24px 16px !important; }
+    .full-width { width: 100%; }
+    .checkbox-field { display: block; margin: 8px 0 16px; }
+  `]
 })
 export class PromptDialogComponent {
   dialogRef = inject(MatDialogRef<PromptDialogComponent>);

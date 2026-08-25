@@ -57,8 +57,10 @@ export interface ResidencySummaryDto {
 
 export interface VehicleDto {
   id: number;
-  memberId: number;
+  memberId?: number | null;
   memberName?: string | null;
+  flatId?: number | null;
+  flatNumber?: string | null;
   vehicleType: VehicleType;
   registrationNumber: string;
   make?: string | null;

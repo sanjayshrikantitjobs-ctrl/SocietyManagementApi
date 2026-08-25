@@ -31,6 +31,7 @@ public class TopContributorDto
 {
     public string MemberName { get; set; } = default!;
     public string? FlatNumber { get; set; }
+    public int? FlatId { get; set; }
     public decimal TotalAmount { get; set; }
     public int ContributionCount { get; set; }
 }
@@ -113,6 +114,7 @@ public class ContributionCommandHandlers : IRequestHandler<CreateContributionCom
 // ---- Queries -------------------------------------------------------------------
 public record GetContributionsQuery(
     int FestivalId, string? Search, ContributionPaymentMethod? PaymentMethod,
+    string? SortBy = null, bool SortDescending = false,
     int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<FestivalContributionDto>>;
 
 public record GetTopContributorsQuery(int FestivalId, int Top = 10) : IRequest<List<TopContributorDto>>;
@@ -152,8 +154,23 @@ public class ContributionQueryHandlers :
         var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
         var pageNumber = Math.Max(request.PageNumber, 1);
 
+        query = (request.SortBy?.ToLowerInvariant(), request.SortDescending) switch
+        {
+            ("donor", false) => query.OrderBy(c => c.MemberName),
+            ("donor", true) => query.OrderByDescending(c => c.MemberName),
+            ("amount", false) => query.OrderBy(c => c.Amount),
+            ("amount", true) => query.OrderByDescending(c => c.Amount),
+            ("method", false) => query.OrderBy(c => c.PaymentMethod),
+            ("method", true) => query.OrderByDescending(c => c.PaymentMethod),
+            ("date", false) => query.OrderBy(c => c.PaymentDate),
+            ("date", true) => query.OrderByDescending(c => c.PaymentDate),
+            ("receipt", false) => query.OrderBy(c => c.ReceiptNumber),
+            ("receipt", true) => query.OrderByDescending(c => c.ReceiptNumber),
+            // Default and "flat": guest/no-flat contributions (FlatId null) sort last.
+            _ => query.OrderBy(c => c.FlatId == null).ThenBy(c => c.Flat!.FlatNumber)
+        };
+
         var items = await query
-            .OrderByDescending(c => c.PaymentDate)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .Select(c => new FestivalContributionDto
@@ -179,11 +196,12 @@ public class ContributionQueryHandlers :
     public async Task<List<TopContributorDto>> Handle(GetTopContributorsQuery request, CancellationToken ct) =>
         await _context.FestivalContributions
             .Where(c => c.FestivalId == request.FestivalId && !c.IsAnonymous)
-            .GroupBy(c => new { c.MemberName, FlatNumber = c.Flat != null ? c.Flat.FlatNumber : null })
+            .GroupBy(c => new { c.MemberName, FlatNumber = c.Flat != null ? c.Flat.FlatNumber : null, c.FlatId })
             .Select(g => new TopContributorDto
             {
                 MemberName = g.Key.MemberName,
                 FlatNumber = g.Key.FlatNumber,
+                FlatId = g.Key.FlatId,
                 TotalAmount = g.Sum(c => c.Amount),
                 ContributionCount = g.Count()
             })
@@ -205,7 +223,7 @@ public class ContributionQueryHandlers :
         return await _context.Flats
             .Where(fl => fl.Floor.Wing.Building.SocietyId == festival.SocietyId && !contributedFlatIds.Contains(fl.Id))
             .Select(fl => new PendingContributorDto { FlatId = fl.Id, FlatNumber = fl.FlatNumber })
-            .OrderBy(fl => fl.FlatNumber)
+            .OrderBy(fl => fl.FlatId)
             .ToListAsync(ct);
     }
 
@@ -217,8 +235,11 @@ public class ContributionQueryHandlers :
             {
                 c.ReceiptNumber,
                 SocietyName = c.Festival.Society.Name,
+                SocietyLogoUrl = c.Festival.Society.LogoUrl,
+                FestivalId = c.FestivalId,
                 FestivalName = c.Festival.Name,
                 c.MemberName,
+                c.FlatId,
                 FlatNumber = c.Flat != null ? c.Flat.FlatNumber : null,
                 c.Amount,
                 c.PaymentMethod,
@@ -228,8 +249,23 @@ public class ContributionQueryHandlers :
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException(nameof(FestivalContribution), request.Id);
 
+        decimal? targetAmount = null;
+        var totalPaidForFlat = data.Amount;
+        if (data.FlatId.HasValue)
+        {
+            targetAmount = await _context.FestivalFlatTargets
+                .Where(t => t.FestivalId == data.FestivalId && t.FlatId == data.FlatId)
+                .Select(t => (decimal?)t.TargetAmount)
+                .FirstOrDefaultAsync(ct);
+
+            totalPaidForFlat = await _context.FestivalContributions
+                .Where(c => c.FestivalId == data.FestivalId && c.FlatId == data.FlatId)
+                .SumAsync(c => c.Amount, ct);
+        }
+
         return _pdfReceiptService.GenerateContributionReceipt(new ContributionReceiptData(
-            data.ReceiptNumber, data.SocietyName, data.FestivalName, data.MemberName, data.FlatNumber,
-            data.Amount, data.PaymentMethod.ToString(), data.PaymentDate, data.TransactionId));
+            data.ReceiptNumber, data.SocietyName, data.SocietyLogoUrl, data.FestivalName, data.MemberName, data.FlatNumber,
+            data.Amount, data.PaymentMethod.ToString(), data.PaymentDate, data.TransactionId,
+            targetAmount, totalPaidForFlat));
     }
 }

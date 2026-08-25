@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using SocietyManagement.Application.Common.Interfaces;
 using SocietyManagement.Domain.Entities;
 using SocietyManagement.Domain.Enums;
+using SocietyManagement.Shared.Constants;
 using SocietyManagement.Shared.Exceptions;
+using SocietyManagement.Shared.Wrappers;
 
 namespace SocietyManagement.Application.Features.Occupancy;
 
@@ -15,6 +17,7 @@ public class OccupancyMemberDto
     public string PersonName { get; set; } = default!;
     public string Phone { get; set; } = default!;
     public string? Email { get; set; }
+    public string? WhatsAppNumber { get; set; }
     public string? PhotoUrl { get; set; }
     public PersonRelationship Relationship { get; set; }
     public bool IsPrimary { get; set; }
@@ -44,6 +47,34 @@ public class FlatOccupancyOverviewDto
     public FlatOccupancyDto? CurrentTenantOccupancy { get; set; }
 }
 
+/// <summary>One row of the Owners tab's society-wide grid.</summary>
+public class FlatOwnershipGridDto
+{
+    public int FlatId { get; set; }
+    public string FlatNumber { get; set; } = default!;
+    public string? BuildingName { get; set; }
+    public string? WingName { get; set; }
+    public bool HasOwner { get; set; }
+    public string? PrimaryOwnerName { get; set; }
+    public string? PrimaryOwnerPhone { get; set; }
+    public string? PrimaryOwnerWhatsApp { get; set; }
+    public int MemberCount { get; set; }
+}
+
+/// <summary>One row of the Tenants tab's society-wide grid.</summary>
+public class FlatTenancyGridDto
+{
+    public int FlatId { get; set; }
+    public string FlatNumber { get; set; } = default!;
+    public string? BuildingName { get; set; }
+    public string? WingName { get; set; }
+    public bool HasTenant { get; set; }
+    public string? PrimaryTenantName { get; set; }
+    public string? PrimaryTenantPhone { get; set; }
+    public string? PrimaryTenantWhatsApp { get; set; }
+    public int MemberCount { get; set; }
+}
+
 // ---- Commands ----------------------------------------------------------------
 
 /// <summary>The "Add Owner Member" dialog's target. Adds the person to the
@@ -51,7 +82,7 @@ public class FlatOccupancyOverviewDto
 /// exists yet. Owners are additive within one episode (co-owners), not a
 /// close-and-reopen like Tenant.</summary>
 public record AddOwnerMemberCommand(
-    int FlatId, int? PersonId, string? FirstName, string? LastName, string? Phone, string? Email,
+    int FlatId, int? PersonId, string? FirstName, string? LastName, string? Phone, string? Email, string? WhatsAppNumber,
     Gender? Gender, DateTime? DateOfBirth, string? PhotoUrl, string? AadhaarNumber, string? PanNumber,
     PersonRelationship Relationship, bool IsPrimary, DateTime MoveInDate) : IRequest<int>;
 
@@ -74,7 +105,7 @@ public class AddOwnerMemberCommandValidator : AbstractValidator<AddOwnerMemberCo
 /// currently-open Tenant episode on the flat first (rule: only one active
 /// Tenant occupancy per flat; previous auto-closes before a new one starts).</summary>
 public record AddTenantOccupancyCommand(
-    int FlatId, int? PersonId, string? FirstName, string? LastName, string? Phone, string? Email,
+    int FlatId, int? PersonId, string? FirstName, string? LastName, string? Phone, string? Email, string? WhatsAppNumber,
     Gender? Gender, DateTime? DateOfBirth, string? PhotoUrl, string? AadhaarNumber, string? PanNumber,
     DateTime MoveInDate) : IRequest<int>;
 
@@ -94,7 +125,7 @@ public class AddTenantOccupancyCommandValidator : AbstractValidator<AddTenantOcc
 
 /// <summary>"Additional residents added afterward" — never Primary.</summary>
 public record AddTenantFamilyMemberCommand(
-    int FlatOccupancyId, int? PersonId, string? FirstName, string? LastName, string? Phone, string? Email,
+    int FlatOccupancyId, int? PersonId, string? FirstName, string? LastName, string? Phone, string? Email, string? WhatsAppNumber,
     Gender? Gender, DateTime? DateOfBirth, string? PhotoUrl, string? AadhaarNumber, string? PanNumber,
     PersonRelationship Relationship, DateTime MoveInDate) : IRequest<int>;
 
@@ -150,7 +181,7 @@ public class FlatOccupancyCommandHandlers :
     }
 
     private async Task<Person> ResolveOrCreatePersonAsync(
-        int societyId, int? personId, string? firstName, string? lastName, string? phone, string? email,
+        int societyId, int? personId, string? firstName, string? lastName, string? phone, string? email, string? whatsAppNumber,
         Gender? gender, DateTime? dateOfBirth, string? photoUrl, string? aadhaarNumber, string? panNumber,
         CancellationToken ct)
     {
@@ -173,7 +204,7 @@ public class FlatOccupancyCommandHandlers :
         var newPerson = new Person
         {
             SocietyId = societyId, FirstName = firstName!, LastName = lastName!, Phone = phone!, Email = email,
-            Gender = gender, DateOfBirth = dateOfBirth, PhotoUrl = photoUrl,
+            WhatsAppNumber = whatsAppNumber, Gender = gender, DateOfBirth = dateOfBirth, PhotoUrl = photoUrl,
             AadhaarNumber = aadhaarNumber, PanNumber = panNumber
         };
         await _context.People.AddAsync(newPerson, ct);
@@ -185,7 +216,7 @@ public class FlatOccupancyCommandHandlers :
     {
         var societyId = await GetFlatSocietyIdAsync(request.FlatId, ct);
         var person = await ResolveOrCreatePersonAsync(
-            societyId, request.PersonId, request.FirstName, request.LastName, request.Phone, request.Email,
+            societyId, request.PersonId, request.FirstName, request.LastName, request.Phone, request.Email, request.WhatsAppNumber,
             request.Gender, request.DateOfBirth, request.PhotoUrl, request.AadhaarNumber, request.PanNumber, ct);
 
         var occupancy = await _context.FlatOccupancies.FirstOrDefaultAsync(
@@ -230,7 +261,7 @@ public class FlatOccupancyCommandHandlers :
     {
         var societyId = await GetFlatSocietyIdAsync(request.FlatId, ct);
         var person = await ResolveOrCreatePersonAsync(
-            societyId, request.PersonId, request.FirstName, request.LastName, request.Phone, request.Email,
+            societyId, request.PersonId, request.FirstName, request.LastName, request.Phone, request.Email, request.WhatsAppNumber,
             request.Gender, request.DateOfBirth, request.PhotoUrl, request.AadhaarNumber, request.PanNumber, ct);
 
         var previous = await _context.FlatOccupancies.Include(o => o.Members)
@@ -285,7 +316,7 @@ public class FlatOccupancyCommandHandlers :
 
         var societyId = await GetFlatSocietyIdAsync(occupancy.FlatId, ct);
         var person = await ResolveOrCreatePersonAsync(
-            societyId, request.PersonId, request.FirstName, request.LastName, request.Phone, request.Email,
+            societyId, request.PersonId, request.FirstName, request.LastName, request.Phone, request.Email, request.WhatsAppNumber,
             request.Gender, request.DateOfBirth, request.PhotoUrl, request.AadhaarNumber, request.PanNumber, ct);
 
         if (await _context.OccupancyMembers.AnyAsync(
@@ -375,10 +406,23 @@ public record GetOccupancyMembersQuery(int FlatOccupancyId) : IRequest<List<Occu
 /// so history can never be removed.</summary>
 public record GetOccupancyHistoryQuery(int FlatId, OccupancyType? Type) : IRequest<List<FlatOccupancyDto>>;
 
+/// <summary>Owners tab's primary entry point — every flat in the society
+/// with its current owner summary, sortable/searchable/paginated.</summary>
+public record GetFlatsOwnershipGridQuery(
+    int SocietyId, string? Search, string? SortBy = null, bool SortDescending = false,
+    int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<FlatOwnershipGridDto>>;
+
+/// <summary>Tenants tab's primary entry point — mirrors GetFlatsOwnershipGridQuery.</summary>
+public record GetFlatsTenancyGridQuery(
+    int SocietyId, string? Search, string? SortBy = null, bool SortDescending = false,
+    int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<FlatTenancyGridDto>>;
+
 public class FlatOccupancyQueryHandlers :
     IRequestHandler<GetFlatOccupancyOverviewQuery, FlatOccupancyOverviewDto>,
     IRequestHandler<GetOccupancyMembersQuery, List<OccupancyMemberDto>>,
-    IRequestHandler<GetOccupancyHistoryQuery, List<FlatOccupancyDto>>
+    IRequestHandler<GetOccupancyHistoryQuery, List<FlatOccupancyDto>>,
+    IRequestHandler<GetFlatsOwnershipGridQuery, PaginatedResult<FlatOwnershipGridDto>>,
+    IRequestHandler<GetFlatsTenancyGridQuery, PaginatedResult<FlatTenancyGridDto>>
 {
     private readonly IApplicationDbContext _context;
 
@@ -389,7 +433,7 @@ public class FlatOccupancyQueryHandlers :
             .Select(m => new OccupancyMemberDto
             {
                 Id = m.Id, PersonId = m.PersonId, PersonName = m.Person.FirstName + " " + m.Person.LastName,
-                Phone = m.Person.Phone, Email = m.Person.Email, PhotoUrl = m.Person.PhotoUrl,
+                Phone = m.Person.Phone, Email = m.Person.Email, WhatsAppNumber = m.Person.WhatsAppNumber, PhotoUrl = m.Person.PhotoUrl,
                 Relationship = m.Relationship, IsPrimary = m.IsPrimary, ResidentStatus = m.ResidentStatus,
                 JoinedDate = m.JoinedDate, LeftDate = m.LeftDate
             });
@@ -402,7 +446,7 @@ public class FlatOccupancyQueryHandlers :
                 .Select(m => new OccupancyMemberDto
                 {
                     Id = m.Id, PersonId = m.PersonId, PersonName = m.Person.FirstName + " " + m.Person.LastName,
-                    Phone = m.Person.Phone, Email = m.Person.Email, PhotoUrl = m.Person.PhotoUrl,
+                    Phone = m.Person.Phone, Email = m.Person.Email, WhatsAppNumber = m.Person.WhatsAppNumber, PhotoUrl = m.Person.PhotoUrl,
                     Relationship = m.Relationship, IsPrimary = m.IsPrimary, ResidentStatus = m.ResidentStatus,
                     JoinedDate = m.JoinedDate, LeftDate = m.LeftDate
                 }).ToList(),
@@ -447,5 +491,121 @@ public class FlatOccupancyQueryHandlers :
             query = query.Where(o => o.Type == request.Type.Value);
         }
         return await ProjectOccupancy(query.OrderByDescending(o => o.StartDate)).ToListAsync(ct);
+    }
+
+    /// <summary>Flat numbers here are plain digit strings (101, 1001, ...)
+    /// where floor*100+unit already encodes the correct physical order, but
+    /// a plain string OrderBy sorts "1001" before "101" lexicographically.
+    /// Parse numerically so the default/flatnumber sort reads top-to-bottom
+    /// the way a resident would expect (101, 102, ..., 1001, 1002, ...).
+    /// Falls back to int.MaxValue (sorts last) for any non-numeric number.</summary>
+    private static int NaturalFlatOrder(string flatNumber) => int.TryParse(flatNumber, out var n) ? n : int.MaxValue;
+
+    /// <summary>Shared by both grid queries: every current (LeftDate==null)
+    /// member of a given occupancy Type across the whole society, grouped by
+    /// flat — the building block both GetFlatsOwnershipGridQuery and
+    /// GetFlatsTenancyGridQuery reduce down to their own DTO shape.</summary>
+    private async Task<Dictionary<int, List<(bool IsPrimary, string Name, string Phone, string? WhatsApp)>>> LoadCurrentMembersByFlatAsync(
+        int societyId, OccupancyType type, CancellationToken ct)
+    {
+        var members = await _context.OccupancyMembers
+            .Where(m => !m.IsDeleted && m.LeftDate == null && m.FlatOccupancy.Type == type && m.FlatOccupancy.EndDate == null
+                && m.FlatOccupancy.Flat.Floor.Wing.Building.SocietyId == societyId)
+            .Select(m => new { FlatId = m.FlatOccupancy.FlatId, m.IsPrimary, Name = m.Person.FirstName + " " + m.Person.LastName, m.Person.Phone, m.Person.WhatsAppNumber })
+            .ToListAsync(ct);
+
+        return members
+            .GroupBy(m => m.FlatId)
+            .ToDictionary(g => g.Key, g => g.Select(m => (m.IsPrimary, m.Name, m.Phone, m.WhatsAppNumber)).ToList());
+    }
+
+    public async Task<PaginatedResult<FlatOwnershipGridDto>> Handle(GetFlatsOwnershipGridQuery request, CancellationToken ct)
+    {
+        var flats = await _context.Flats
+            .Where(fl => fl.Floor.Wing.Building.SocietyId == request.SocietyId && !fl.IsDeleted)
+            .Select(fl => new { fl.Id, fl.FlatNumber, BuildingName = fl.Floor.Wing.Building.Name, WingName = fl.Floor.Wing.Name })
+            .ToListAsync(ct);
+
+        var byFlat = await LoadCurrentMembersByFlatAsync(request.SocietyId, OccupancyType.Owner, ct);
+
+        var all = flats.Select(fl =>
+        {
+            var group = byFlat.GetValueOrDefault(fl.Id);
+            var primary = group?.FirstOrDefault(m => m.IsPrimary) ?? group?.FirstOrDefault();
+            return new FlatOwnershipGridDto
+            {
+                FlatId = fl.Id, FlatNumber = fl.FlatNumber, BuildingName = fl.BuildingName, WingName = fl.WingName,
+                HasOwner = group is { Count: > 0 }, PrimaryOwnerName = primary?.Name, PrimaryOwnerPhone = primary?.Phone,
+                PrimaryOwnerWhatsApp = primary?.WhatsApp, MemberCount = group?.Count ?? 0
+            };
+        }).ToList();
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var term = request.Search.Trim().ToLower();
+            all = all.Where(f => f.FlatNumber.ToLower().Contains(term)
+                || (f.PrimaryOwnerName?.ToLower().Contains(term) ?? false)).ToList();
+        }
+
+        all = (request.SortBy?.ToLowerInvariant(), request.SortDescending) switch
+        {
+            ("ownername", false) => all.OrderBy(f => f.PrimaryOwnerName).ToList(),
+            ("ownername", true) => all.OrderByDescending(f => f.PrimaryOwnerName).ToList(),
+            ("membercount", false) => all.OrderBy(f => f.MemberCount).ToList(),
+            ("membercount", true) => all.OrderByDescending(f => f.MemberCount).ToList(),
+            ("flatnumber", true) => all.OrderByDescending(f => NaturalFlatOrder(f.FlatNumber)).ToList(),
+            _ => all.OrderBy(f => NaturalFlatOrder(f.FlatNumber)).ToList()
+        };
+
+        var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
+        var pageNumber = Math.Max(request.PageNumber, 1);
+        var items = all.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+
+        return new PaginatedResult<FlatOwnershipGridDto>(items, all.Count, pageNumber, pageSize);
+    }
+
+    public async Task<PaginatedResult<FlatTenancyGridDto>> Handle(GetFlatsTenancyGridQuery request, CancellationToken ct)
+    {
+        var flats = await _context.Flats
+            .Where(fl => fl.Floor.Wing.Building.SocietyId == request.SocietyId && !fl.IsDeleted)
+            .Select(fl => new { fl.Id, fl.FlatNumber, BuildingName = fl.Floor.Wing.Building.Name, WingName = fl.Floor.Wing.Name })
+            .ToListAsync(ct);
+
+        var byFlat = await LoadCurrentMembersByFlatAsync(request.SocietyId, OccupancyType.Tenant, ct);
+
+        var all = flats.Select(fl =>
+        {
+            var group = byFlat.GetValueOrDefault(fl.Id);
+            var primary = group?.FirstOrDefault(m => m.IsPrimary) ?? group?.FirstOrDefault();
+            return new FlatTenancyGridDto
+            {
+                FlatId = fl.Id, FlatNumber = fl.FlatNumber, BuildingName = fl.BuildingName, WingName = fl.WingName,
+                HasTenant = group is { Count: > 0 }, PrimaryTenantName = primary?.Name, PrimaryTenantPhone = primary?.Phone,
+                PrimaryTenantWhatsApp = primary?.WhatsApp, MemberCount = group?.Count ?? 0
+            };
+        }).ToList();
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var term = request.Search.Trim().ToLower();
+            all = all.Where(f => f.FlatNumber.ToLower().Contains(term)
+                || (f.PrimaryTenantName?.ToLower().Contains(term) ?? false)).ToList();
+        }
+
+        all = (request.SortBy?.ToLowerInvariant(), request.SortDescending) switch
+        {
+            ("tenantname", false) => all.OrderBy(f => f.PrimaryTenantName).ToList(),
+            ("tenantname", true) => all.OrderByDescending(f => f.PrimaryTenantName).ToList(),
+            ("membercount", false) => all.OrderBy(f => f.MemberCount).ToList(),
+            ("membercount", true) => all.OrderByDescending(f => f.MemberCount).ToList(),
+            ("flatnumber", true) => all.OrderByDescending(f => NaturalFlatOrder(f.FlatNumber)).ToList(),
+            _ => all.OrderBy(f => NaturalFlatOrder(f.FlatNumber)).ToList()
+        };
+
+        var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
+        var pageNumber = Math.Max(request.PageNumber, 1);
+        var items = all.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+
+        return new PaginatedResult<FlatTenancyGridDto>(items, all.Count, pageNumber, pageSize);
     }
 }

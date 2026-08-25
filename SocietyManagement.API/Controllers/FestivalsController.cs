@@ -61,4 +61,28 @@ public class FestivalsController : ApiControllerBase
         await Mediator.Send(new DeleteFestivalCommand(id));
         return Ok(ApiResponse.SuccessResponse("Festival deleted."));
     }
+
+    [HttpGet("contribution-pools")]
+    [HasPermission(Permissions.Festivals.View)]
+    public async Task<IActionResult> GetContributionPools([FromQuery] int societyId)
+    {
+        var result = await Mediator.Send(new GetContributionPoolsQuery(societyId));
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpGet("{id:int}/pool-summary")]
+    [HasPermission(Permissions.Festivals.View)]
+    public async Task<IActionResult> GetPoolSummary(int id)
+    {
+        var result = await Mediator.Send(new GetPoolSummaryQuery(id));
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpGet("{id:int}/pool-status")]
+    [HasPermission(Permissions.Festivals.View)]
+    public async Task<IActionResult> GetChildPoolStatus(int id)
+    {
+        var result = await Mediator.Send(new GetChildPoolStatusQuery(id));
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
 }

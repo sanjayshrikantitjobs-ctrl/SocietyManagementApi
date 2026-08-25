@@ -112,3 +112,13 @@ public enum PoliceVerificationStatus
     Pending = 1,
     Done = 2
 }
+
+public enum StaffCategory
+{
+    Watchman = 1,
+    Sweeper = 2,
+    Gardener = 3,
+    Electrician = 4,
+    Plumber = 5,
+    Other = 6
+}

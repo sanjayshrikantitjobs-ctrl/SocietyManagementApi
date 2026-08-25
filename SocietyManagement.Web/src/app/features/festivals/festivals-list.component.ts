@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -11,6 +11,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { FestivalCardComponent } from '../../shared/components/festival-card/festival-card.component';
+import { FestivalsEventsTabsComponent } from '../../shared/components/festivals-events-tabs/festivals-events-tabs.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader/skeleton-loader.component';
 import { Society } from '../../core/models/society.model';
@@ -24,9 +25,10 @@ import { FestivalService } from './services/festival.service';
   standalone: true,
   imports: [
     CommonModule, MatButtonModule, MatButtonToggleModule, MatFormFieldModule, MatIconModule, MatSelectModule,
-    EmptyStateComponent, FestivalCardComponent, PageHeaderComponent, SkeletonLoaderComponent
+    EmptyStateComponent, FestivalCardComponent, FestivalsEventsTabsComponent, PageHeaderComponent, SkeletonLoaderComponent
   ],
   template: `
+    <div class="app-page">
     <app-page-header title="Festivals & Events" subtitle="Every festival runs as its own project — budget, contributions, sponsors and expenses.">
       @if (societies().length > 1) {
         <mat-form-field appearance="outline" subscriptSizing="dynamic" class="society-picker">
@@ -42,6 +44,8 @@ import { FestivalService } from './services/festival.service';
       }
     </app-page-header>
 
+    <app-festivals-events-tabs />
+
     <mat-button-toggle-group [value]="statusFilter()" (change)="onStatusFilterChange($event.value)" class="status-filter">
       <mat-button-toggle [value]="null">All</mat-button-toggle>
       <mat-button-toggle [value]="1">Planning</mat-button-toggle>
@@ -56,16 +60,34 @@ import { FestivalService } from './services/festival.service';
         message="Create your first festival to start tracking its budget, contributions and expenses."
         [actionLabel]="canManage() ? 'New Festival' : null" (action)="createFestival()" />
     } @else {
-      <div class="grid">
-        @for (festival of festivals(); track festival.id) {
-          <app-festival-card [festival]="festival" (open)="openFestival(festival)" />
-        }
-      </div>
+      <h3 class="section-title">Primary Festivals & Events</h3>
+      @if (primaryFestivals().length === 0) {
+        <p class="empty">No standalone festivals or contribution pools match this filter.</p>
+      } @else {
+        <div class="grid">
+          @for (festival of primaryFestivals(); track festival.id) {
+            <app-festival-card [festival]="festival" (open)="openFestival(festival)" />
+          }
+        </div>
+      }
+
+      @if (childFestivals().length > 0) {
+        <h3 class="section-title section-title--child">Child Festivals & Events</h3>
+        <div class="grid">
+          @for (festival of childFestivals(); track festival.id) {
+            <app-festival-card [festival]="festival" (open)="openFestival(festival)" />
+          }
+        </div>
+      }
     }
+    </div>
   `,
   styles: [`
     .society-picker { width: 220px; margin-right: 8px; }
     .status-filter { margin-bottom: 16px; }
+    .section-title { margin: 0 0 12px; font-size: 15px; font-weight: 600; }
+    .section-title--child { margin-top: 28px; }
+    .empty { color: var(--app-text-muted); font-size: 13px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
   `]
 })
@@ -82,6 +104,10 @@ export class FestivalsListComponent implements OnInit {
   readonly societyId = signal(0);
   readonly festivals = signal<Festival[]>([]);
   readonly statusFilter = signal<FestivalStatus | null>(null);
+  // Primary = Standalone (1) + Contribution Pool (2); Child (3) gets its own
+  // section since it draws funding from a pool rather than standing alone.
+  readonly primaryFestivals = computed(() => this.festivals().filter((f) => f.kind !== 3));
+  readonly childFestivals = computed(() => this.festivals().filter((f) => f.kind === 3));
 
   canManage(): boolean {
     return this.auth.hasPermission('festivals.manage');

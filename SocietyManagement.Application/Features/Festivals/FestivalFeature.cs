@@ -29,6 +29,9 @@ public class FestivalDto
     public FestivalVisibility Visibility { get; set; }
     public bool IsRecurring { get; set; }
     public int? ParentFestivalId { get; set; }
+    public FestivalKind Kind { get; set; }
+    public int? ContributionPoolFestivalId { get; set; }
+    public string? ContributionPoolFestivalName { get; set; }
 
     public decimal TotalBudget { get; set; }
     public decimal Collected { get; set; }
@@ -42,7 +45,8 @@ public class FestivalDto
 public record CreateFestivalCommand(
     int SocietyId, string Name, int Year, DateTime StartDate, DateTime EndDate,
     string? Description, string? BannerImageUrl, string? CoverPhotoUrl, string? Theme,
-    FestivalVisibility Visibility, bool IsRecurring, int? ParentFestivalId) : IRequest<int>;
+    FestivalVisibility Visibility, bool IsRecurring, int? ParentFestivalId,
+    FestivalKind Kind = FestivalKind.Standalone, int? ContributionPoolFestivalId = null) : IRequest<int>;
 
 public class CreateFestivalCommandValidator : AbstractValidator<CreateFestivalCommand>
 {
@@ -54,6 +58,8 @@ public class CreateFestivalCommandValidator : AbstractValidator<CreateFestivalCo
         RuleFor(x => x.EndDate).GreaterThanOrEqualTo(x => x.StartDate);
         RuleFor(x => x.Theme).MaximumLength(100);
         RuleFor(x => x.Description).MaximumLength(2000);
+        RuleFor(x => x.ContributionPoolFestivalId).Null().When(x => x.Kind != FestivalKind.Child)
+            .WithMessage("Only a Child festival can be linked to a contribution pool.");
     }
 }
 
@@ -105,6 +111,22 @@ public class FestivalCommandHandlers :
             throw new NotFoundException(nameof(Festival), request.ParentFestivalId.Value);
         }
 
+        if (request.ContributionPoolFestivalId.HasValue)
+        {
+            var pool = await _context.Festivals.FirstOrDefaultAsync(
+                f => f.Id == request.ContributionPoolFestivalId && !f.IsDeleted, ct)
+                ?? throw new NotFoundException(nameof(Festival), request.ContributionPoolFestivalId.Value);
+
+            if (pool.Kind != FestivalKind.Pool)
+            {
+                throw new ConflictAppException("The linked festival must be a Contribution Pool.");
+            }
+            if (pool.SocietyId != request.SocietyId)
+            {
+                throw new ConflictAppException("The contribution pool must belong to the same society.");
+            }
+        }
+
         var festival = new Festival
         {
             SocietyId = request.SocietyId,
@@ -119,6 +141,8 @@ public class FestivalCommandHandlers :
             Visibility = request.Visibility,
             IsRecurring = request.IsRecurring,
             ParentFestivalId = request.ParentFestivalId,
+            Kind = request.Kind,
+            ContributionPoolFestivalId = request.ContributionPoolFestivalId,
             Status = FestivalStatus.Planning
         };
         await _context.Festivals.AddAsync(festival, ct);
@@ -216,6 +240,9 @@ public class FestivalQueryHandlers :
             Visibility = f.Visibility,
             IsRecurring = f.IsRecurring,
             ParentFestivalId = f.ParentFestivalId,
+            Kind = f.Kind,
+            ContributionPoolFestivalId = f.ContributionPoolFestivalId,
+            ContributionPoolFestivalName = f.ContributionPoolFestival != null ? f.ContributionPoolFestival.Name : null,
             TotalBudget = f.BudgetCategories.Sum(c => (decimal?)c.ApprovedAmount) ?? 0,
             Collected = f.Contributions.Sum(c => (decimal?)c.Amount) ?? 0,
             Spent = f.Expenses.Where(e => SpentStatuses.Contains(e.ApprovalStatus)).Sum(e => (decimal?)e.Amount) ?? 0,

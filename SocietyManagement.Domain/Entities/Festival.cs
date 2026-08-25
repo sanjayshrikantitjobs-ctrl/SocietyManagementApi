@@ -38,6 +38,14 @@ public class Festival : BaseAuditableEntity
     public int? ParentFestivalId { get; set; }
     public Festival? ParentFestival { get; set; }
 
+    public FestivalKind Kind { get; set; } = FestivalKind.Standalone;
+
+    /// <summary>Set only when Kind == Child — the Pool-kind festival this
+    /// one draws its funding from, instead of collecting its own
+    /// contributions. Unrelated to ParentFestivalId.</summary>
+    public int? ContributionPoolFestivalId { get; set; }
+    public Festival? ContributionPoolFestival { get; set; }
+
     public ICollection<FestivalBudgetCategory> BudgetCategories { get; set; } = new List<FestivalBudgetCategory>();
     public ICollection<FestivalContribution> Contributions { get; set; } = new List<FestivalContribution>();
     public ICollection<FestivalSponsor> Sponsors { get; set; } = new List<FestivalSponsor>();

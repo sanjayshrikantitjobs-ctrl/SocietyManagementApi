@@ -340,6 +340,9 @@ namespace SocietyManagement.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<int?>("ContributionPoolFestivalId")
+                        .HasColumnType("int");
+
                     b.Property<string>("CoverPhotoUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -368,6 +371,9 @@ namespace SocietyManagement.Infrastructure.Migrations
 
                     b.Property<bool>("IsRecurring")
                         .HasColumnType("bit");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
@@ -403,6 +409,8 @@ namespace SocietyManagement.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ContributionPoolFestivalId");
 
                     b.HasIndex("ParentFestivalId");
 
@@ -2035,6 +2043,10 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.Property<int>("SocietyId")
                         .HasColumnType("int");
 
+                    b.Property<string>("WhatsAppNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SocietyId", "Phone");
@@ -2336,6 +2348,77 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.ToTable("Societies", (string)null);
                 });
 
+            modelBuilder.Entity("SocietyManagement.Domain.Entities.SocietyService", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContactNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("ContactPerson")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("RenewalDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ServiceName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("SocietyId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("VendorName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SocietyId", "RenewalDate");
+
+                    b.ToTable("SocietyServices", (string)null);
+                });
+
             modelBuilder.Entity("SocietyManagement.Domain.Entities.SpecialCharge", b =>
                 {
                     b.Property<int>("Id")
@@ -2397,6 +2480,89 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.HasIndex("FlatId");
 
                     b.ToTable("SpecialCharges", (string)null);
+                });
+
+            modelBuilder.Entity("SocietyManagement.Domain.Entities.Staff", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("JoiningDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("JoiningDocumentUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("PhotoUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Salary")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("SalaryPayDay")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SocietyId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SocietyId", "Category");
+
+                    b.ToTable("Staff", (string)null);
                 });
 
             modelBuilder.Entity("SocietyManagement.Domain.Entities.User", b =>
@@ -2485,6 +2651,9 @@ namespace SocietyManagement.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<int?>("PersonId")
+                        .HasColumnType("int");
+
                     b.Property<string>("ProfilePhotoUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -2504,6 +2673,8 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.HasIndex("MobileNumber")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("PersonId");
 
                     b.HasIndex("RoleId");
 
@@ -2534,6 +2705,9 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.Property<string>("DeletedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("FlatId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -2541,7 +2715,7 @@ namespace SocietyManagement.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("MemberId")
+                    b.Property<int?>("MemberId")
                         .HasColumnType("int");
 
                     b.Property<string>("Model")
@@ -2566,6 +2740,8 @@ namespace SocietyManagement.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FlatId");
 
                     b.HasIndex("MemberId");
 
@@ -3046,6 +3222,11 @@ namespace SocietyManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("SocietyManagement.Domain.Entities.Festival", b =>
                 {
+                    b.HasOne("SocietyManagement.Domain.Entities.Festival", "ContributionPoolFestival")
+                        .WithMany()
+                        .HasForeignKey("ContributionPoolFestivalId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("SocietyManagement.Domain.Entities.Festival", "ParentFestival")
                         .WithMany()
                         .HasForeignKey("ParentFestivalId")
@@ -3056,6 +3237,8 @@ namespace SocietyManagement.Infrastructure.Migrations
                         .HasForeignKey("SocietyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("ContributionPoolFestival");
 
                     b.Navigation("ParentFestival");
 
@@ -3469,6 +3652,17 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("SocietyManagement.Domain.Entities.SocietyService", b =>
+                {
+                    b.HasOne("SocietyManagement.Domain.Entities.Society", "Society")
+                        .WithMany()
+                        .HasForeignKey("SocietyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Society");
+                });
+
             modelBuilder.Entity("SocietyManagement.Domain.Entities.SpecialCharge", b =>
                 {
                     b.HasOne("SocietyManagement.Domain.Entities.Flat", "Flat")
@@ -3480,11 +3674,27 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.Navigation("Flat");
                 });
 
+            modelBuilder.Entity("SocietyManagement.Domain.Entities.Staff", b =>
+                {
+                    b.HasOne("SocietyManagement.Domain.Entities.Society", "Society")
+                        .WithMany()
+                        .HasForeignKey("SocietyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Society");
+                });
+
             modelBuilder.Entity("SocietyManagement.Domain.Entities.User", b =>
                 {
                     b.HasOne("SocietyManagement.Domain.Entities.Member", "Member")
                         .WithOne("User")
                         .HasForeignKey("SocietyManagement.Domain.Entities.User", "MemberId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SocietyManagement.Domain.Entities.Person", "Person")
+                        .WithMany()
+                        .HasForeignKey("PersonId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("SocietyManagement.Domain.Entities.Role", "Role")
@@ -3495,21 +3705,29 @@ namespace SocietyManagement.Infrastructure.Migrations
 
                     b.Navigation("Member");
 
+                    b.Navigation("Person");
+
                     b.Navigation("Role");
                 });
 
             modelBuilder.Entity("SocietyManagement.Domain.Entities.Vehicle", b =>
                 {
+                    b.HasOne("SocietyManagement.Domain.Entities.Flat", "Flat")
+                        .WithMany()
+                        .HasForeignKey("FlatId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("SocietyManagement.Domain.Entities.Member", "Member")
                         .WithMany("Vehicles")
                         .HasForeignKey("MemberId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("SocietyManagement.Domain.Entities.ParkingSlot", "ParkingSlot")
                         .WithMany()
                         .HasForeignKey("ParkingSlotId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Flat");
 
                     b.Navigation("Member");
 

@@ -14,6 +14,7 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
         builder.Property(p => p.LastName).HasMaxLength(100).IsRequired();
         builder.Property(p => p.Phone).HasMaxLength(20).IsRequired();
         builder.Property(p => p.Email).HasMaxLength(256);
+        builder.Property(p => p.WhatsAppNumber).HasMaxLength(20);
         builder.Property(p => p.PhotoUrl).HasMaxLength(500);
         builder.Property(p => p.AadhaarNumber).HasMaxLength(20);
         builder.Property(p => p.PanNumber).HasMaxLength(10);

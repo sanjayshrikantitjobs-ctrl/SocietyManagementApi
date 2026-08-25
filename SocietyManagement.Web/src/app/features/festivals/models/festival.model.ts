@@ -6,6 +6,7 @@ export type SponsorshipType = 1 | 2 | 3 | 4 | 5 | 6 | 7; // Title..Media
 export type ExpenseApprovalStatus = 1 | 2 | 3 | 4 | 5; // Draft|Pending|Approved|Rejected|Paid
 export type VendorCategory = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 export type FlatContributionStatus = 0 | 1 | 2 | 3; // NoTarget|Pending|PartiallyPaid|Paid
+export type FestivalKind = 1 | 2 | 3; // Standalone | Pool | Child
 
 export const FESTIVAL_STATUS_LABELS: Record<FestivalStatus, string> = {
   1: 'Planning', 2: 'Ongoing', 3: 'Completed'
@@ -41,6 +42,10 @@ export const FLAT_CONTRIBUTION_STATUS_LABELS: Record<FlatContributionStatus, str
   0: 'No Target', 1: 'Pending', 2: 'Partially Paid', 3: 'Paid'
 };
 
+export const FESTIVAL_KIND_LABELS: Record<FestivalKind, string> = {
+  1: 'Standalone', 2: 'Contribution Pool', 3: 'Child Festival'
+};
+
 export interface Festival {
   id: number;
   societyId: number;
@@ -56,6 +61,9 @@ export interface Festival {
   visibility: FestivalVisibility;
   isRecurring: boolean;
   parentFestivalId?: number | null;
+  kind: FestivalKind;
+  contributionPoolFestivalId?: number | null;
+  contributionPoolFestivalName?: string | null;
   totalBudget: number;
   collected: number;
   spent: number;
@@ -110,6 +118,11 @@ export interface TopContributorDto {
 }
 
 export interface PendingContributorDto {
+  flatId: number;
+  flatNumber: string;
+}
+
+export interface ContributableFlatDto {
   flatId: number;
   flatNumber: string;
 }
@@ -217,4 +230,32 @@ export interface FestivalDashboardDto {
   budgetVsActual: BudgetVsActualPointDto[];
   expenseByCategory: ExpenseCategoryPointDto[];
   sponsorContributions: SponsorContributionPointDto[];
+}
+
+export interface ContributionPoolDto {
+  id: number;
+  name: string;
+  year: number;
+}
+
+export interface PoolChildSummaryDto {
+  festivalId: number;
+  name: string;
+  status: FestivalStatus;
+  budget: number;
+  spent: number;
+}
+
+export interface PoolSummaryDto {
+  festivalId: number;
+  poolCollected: number;
+  childrenSpent: number;
+  poolRemaining: number;
+  children: PoolChildSummaryDto[];
+}
+
+export interface ChildPoolStatusDto {
+  poolFestivalId: number;
+  poolFestivalName: string;
+  poolRemaining: number;
 }

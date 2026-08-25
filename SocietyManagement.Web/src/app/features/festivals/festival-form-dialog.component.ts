@@ -10,11 +10,18 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { FileUploadService } from '../../core/services/file-upload.service';
-import { Festival } from './models/festival.model';
+import { ContributionPoolDto, Festival } from './models/festival.model';
+import { FestivalService } from './services/festival.service';
 
 export interface FestivalFormDialogData {
   societyId: number;
   festival: Festival | null;
+  /** Set when opened from a Pool's "Add Child Festival" action — pre-fills
+   * and locks Kind=Child + the pool link, so the dialog can't create an
+   * unlinked or wrong-kind festival from that entry point. */
+  lockedKind?: number;
+  lockedPoolFestivalId?: number;
+  lockedPoolFestivalName?: string;
 }
 
 /** Dedicated create/edit dialog for Festival — richer than the generic
@@ -54,6 +61,27 @@ export interface FestivalFormDialogData {
           </mat-select>
         </mat-form-field>
         <mat-checkbox formControlName="isRecurring" class="recurring">Recurs every year</mat-checkbox>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Festival Kind</mat-label>
+          <mat-select formControlName="kind" [disabled]="!!data.festival || !!data.lockedKind">
+            <mat-option [value]="1">Standalone</mat-option>
+            <mat-option [value]="2">Contribution Pool (collects a shared yearly amount)</mat-option>
+            <mat-option [value]="3">Child Festival (draws from a pool)</mat-option>
+          </mat-select>
+        </mat-form-field>
+        @if (form.value.kind === 3) {
+          <mat-form-field appearance="outline">
+            <mat-label>Contribution Pool</mat-label>
+            @if (data.lockedPoolFestivalId) {
+              <input matInput [value]="data.lockedPoolFestivalName" readonly />
+            } @else {
+              <mat-select formControlName="contributionPoolFestivalId" [disabled]="!!data.festival">
+                @for (p of pools(); track p.id) { <mat-option [value]="p.id">{{ p.name }} ({{ p.year }})</mat-option> }
+              </mat-select>
+            }
+          </mat-form-field>
+        }
 
         <div class="upload-field">
           <label>Banner Image</label>
@@ -100,9 +128,11 @@ export class FestivalFormDialogComponent {
   data = inject<FestivalFormDialogData>(MAT_DIALOG_DATA);
   private readonly fb = inject(FormBuilder);
   private readonly fileUploadService = inject(FileUploadService);
+  private readonly festivalService = inject(FestivalService);
 
   readonly uploadingBanner = signal(false);
   readonly uploadingCover = signal(false);
+  readonly pools = signal<ContributionPoolDto[]>([]);
 
   form = this.fb.nonNullable.group({
     name: [this.data.festival?.name ?? '', Validators.required],
@@ -113,9 +143,17 @@ export class FestivalFormDialogComponent {
     description: [this.data.festival?.description ?? ''],
     visibility: [this.data.festival?.visibility ?? 1, Validators.required],
     isRecurring: [this.data.festival?.isRecurring ?? false],
+    kind: [this.data.festival?.kind ?? this.data.lockedKind ?? 1, Validators.required],
+    contributionPoolFestivalId: [
+      this.data.festival?.contributionPoolFestivalId ?? this.data.lockedPoolFestivalId ?? null as number | null
+    ],
     bannerImageUrl: [this.data.festival?.bannerImageUrl ?? ''],
     coverPhotoUrl: [this.data.festival?.coverPhotoUrl ?? '']
   });
+
+  constructor() {
+    this.festivalService.getContributionPools(this.data.societyId).subscribe((pools) => this.pools.set(pools));
+  }
 
   onFileSelected(event: Event, controlKey: 'bannerImageUrl' | 'coverPhotoUrl', flagKey: 'uploadingBanner' | 'uploadingCover'): void {
     const file = (event.target as HTMLInputElement).files?.[0];
@@ -136,6 +174,7 @@ export class FestivalFormDialogComponent {
     const value = this.form.getRawValue();
     this.dialogRef.close({
       ...value,
+      contributionPoolFestivalId: value.kind === 3 ? value.contributionPoolFestivalId : null,
       parentFestivalId: this.data.festival?.parentFestivalId ?? null,
       societyId: this.data.societyId
     });

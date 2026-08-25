@@ -45,9 +45,14 @@ import { OccupancyService } from '../services/occupancy.service';
             <th mat-header-cell *matHeaderCellDef>Mobile</th>
             <td mat-cell *matCellDef="let m">{{ m.phone }}</td>
           </ng-container>
+          <ng-container matColumnDef="whatsApp">
+            <th mat-header-cell *matHeaderCellDef>WhatsApp</th>
+            <td mat-cell *matCellDef="let m">{{ m.whatsAppNumber ?? '—' }}</td>
+          </ng-container>
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let m">
+              <button mat-icon-button (click)="editMember(m)" matTooltip="Edit"><mat-icon>edit</mat-icon></button>
               <button mat-icon-button (click)="removeMember(m)" matTooltip="Remove"><mat-icon>person_remove</mat-icon></button>
             </td>
           </ng-container>
@@ -78,7 +83,7 @@ export class OwnerOccupancyPanelComponent {
   private readonly occupancyService = inject(OccupancyService);
   private readonly toast = inject(ToastService);
 
-  readonly displayedColumns = ['photo', 'name', 'relationship', 'phone', 'actions'];
+  readonly displayedColumns = ['photo', 'name', 'relationship', 'phone', 'whatsApp', 'actions'];
   // Widened to a numeric index signature (matches flats-list.component.ts's
   // established fix) so indexing from the table template — where the row
   // type from [dataSource] doesn't narrow to the PersonRelationship literal
@@ -90,6 +95,36 @@ export class OwnerOccupancyPanelComponent {
       data: { flatId: this.flatId, societyId: this.societyId }
     }).afterClosed().subscribe((created) => {
       if (created) this.changed.emit();
+    });
+  }
+
+  editMember(member: { personId: number; personName: string }): void {
+    this.occupancyService.getPersonById(member.personId).subscribe((person) => {
+      const ref = this.dialog.open(PromptDialogComponent, {
+        width: '420px',
+        data: {
+          title: `Edit ${member.personName}`, submitLabel: 'Save',
+          fields: [
+            { key: 'firstName', label: 'First Name', type: 'text' as const, defaultValue: person.firstName },
+            { key: 'lastName', label: 'Last Name', type: 'text' as const, defaultValue: person.lastName },
+            { key: 'phone', label: 'Phone', type: 'text' as const, defaultValue: person.phone },
+            { key: 'email', label: 'Email', type: 'text' as const, required: false, defaultValue: person.email ?? '' },
+            { key: 'whatsAppNumber', label: 'WhatsApp Number', type: 'text' as const, required: false, defaultValue: person.whatsAppNumber ?? '' }
+          ]
+        }
+      });
+      ref.afterClosed().subscribe((result) => {
+        if (!result) return;
+        this.occupancyService.updatePerson(person.id, {
+          firstName: result.firstName, lastName: result.lastName, phone: result.phone,
+          email: result.email || null, whatsAppNumber: result.whatsAppNumber || null,
+          gender: person.gender, dateOfBirth: person.dateOfBirth, photoUrl: person.photoUrl,
+          aadhaarNumber: person.aadhaarNumber, panNumber: person.panNumber
+        }).subscribe(() => {
+          this.toast.success('Owner details updated.');
+          this.changed.emit();
+        });
+      });
     });
   }
 

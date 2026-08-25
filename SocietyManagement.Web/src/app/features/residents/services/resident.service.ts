@@ -85,7 +85,7 @@ export class ResidentService {
 
   // ---- Vehicles -------------------------------------------------------------------
   getVehicles(params: {
-    memberId?: number; societyId?: number; search?: string; sortBy?: string; sortDescending?: boolean;
+    memberId?: number; flatId?: number; societyId?: number; search?: string; sortBy?: string; sortDescending?: boolean;
     pageNumber?: number; pageSize?: number;
   }): Observable<PaginatedResult<VehicleDto>> {
     return this.http.get<ApiResponse<PaginatedResult<VehicleDto>>>(`${this.baseUrl}/vehicles`, { params: toHttpParams(params) })

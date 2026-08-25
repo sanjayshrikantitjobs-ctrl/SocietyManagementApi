@@ -65,6 +65,10 @@ import { OccupancyService } from '../services/occupancy.service';
             <th mat-header-cell *matHeaderCellDef>Email</th>
             <td mat-cell *matCellDef="let m">{{ m.email ?? '—' }}</td>
           </ng-container>
+          <ng-container matColumnDef="whatsApp">
+            <th mat-header-cell *matHeaderCellDef>WhatsApp</th>
+            <td mat-cell *matCellDef="let m">{{ m.whatsAppNumber ?? '—' }}</td>
+          </ng-container>
           <ng-container matColumnDef="residentStatus">
             <th mat-header-cell *matHeaderCellDef>Resident Status</th>
             <td mat-cell *matCellDef="let m">{{ residentStatusLabels[m.residentStatus] }}</td>
@@ -72,6 +76,7 @@ import { OccupancyService } from '../services/occupancy.service';
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let m">
+              <button mat-icon-button (click)="editMember(m)" matTooltip="Edit"><mat-icon>edit</mat-icon></button>
               @if (!m.isPrimary) {
                 <button mat-icon-button (click)="removeMember(m)" matTooltip="Remove"><mat-icon>person_remove</mat-icon></button>
               }
@@ -107,7 +112,7 @@ export class TenantOccupancyPanelComponent {
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly toast = inject(ToastService);
 
-  readonly displayedColumns = ['photo', 'name', 'relationship', 'phone', 'email', 'residentStatus', 'actions'];
+  readonly displayedColumns = ['photo', 'name', 'relationship', 'phone', 'email', 'whatsApp', 'residentStatus', 'actions'];
   // See owner-occupancy-panel.component.ts for why these are widened to a
   // numeric index signature.
   readonly relationshipLabels: Record<number, string> = PERSON_RELATIONSHIP_LABELS;
@@ -145,6 +150,36 @@ export class TenantOccupancyPanelComponent {
       this.occupancyService.endOccupancy(this.occupancy!.id, result.endDate).subscribe(() => {
         this.toast.success('Tenancy ended — the whole family has moved out.');
         this.changed.emit();
+      });
+    });
+  }
+
+  editMember(member: { personId: number; personName: string }): void {
+    this.occupancyService.getPersonById(member.personId).subscribe((person) => {
+      const ref = this.dialog.open(PromptDialogComponent, {
+        width: '420px',
+        data: {
+          title: `Edit ${member.personName}`, submitLabel: 'Save',
+          fields: [
+            { key: 'firstName', label: 'First Name', type: 'text' as const, defaultValue: person.firstName },
+            { key: 'lastName', label: 'Last Name', type: 'text' as const, defaultValue: person.lastName },
+            { key: 'phone', label: 'Phone', type: 'text' as const, defaultValue: person.phone },
+            { key: 'email', label: 'Email', type: 'text' as const, required: false, defaultValue: person.email ?? '' },
+            { key: 'whatsAppNumber', label: 'WhatsApp Number', type: 'text' as const, required: false, defaultValue: person.whatsAppNumber ?? '' }
+          ]
+        }
+      });
+      ref.afterClosed().subscribe((result) => {
+        if (!result) return;
+        this.occupancyService.updatePerson(person.id, {
+          firstName: result.firstName, lastName: result.lastName, phone: result.phone,
+          email: result.email || null, whatsAppNumber: result.whatsAppNumber || null,
+          gender: person.gender, dateOfBirth: person.dateOfBirth, photoUrl: person.photoUrl,
+          aadhaarNumber: person.aadhaarNumber, panNumber: person.panNumber
+        }).subscribe(() => {
+          this.toast.success('Tenant details updated.');
+          this.changed.emit();
+        });
       });
     });
   }

@@ -20,6 +20,26 @@ public class FlatOccupanciesController : ApiControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
+    [HttpGet("owners-grid")]
+    [HasPermission(Permissions.Occupancy.View)]
+    public async Task<IActionResult> GetOwnersGrid(
+        [FromQuery] int societyId, [FromQuery] string? search, [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
+    {
+        var result = await Mediator.Send(new GetFlatsOwnershipGridQuery(societyId, search, sortBy, sortDescending, pageNumber, pageSize));
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpGet("tenants-grid")]
+    [HasPermission(Permissions.Occupancy.View)]
+    public async Task<IActionResult> GetTenantsGrid(
+        [FromQuery] int societyId, [FromQuery] string? search, [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
+    {
+        var result = await Mediator.Send(new GetFlatsTenancyGridQuery(societyId, search, sortBy, sortDescending, pageNumber, pageSize));
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
     [HttpGet("{id:int}/members")]
     [HasPermission(Permissions.Occupancy.View)]
     public async Task<IActionResult> GetMembers(int id)
@@ -57,7 +77,7 @@ public class FlatOccupanciesController : ApiControllerBase
     public async Task<IActionResult> AddFamilyMember(int id, [FromBody] AddFamilyMemberRequest request)
     {
         var command = new AddTenantFamilyMemberCommand(
-            id, request.PersonId, request.FirstName, request.LastName, request.Phone, request.Email,
+            id, request.PersonId, request.FirstName, request.LastName, request.Phone, request.Email, request.WhatsAppNumber,
             request.Gender, request.DateOfBirth, request.PhotoUrl, request.AadhaarNumber, request.PanNumber,
             request.Relationship, request.MoveInDate);
         var memberId = await Mediator.Send(command);
@@ -90,7 +110,7 @@ public class FlatOccupanciesController : ApiControllerBase
 }
 
 public record AddFamilyMemberRequest(
-    int? PersonId, string? FirstName, string? LastName, string? Phone, string? Email,
+    int? PersonId, string? FirstName, string? LastName, string? Phone, string? Email, string? WhatsAppNumber,
     Gender? Gender, DateTime? DateOfBirth, string? PhotoUrl, string? AadhaarNumber, string? PanNumber,
     PersonRelationship Relationship, DateTime MoveInDate);
 

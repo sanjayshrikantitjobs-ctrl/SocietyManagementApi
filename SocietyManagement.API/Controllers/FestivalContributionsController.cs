@@ -16,9 +16,10 @@ public class FestivalContributionsController : ApiControllerBase
     [HasPermission(Permissions.Festivals.View)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int festivalId, [FromQuery] string? search, [FromQuery] ContributionPaymentMethod? paymentMethod,
+        [FromQuery] string? sortBy, [FromQuery] bool sortDescending = false,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
-        var result = await Mediator.Send(new GetContributionsQuery(festivalId, search, paymentMethod, pageNumber, pageSize));
+        var result = await Mediator.Send(new GetContributionsQuery(festivalId, search, paymentMethod, sortBy, sortDescending, pageNumber, pageSize));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
@@ -58,9 +59,18 @@ public class FestivalContributionsController : ApiControllerBase
     [HasPermission(Permissions.Festivals.View)]
     public async Task<IActionResult> GetFlatSummary(
         [FromQuery] int festivalId, [FromQuery] string? search, [FromQuery] FlatContributionStatus? status,
+        [FromQuery] string? sortBy, [FromQuery] bool sortDescending = false,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
-        var result = await Mediator.Send(new GetFlatContributionsQuery(festivalId, search, status, pageNumber, pageSize));
+        var result = await Mediator.Send(new GetFlatContributionsQuery(festivalId, search, status, sortBy, sortDescending, pageNumber, pageSize));
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpGet("contributable-flats")]
+    [HasPermission(Permissions.Festivals.Contribute)]
+    public async Task<IActionResult> GetContributableFlats([FromQuery] int festivalId)
+    {
+        var result = await Mediator.Send(new GetContributableFlatsQuery(festivalId));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 

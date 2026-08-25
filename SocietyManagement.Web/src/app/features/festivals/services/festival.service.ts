@@ -4,10 +4,10 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../../../core/models/api-response.model';
 import {
-  BudgetVsActualPointDto, Festival, FestivalBudgetCategoryDto, FestivalBudgetRevisionDto,
-  FestivalContributionDto, FestivalDashboardDto, FestivalExpenseDto, FestivalSponsorDto,
-  FestivalVendorDto, FlatContributionDto, FlatContributionKpisDto, FlatContributionStatus,
-  PendingContributorDto, TopContributorDto
+  BudgetVsActualPointDto, ChildPoolStatusDto, ContributableFlatDto, ContributionPoolDto, Festival,
+  FestivalBudgetCategoryDto, FestivalBudgetRevisionDto, FestivalContributionDto, FestivalDashboardDto,
+  FestivalExpenseDto, FestivalSponsorDto, FestivalVendorDto, FlatContributionDto, FlatContributionKpisDto,
+  FlatContributionStatus, PendingContributorDto, PoolSummaryDto, TopContributorDto
 } from '../models/festival.model';
 
 function toHttpParams(params: Record<string, unknown>): HttpParams {
@@ -72,7 +72,8 @@ export class FestivalService {
 
   // ---- Contributions -----------------------------------------------------------
   getContributions(params: {
-    festivalId: number; search?: string; paymentMethod?: number; pageNumber?: number; pageSize?: number;
+    festivalId: number; search?: string; paymentMethod?: number; sortBy?: string; sortDescending?: boolean;
+    pageNumber?: number; pageSize?: number;
   }): Observable<PaginatedResult<FestivalContributionDto>> {
     return this.http.get<ApiResponse<PaginatedResult<FestivalContributionDto>>>(`${this.baseUrl}/festival-contributions`, { params: toHttpParams(params) })
       .pipe(map((r) => r.data!));
@@ -92,13 +93,18 @@ export class FestivalService {
     return this.http.get(`${this.baseUrl}/festival-contributions/${id}/receipt`, { responseType: 'blob' });
   }
   getFlatContributions(params: {
-    festivalId: number; search?: string; status?: FlatContributionStatus; pageNumber?: number; pageSize?: number;
+    festivalId: number; search?: string; status?: FlatContributionStatus; sortBy?: string; sortDescending?: boolean;
+    pageNumber?: number; pageSize?: number;
   }): Observable<PaginatedResult<FlatContributionDto>> {
     return this.http.get<ApiResponse<PaginatedResult<FlatContributionDto>>>(`${this.baseUrl}/festival-contributions/flat-summary`, { params: toHttpParams(params) })
       .pipe(map((r) => r.data!));
   }
   getFlatContributionKpis(festivalId: number): Observable<FlatContributionKpisDto> {
     return this.http.get<ApiResponse<FlatContributionKpisDto>>(`${this.baseUrl}/festival-contributions/flat-summary/kpis`, { params: { festivalId } })
+      .pipe(map((r) => r.data!));
+  }
+  getContributableFlats(festivalId: number): Observable<ContributableFlatDto[]> {
+    return this.http.get<ApiResponse<ContributableFlatDto[]>>(`${this.baseUrl}/festival-contributions/contributable-flats`, { params: { festivalId } })
       .pipe(map((r) => r.data!));
   }
   setContributionTargets(festivalId: number, targetAmount: number): Observable<number> {
@@ -175,5 +181,19 @@ export class FestivalService {
   getDashboard(festivalId: number): Observable<FestivalDashboardDto> {
     return this.http.get<ApiResponse<FestivalDashboardDto>>(`${this.baseUrl}/festival-dashboard/${festivalId}`)
       .pipe(map((r) => r.data!));
+  }
+
+  // ---- Contribution Pools ----------------------------------------------------
+  getContributionPools(societyId: number): Observable<ContributionPoolDto[]> {
+    return this.http.get<ApiResponse<ContributionPoolDto[]>>(`${this.baseUrl}/festivals/contribution-pools`, { params: { societyId } })
+      .pipe(map((r) => r.data!));
+  }
+  getPoolSummary(festivalId: number): Observable<PoolSummaryDto> {
+    return this.http.get<ApiResponse<PoolSummaryDto>>(`${this.baseUrl}/festivals/${festivalId}/pool-summary`)
+      .pipe(map((r) => r.data!));
+  }
+  getChildPoolStatus(festivalId: number): Observable<ChildPoolStatusDto | null> {
+    return this.http.get<ApiResponse<ChildPoolStatusDto | null>>(`${this.baseUrl}/festivals/${festivalId}/pool-status`)
+      .pipe(map((r) => r.data ?? null));
   }
 }

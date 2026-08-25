@@ -5,8 +5,16 @@ namespace SocietyManagement.Domain.Entities;
 
 public class Vehicle : BaseAuditableEntity
 {
-    public int MemberId { get; set; }
-    public Member Member { get; set; } = default!;
+    /// <summary>At least one of MemberId/FlatId must be set (enforced in the
+    /// command handlers, not the DB). MemberId is the older Member-model
+    /// assignment; FlatId is the newer Owner/Tenant Occupancy model's
+    /// assignment — a flat can have vehicles even when no legacy Member
+    /// record exists for its occupants.</summary>
+    public int? MemberId { get; set; }
+    public Member? Member { get; set; }
+
+    public int? FlatId { get; set; }
+    public Flat? Flat { get; set; }
 
     public VehicleType VehicleType { get; set; }
 

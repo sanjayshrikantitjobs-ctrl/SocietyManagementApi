@@ -60,11 +60,17 @@ public class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
         builder.Property(v => v.Model).HasMaxLength(100);
         builder.Property(v => v.Color).HasMaxLength(50);
         builder.HasIndex(v => v.MemberId);
+        builder.HasIndex(v => v.FlatId);
         builder.HasIndex(v => v.RegistrationNumber).IsUnique().HasFilter("[IsDeleted] = 0");
 
         builder.HasOne(v => v.Member)
             .WithMany(m => m.Vehicles)
             .HasForeignKey(v => v.MemberId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(v => v.Flat)
+            .WithMany()
+            .HasForeignKey(v => v.FlatId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(v => v.ParkingSlot)

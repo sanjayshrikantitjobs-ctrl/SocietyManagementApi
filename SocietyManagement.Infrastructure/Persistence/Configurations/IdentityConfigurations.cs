@@ -31,6 +31,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .WithOne(m => m.User)
             .HasForeignKey<User>(u => u.MemberId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(u => u.Person)
+            .WithMany()
+            .HasForeignKey(u => u.PersonId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
 

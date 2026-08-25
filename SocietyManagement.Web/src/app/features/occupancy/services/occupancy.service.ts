@@ -2,10 +2,11 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../../core/models/api-response.model';
+import { ApiResponse, PaginatedResult } from '../../../core/models/api-response.model';
 import {
-  FlatOccupancyDto, FlatOccupancyOverviewDto, OccupancyMemberDto, OccupancySettingsDto, OccupancyType,
-  PersonDetailDto, PersonDto, PersonRelationship, ResidentStatus
+  BulkLoginResultDto, FlatOccupancyDto, FlatOccupancyOverviewDto, FlatOwnershipGridDto, FlatTenancyGridDto,
+  OccupancyMemberDto, OccupancySettingsDto, OccupancyType, PersonDetailDto, PersonDto, PersonLoginDto,
+  PersonRelationship, RecentOccupancyChangeDto, ResidentStatus, ResidentsOverviewSummaryDto
 } from '../models/occupancy.model';
 
 function toHttpParams(params: Record<string, unknown>): HttpParams {
@@ -42,6 +43,18 @@ export class OccupancyService {
   updatePerson(id: number, payload: Record<string, unknown>): Observable<void> {
     return this.http.put<ApiResponse<void>>(`${this.baseUrl}/persons/${id}`, { id, ...payload }).pipe(map(() => void 0));
   }
+  getPersonLogin(personId: number): Observable<PersonLoginDto | null> {
+    return this.http.get<ApiResponse<PersonLoginDto | null>>(`${this.baseUrl}/persons/${personId}/login`)
+      .pipe(map((r) => r.data ?? null));
+  }
+  createLoginForPerson(personId: number, flatId: number, roleId: number, password?: string): Observable<number> {
+    return this.http.post<ApiResponse<number>>(`${this.baseUrl}/persons/${personId}/create-login`, { flatId, roleId, password })
+      .pipe(map((r) => r.data!));
+  }
+  bulkCreateOwnerLogins(flatIds: number[], roleId: number, password?: string): Observable<BulkLoginResultDto[]> {
+    return this.http.post<ApiResponse<BulkLoginResultDto[]>>(`${this.baseUrl}/persons/bulk-create-owner-logins`, { flatIds, roleId, password })
+      .pipe(map((r) => r.data!));
+  }
 
   // ---- Flat Occupancies -----------------------------------------------------
   getOverview(flatId: number): Observable<FlatOccupancyOverviewDto> {
@@ -54,6 +67,18 @@ export class OccupancyService {
   }
   getHistory(flatId: number, type?: OccupancyType): Observable<FlatOccupancyDto[]> {
     return this.http.get<ApiResponse<FlatOccupancyDto[]>>(`${this.baseUrl}/flat-occupancies/history`, { params: toHttpParams({ flatId, type }) })
+      .pipe(map((r) => r.data!));
+  }
+  getOwnersGrid(params: {
+    societyId: number; search?: string; sortBy?: string; sortDescending?: boolean; pageNumber?: number; pageSize?: number;
+  }): Observable<PaginatedResult<FlatOwnershipGridDto>> {
+    return this.http.get<ApiResponse<PaginatedResult<FlatOwnershipGridDto>>>(`${this.baseUrl}/flat-occupancies/owners-grid`, { params: toHttpParams(params) })
+      .pipe(map((r) => r.data!));
+  }
+  getTenantsGrid(params: {
+    societyId: number; search?: string; sortBy?: string; sortDescending?: boolean; pageNumber?: number; pageSize?: number;
+  }): Observable<PaginatedResult<FlatTenancyGridDto>> {
+    return this.http.get<ApiResponse<PaginatedResult<FlatTenancyGridDto>>>(`${this.baseUrl}/flat-occupancies/tenants-grid`, { params: toHttpParams(params) })
       .pipe(map((r) => r.data!));
   }
   addOwnerMember(payload: Record<string, unknown>): Observable<number> {
@@ -95,5 +120,15 @@ export class OccupancyService {
   updateSettings(societyId: number, allowMultiplePrimaryOwners: boolean): Observable<void> {
     return this.http.put<ApiResponse<void>>(`${this.baseUrl}/occupancy-settings`, { societyId, allowMultiplePrimaryOwners })
       .pipe(map(() => void 0));
+  }
+
+  // ---- Residents Overview -----------------------------------------------------
+  getResidentsOverviewSummary(societyId: number): Observable<ResidentsOverviewSummaryDto> {
+    return this.http.get<ApiResponse<ResidentsOverviewSummaryDto>>(`${this.baseUrl}/residents-overview/summary`, { params: { societyId } })
+      .pipe(map((r) => r.data!));
+  }
+  getRecentOccupancyChanges(societyId: number, take = 10): Observable<RecentOccupancyChangeDto[]> {
+    return this.http.get<ApiResponse<RecentOccupancyChangeDto[]>>(`${this.baseUrl}/residents-overview/recent-changes`, { params: { societyId, take } })
+      .pipe(map((r) => r.data!));
   }
 }

@@ -13,6 +13,17 @@ public enum FestivalVisibility
     MembersOnly = 2
 }
 
+/// <summary>Standalone (every festival today) vs a shared yearly
+/// contribution Pool vs a Child festival that draws its funding from a
+/// Pool. Deliberately separate from ParentFestivalId, which means
+/// "cloned from last year's instance" — an unrelated concept.</summary>
+public enum FestivalKind
+{
+    Standalone = 1,
+    Pool = 2,
+    Child = 3
+}
+
 public enum FestivalBudgetCategoryType
 {
     Decoration = 1,

@@ -27,6 +27,11 @@ public class FestivalConfiguration : IEntityTypeConfiguration<Festival>
             .WithMany()
             .HasForeignKey(f => f.ParentFestivalId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(f => f.ContributionPoolFestival)
+            .WithMany()
+            .HasForeignKey(f => f.ContributionPoolFestivalId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 

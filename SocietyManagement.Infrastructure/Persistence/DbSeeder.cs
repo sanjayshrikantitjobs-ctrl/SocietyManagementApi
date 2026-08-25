@@ -135,7 +135,11 @@ public class DbSeeder
             ("Occupancy", "View", Permissions.Occupancy.View),
             ("Occupancy", "Manage", Permissions.Occupancy.Manage),
             ("Occupancy", "ManageSettings", Permissions.Occupancy.ManageSettings),
-            ("Occupancy", "ViewHistory", Permissions.Occupancy.ViewHistory)
+            ("Occupancy", "ViewHistory", Permissions.Occupancy.ViewHistory),
+            ("Staff", "View", Permissions.Staff.View),
+            ("Staff", "Manage", Permissions.Staff.Manage),
+            ("Services", "View", Permissions.Services.View),
+            ("Services", "Manage", Permissions.Services.Manage)
         };
 
         var existingCodes = await _context.Permissions.Select(p => p.Code).ToListAsync();

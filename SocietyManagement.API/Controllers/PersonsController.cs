@@ -43,4 +43,31 @@ public class PersonsController : ApiControllerBase
         await Mediator.Send(command);
         return Ok(ApiResponse.SuccessResponse("Person updated."));
     }
+
+    [HttpGet("{id:int}/login")]
+    [HasPermission(Permissions.Occupancy.View)]
+    public async Task<IActionResult> GetLogin(int id)
+    {
+        var result = await Mediator.Send(new GetPersonLoginQuery(id));
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpPost("{id:int}/create-login")]
+    [HasPermission(Permissions.Occupancy.Manage)]
+    public async Task<IActionResult> CreateLogin(int id, [FromBody] CreatePersonLoginRequest request)
+    {
+        var userId = await Mediator.Send(new CreateUserForPersonCommand(id, request.FlatId, request.RoleId, request.Password));
+        return Ok(ApiResponse<int>.SuccessResponse(userId, "Login account created."));
+    }
+
+    [HttpPost("bulk-create-owner-logins")]
+    [HasPermission(Permissions.Occupancy.Manage)]
+    public async Task<IActionResult> BulkCreateOwnerLogins(BulkCreateOwnerLoginsCommand command)
+    {
+        var results = await Mediator.Send(command);
+        var createdCount = results.Count(r => r.Created);
+        return Ok(ApiResponse<object>.SuccessResponse(results, $"{createdCount} of {results.Count} login(s) created."));
+    }
 }
+
+public record CreatePersonLoginRequest(int FlatId, int RoleId, string? Password);

@@ -14,6 +14,9 @@ import { SocietyService } from '../../society-setup/services/society.service';
 import { VEHICLE_TYPE_LABELS, VehicleDto } from '../models/resident.model';
 import { ResidentService } from '../services/resident.service';
 
+/** Society-wide vehicle list — a vehicle can be assigned to either a Member
+ * or a Flat (or both fields left as-is on edit); the Owner/Flat column
+ * shows whichever is set. */
 @Component({
   selector: 'app-vehicles-list',
   standalone: true,
@@ -22,15 +25,13 @@ import { ResidentService } from '../services/resident.service';
     <div class="tab-content">
       <div class="toolbar">
         <h3>Vehicles</h3>
-        <button mat-flat-button color="primary" (click)="add()" [disabled]="memberOptions.length === 0">
-          <mat-icon>add</mat-icon> Add Vehicle
-        </button>
+        <button mat-flat-button color="primary" (click)="add()"><mat-icon>add</mat-icon> Add Vehicle</button>
       </div>
 
       <app-data-table
         [loading]="loading()" [totalCount]="totalCount()" [pageSize]="pageSize()" [pageIndex]="pageIndex()"
-        searchPlaceholder="Search reg. no. or owner..." emptyIcon="directions_car" emptyTitle="No vehicles yet"
-        emptyMessage="Register a member's two-wheeler or four-wheeler and optionally assign a parking slot."
+        searchPlaceholder="Search reg. no., owner, or flat..." emptyIcon="directions_car" emptyTitle="No vehicles yet"
+        emptyMessage="Register a two-wheeler or four-wheeler and assign it to a member or a flat."
         (page)="onPage($event)" (search)="onSearch($event)">
         <table mat-table [dataSource]="vehicles()" matSort (matSortChange)="onSort($event)" table>
           <ng-container matColumnDef="registrationNumber">
@@ -38,8 +39,8 @@ import { ResidentService } from '../services/resident.service';
             <td mat-cell *matCellDef="let v"><strong>{{ v.registrationNumber }}</strong></td>
           </ng-container>
           <ng-container matColumnDef="memberName">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header="membername">Owner</th>
-            <td mat-cell *matCellDef="let v">{{ v.memberName }}</td>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="membername">Owner / Flat</th>
+            <td mat-cell *matCellDef="let v">{{ v.memberName ?? (v.flatNumber ? 'Flat ' + v.flatNumber : '—') }}</td>
           </ng-container>
           <ng-container matColumnDef="vehicleType">
             <th mat-header-cell *matHeaderCellDef mat-sort-header="vehicletype">Type</th>
@@ -93,7 +94,8 @@ export class VehiclesListComponent implements OnInit {
 
   private societyId = 0;
   private parkingSlotOptions: { value: number; label: string }[] = [];
-  memberOptions: { value: number; label: string }[] = [];
+  private memberOptions: { value: number; label: string }[] = [];
+  private flatOptions: { value: number; label: string }[] = [];
 
   ngOnInit(): void {
     this.societyService.getSocieties().subscribe((societies) => {
@@ -101,6 +103,9 @@ export class VehiclesListComponent implements OnInit {
       this.societyId = societies[0].id;
       this.residentService.getMembers({ societyId: this.societyId, pageSize: 500 }).subscribe((result) => {
         this.memberOptions = result.items.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }));
+      });
+      this.societyService.getFlats({ pageSize: 500 }).subscribe((result) => {
+        this.flatOptions = result.items.map((f) => ({ value: f.id, label: f.flatNumber }));
       });
       this.societyService.getParkingSlots(this.societyId).subscribe((slots) => {
         this.parkingSlotOptions = slots.map((s) => ({ value: s.id, label: s.slotNumber }));
@@ -143,7 +148,14 @@ export class VehiclesListComponent implements OnInit {
 
   private fields(vehicle?: VehicleDto) {
     return [
-      { key: 'memberId', label: 'Owner', type: 'select' as const, options: this.memberOptions, defaultValue: vehicle?.memberId },
+      {
+        key: 'memberId', label: 'Owner (Member)', type: 'select' as const, required: false,
+        options: [{ value: '', label: 'None' }, ...this.memberOptions], defaultValue: vehicle?.memberId ?? ''
+      },
+      {
+        key: 'flatId', label: 'Flat', type: 'select' as const, required: false,
+        options: [{ value: '', label: 'None' }, ...this.flatOptions], defaultValue: vehicle?.flatId ?? ''
+      },
       {
         key: 'vehicleType', label: 'Vehicle Type', type: 'select' as const,
         options: [{ value: 1, label: 'Two Wheeler' }, { value: 2, label: 'Four Wheeler' }],
@@ -164,8 +176,13 @@ export class VehiclesListComponent implements OnInit {
     const ref = this.dialog.open(PromptDialogComponent, { width: '460px', data: { title: 'Add Vehicle', fields: this.fields() } });
     ref.afterClosed().subscribe((result) => {
       if (!result) return;
+      if (!result.memberId && !result.flatId) {
+        this.toast.error('Assign the vehicle to an Owner (Member) or a Flat.');
+        return;
+      }
       this.residentService.createVehicle({
-        ...result, memberId: Number(result.memberId), vehicleType: Number(result.vehicleType),
+        ...result, memberId: result.memberId ? Number(result.memberId) : null,
+        flatId: result.flatId ? Number(result.flatId) : null, vehicleType: Number(result.vehicleType),
         parkingSlotId: result.parkingSlotId ? Number(result.parkingSlotId) : null,
         make: result.make || null, model: result.model || null, color: result.color || null
       }).subscribe(() => {

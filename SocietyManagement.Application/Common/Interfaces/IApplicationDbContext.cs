@@ -65,5 +65,8 @@ public interface IApplicationDbContext
     DbSet<RentalAgreement> RentalAgreements { get; }
     DbSet<OccupancySettings> OccupancySettings { get; }
 
+    DbSet<Staff> Staff { get; }
+    DbSet<SocietyService> SocietyServices { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

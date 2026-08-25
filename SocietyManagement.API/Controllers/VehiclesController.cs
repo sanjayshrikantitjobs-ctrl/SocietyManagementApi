@@ -14,11 +14,11 @@ public class VehiclesController : ApiControllerBase
     [HttpGet]
     [HasPermission(Permissions.Members.View)]
     public async Task<IActionResult> GetAll(
-        [FromQuery] int? memberId, [FromQuery] int? societyId, [FromQuery] string? search,
+        [FromQuery] int? memberId, [FromQuery] int? flatId, [FromQuery] int? societyId, [FromQuery] string? search,
         [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
-        var result = await Mediator.Send(new GetVehiclesQuery(memberId, societyId, search, sortBy, sortDescending, pageNumber, pageSize));
+        var result = await Mediator.Send(new GetVehiclesQuery(memberId, flatId, societyId, search, sortBy, sortDescending, pageNumber, pageSize));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 

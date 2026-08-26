@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,6 +12,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { AssetUrlPipe } from '../../../shared/pipes/asset-url.pipe';
 import { FileUploadService } from '../../../core/services/file-upload.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { parseDateOnly, toDateOnlyString } from '../../../shared/utils/date.util';
 import { PERSON_RELATIONSHIP_LABELS, PersonDto } from '../models/occupancy.model';
 import { OccupancyService } from '../services/occupancy.service';
 
@@ -26,7 +28,7 @@ export interface AddOccupancyFamilyMemberDialogData {
   selector: 'app-add-occupancy-family-member-dialog',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, MatButtonModule, MatDialogModule, MatFormFieldModule,
+    CommonModule, ReactiveFormsModule, MatButtonModule, MatDatepickerModule, MatDialogModule, MatFormFieldModule,
     MatIconModule, MatInputModule, MatProgressSpinnerModule, MatSelectModule, AssetUrlPipe
   ],
   template: `
@@ -61,8 +63,18 @@ export interface AddOccupancyFamilyMemberDialogData {
             }
           </mat-select>
         </mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Date of Birth</mat-label><input matInput type="date" formControlName="dateOfBirth" [readonly]="!!foundPerson()" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Move-in Date</mat-label><input matInput type="date" formControlName="moveInDate" /></mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Date of Birth</mat-label>
+          <input matInput [matDatepicker]="dobPicker" formControlName="dateOfBirth" [readonly]="!!foundPerson()" />
+          <mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle>
+          <mat-datepicker #dobPicker></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Move-in Date</mat-label>
+          <input matInput [matDatepicker]="moveInPicker" formControlName="moveInDate" />
+          <mat-datepicker-toggle matSuffix [for]="moveInPicker"></mat-datepicker-toggle>
+          <mat-datepicker #moveInPicker></mat-datepicker>
+        </mat-form-field>
 
         <div class="upload-field span-2">
           <label>Profile Photo</label>
@@ -116,9 +128,9 @@ export class AddOccupancyFamilyMemberDialogComponent {
     email: [''],
     whatsAppNumber: [''],
     relationship: [2, Validators.required],
-    dateOfBirth: [''],
+    dateOfBirth: [null as Date | null],
     photoUrl: [''],
-    moveInDate: [new Date().toISOString().substring(0, 10), Validators.required]
+    moveInDate: [new Date(), Validators.required]
   });
 
   onPhoneBlur(): void {
@@ -134,7 +146,7 @@ export class AddOccupancyFamilyMemberDialogComponent {
           this.form.patchValue({
             firstName: person.firstName, lastName: person.lastName, email: person.email ?? '',
             whatsAppNumber: person.whatsAppNumber ?? '',
-            dateOfBirth: person.dateOfBirth?.substring(0, 10) ?? '', photoUrl: person.photoUrl ?? ''
+            dateOfBirth: parseDateOnly(person.dateOfBirth), photoUrl: person.photoUrl ?? ''
           });
         }
       },
@@ -144,7 +156,7 @@ export class AddOccupancyFamilyMemberDialogComponent {
 
   clearFoundPerson(): void {
     this.foundPerson.set(null);
-    this.form.patchValue({ firstName: '', lastName: '', email: '', whatsAppNumber: '', dateOfBirth: '', photoUrl: '' });
+    this.form.patchValue({ firstName: '', lastName: '', email: '', whatsAppNumber: '', dateOfBirth: null, photoUrl: '' });
   }
 
   onPhotoSelected(event: Event): void {
@@ -173,10 +185,10 @@ export class AddOccupancyFamilyMemberDialogComponent {
       phone: found ? undefined : value.phone,
       email: found ? undefined : (value.email || null),
       whatsAppNumber: found ? undefined : (value.whatsAppNumber || null),
-      dateOfBirth: found ? undefined : (value.dateOfBirth || null),
+      dateOfBirth: found ? undefined : toDateOnlyString(value.dateOfBirth),
       photoUrl: found ? undefined : (value.photoUrl || null),
       relationship: value.relationship as any,
-      moveInDate: value.moveInDate
+      moveInDate: toDateOnlyString(value.moveInDate)
     }).subscribe({
       next: () => {
         this.toast.success('Family member added.');

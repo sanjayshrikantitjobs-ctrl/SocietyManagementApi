@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { FileUploadService } from '../../../core/services/file-upload.service';
+import { parseDateOnly, toDateOnlyString } from '../../../shared/utils/date.util';
 import { BUDGET_CATEGORY_LABELS, FestivalBudgetCategoryDto, FestivalExpenseDto, FestivalVendorDto } from '../models/festival.model';
 import { FestivalService } from '../services/festival.service';
 
@@ -22,7 +24,7 @@ export interface ExpenseFormDialogData {
   selector: 'app-expense-form-dialog',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, MatButtonModule, MatDialogModule, MatFormFieldModule,
+    CommonModule, ReactiveFormsModule, MatButtonModule, MatDatepickerModule, MatDialogModule, MatFormFieldModule,
     MatIconModule, MatInputModule, MatProgressSpinnerModule, MatSelectModule
   ],
   template: `
@@ -44,7 +46,12 @@ export interface ExpenseFormDialogData {
         </mat-form-field>
 
         <mat-form-field appearance="outline"><mat-label>Amount</mat-label><input matInput type="number" formControlName="amount" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Expense Date</mat-label><input matInput type="date" formControlName="expenseDate" /></mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Expense Date</mat-label>
+          <input matInput [matDatepicker]="expDatePicker" formControlName="expenseDate" />
+          <mat-datepicker-toggle matSuffix [for]="expDatePicker"></mat-datepicker-toggle>
+          <mat-datepicker #expDatePicker></mat-datepicker>
+        </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Payment Method</mat-label>
@@ -103,7 +110,7 @@ export class ExpenseFormDialogComponent implements OnInit {
     festivalBudgetCategoryId: [this.data.expense?.festivalBudgetCategoryId ?? null, Validators.required],
     vendorId: [this.data.expense?.vendorId ?? null],
     amount: [this.data.expense?.amount ?? 0, [Validators.required, Validators.min(0.01)]],
-    expenseDate: [this.data.expense?.expenseDate?.substring(0, 10) ?? '', Validators.required],
+    expenseDate: [parseDateOnly(this.data.expense?.expenseDate) as Date | null, Validators.required],
     paymentMethod: [this.data.expense?.paymentMethod ?? 1, Validators.required],
     invoiceNumber: [this.data.expense?.invoiceNumber ?? ''],
     description: [this.data.expense?.description ?? ''],
@@ -135,6 +142,7 @@ export class ExpenseFormDialogComponent implements OnInit {
 
   submit(): void {
     if (this.form.invalid) return;
-    this.dialogRef.close({ ...this.form.getRawValue(), festivalId: this.data.festivalId });
+    const value = this.form.getRawValue();
+    this.dialogRef.close({ ...value, expenseDate: toDateOnlyString(value.expenseDate), festivalId: this.data.festivalId });
   }
 }

@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -9,23 +10,31 @@ import { MatTableModule } from '@angular/material/table';
 import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 import { SocietyService } from '../../society-setup/services/society.service';
+import { toDateOnlyString } from '../../../shared/utils/date.util';
 import { FinanceReportSummaryDto } from '../models/finance.model';
 import { FinanceService } from '../services/finance.service';
 
 @Component({
   selector: 'app-financial-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatTableModule, SkeletonLoaderComponent, StatCardComponent],
+  imports: [
+    CommonModule, FormsModule, MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatIconModule, MatInputModule,
+    MatTableModule, SkeletonLoaderComponent, StatCardComponent
+  ],
   template: `
     <div class="tab-content">
       <div class="filters">
         <mat-form-field appearance="outline" subscriptSizing="dynamic">
           <mat-label>From</mat-label>
-          <input matInput type="date" [(ngModel)]="dateFrom" (change)="load()" />
+          <input matInput [matDatepicker]="fromPicker" [(ngModel)]="dateFrom" (dateChange)="load()" />
+          <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+          <mat-datepicker #fromPicker></mat-datepicker>
         </mat-form-field>
         <mat-form-field appearance="outline" subscriptSizing="dynamic">
           <mat-label>To</mat-label>
-          <input matInput type="date" [(ngModel)]="dateTo" (change)="load()" />
+          <input matInput [matDatepicker]="toPicker" [(ngModel)]="dateTo" (dateChange)="load()" />
+          <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+          <mat-datepicker #toPicker></mat-datepicker>
         </mat-form-field>
         <span class="spacer"></span>
         <button mat-stroked-button (click)="exportPdf()"><mat-icon>picture_as_pdf</mat-icon> Export PDF</button>
@@ -101,8 +110,8 @@ export class FinancialReportsComponent implements OnInit {
   readonly loading = signal(true);
   readonly summary = signal<FinanceReportSummaryDto | null>(null);
 
-  dateFrom = '';
-  dateTo = '';
+  dateFrom: Date | null = null;
+  dateTo: Date | null = null;
 
   private societyId = 0;
 
@@ -116,7 +125,7 @@ export class FinancialReportsComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.financeService.getReportSummary(this.societyId, this.dateFrom || undefined, this.dateTo || undefined)
+    this.financeService.getReportSummary(this.societyId, toDateOnlyString(this.dateFrom) ?? undefined, toDateOnlyString(this.dateTo) ?? undefined)
       .subscribe((result) => {
         this.summary.set(result);
         this.loading.set(false);
@@ -124,12 +133,12 @@ export class FinancialReportsComponent implements OnInit {
   }
 
   exportPdf(): void {
-    this.financeService.exportReportPdf(this.societyId, this.dateFrom || undefined, this.dateTo || undefined)
+    this.financeService.exportReportPdf(this.societyId, toDateOnlyString(this.dateFrom) ?? undefined, toDateOnlyString(this.dateTo) ?? undefined)
       .subscribe((blob) => this.downloadBlob(blob, 'financial-report.pdf'));
   }
 
   exportExcel(): void {
-    this.financeService.exportReportExcel(this.societyId, this.dateFrom || undefined, this.dateTo || undefined)
+    this.financeService.exportReportExcel(this.societyId, toDateOnlyString(this.dateFrom) ?? undefined, toDateOnlyString(this.dateTo) ?? undefined)
       .subscribe((blob) => this.downloadBlob(blob, 'financial-report.xlsx'));
   }
 

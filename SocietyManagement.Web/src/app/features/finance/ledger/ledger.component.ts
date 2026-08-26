@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { PageEvent } from '@angular/material/paginator';
@@ -9,23 +10,31 @@ import { MatTableModule } from '@angular/material/table';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { SocietyService } from '../../society-setup/services/society.service';
+import { toDateOnlyString } from '../../../shared/utils/date.util';
 import { FinanceLedgerPageDto } from '../models/finance.model';
 import { FinanceService } from '../services/finance.service';
 
 @Component({
   selector: 'app-ledger',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatChipsModule, MatFormFieldModule, MatInputModule, MatTableModule, DataTableComponent, SkeletonLoaderComponent],
+  imports: [
+    CommonModule, FormsModule, MatChipsModule, MatDatepickerModule, MatFormFieldModule, MatInputModule, MatTableModule,
+    DataTableComponent, SkeletonLoaderComponent
+  ],
   template: `
     <div class="tab-content">
       <div class="filters">
         <mat-form-field appearance="outline" subscriptSizing="dynamic">
           <mat-label>From</mat-label>
-          <input matInput type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()" />
+          <input matInput [matDatepicker]="fromPicker" [(ngModel)]="dateFrom" (dateChange)="onFilterChange()" />
+          <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+          <mat-datepicker #fromPicker></mat-datepicker>
         </mat-form-field>
         <mat-form-field appearance="outline" subscriptSizing="dynamic">
           <mat-label>To</mat-label>
-          <input matInput type="date" [(ngModel)]="dateTo" (change)="onFilterChange()" />
+          <input matInput [matDatepicker]="toPicker" [(ngModel)]="dateTo" (dateChange)="onFilterChange()" />
+          <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+          <mat-datepicker #toPicker></mat-datepicker>
         </mat-form-field>
         @if (page(); as p) {
           <div class="opening-balance">Opening Balance: <strong>₹{{ p.openingBalance | number }}</strong></div>
@@ -99,8 +108,8 @@ export class LedgerComponent implements OnInit {
   readonly pageSize = signal(20);
   readonly displayedColumns = ['date', 'type', 'source', 'description', 'amount', 'balance'];
 
-  dateFrom = '';
-  dateTo = '';
+  dateFrom: Date | null = null;
+  dateTo: Date | null = null;
 
   private societyId = 0;
 
@@ -115,7 +124,7 @@ export class LedgerComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.financeService.getLedger({
-      societyId: this.societyId, dateFrom: this.dateFrom || undefined, dateTo: this.dateTo || undefined,
+      societyId: this.societyId, dateFrom: toDateOnlyString(this.dateFrom) ?? undefined, dateTo: toDateOnlyString(this.dateTo) ?? undefined,
       pageNumber: this.pageIndex() + 1, pageSize: this.pageSize()
     }).subscribe((result) => {
       this.page.set(result);

@@ -1,13 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, effect, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDialog } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { PageEvent } from '@angular/material/paginator';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { AuthService } from '../../core/services/auth.service';
 import { SignalrService } from '../../core/services/signalr.service';
 import { ToastService } from '../../core/services/toast.service';
+import { DataTableComponent } from '../../shared/components/data-table/data-table.component';
+import { toDateOnlyString } from '../../shared/utils/date.util';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PromptDialogComponent } from '../../shared/components/prompt-dialog/prompt-dialog.component';
@@ -23,13 +31,16 @@ import { VisitorVisitDetailDialogComponent } from './visitor-visit-detail-dialog
 
 /** Role-aware landing: Watchman sees the security dashboard (counts + New
  * Visitor CTA + recent list); Member sees their pending approvals +
- * recent visitors; Admin sees both plus links into Gates/Purposes. */
+ * recent visitors; Admin sees both plus links into Gates/Purposes. Recent
+ * Visitors is server-paginated/sorted/searched (GetVisitsQuery for
+ * Admin/Watchman, GetMyVisitsQuery for residents) with a from/to date filter. */
 @Component({
   selector: 'app-visitors-landing',
   standalone: true,
   imports: [
-    CommonModule, RouterLink, MatButtonModule, MatIconModule, MatTableModule, AssetUrlPipe,
-    PageHeaderComponent, StatCardComponent, SkeletonLoaderComponent, EmptyStateComponent, VisitorApprovalCardComponent
+    CommonModule, FormsModule, RouterLink, MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatIconModule,
+    MatInputModule, MatSortModule, MatTableModule, AssetUrlPipe, PageHeaderComponent, StatCardComponent,
+    SkeletonLoaderComponent, EmptyStateComponent, VisitorApprovalCardComponent, DataTableComponent
   ],
   template: `
     <div class="app-page">
@@ -44,7 +55,7 @@ import { VisitorVisitDetailDialogComponent } from './visitor-visit-detail-dialog
         }
       </app-page-header>
 
-      @if (loading()) {
+      @if (initialLoading()) {
         <app-skeleton-loader [rows]="4" [height]="70" />
       } @else {
         @if (isWatchman() || auth.isAdmin()) {
@@ -69,45 +80,59 @@ import { VisitorVisitDetailDialogComponent } from './visitor-visit-detail-dialog
         }
 
         <h3>Recent Visitors</h3>
-        @if (recent().length === 0) {
-          <app-empty-state icon="badge" title="No visitors yet" />
-        } @else {
-            <table mat-table [dataSource]="recent()" class="app-card">
-              <ng-container matColumnDef="photo">
-                <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let v">
-                  @if (v.visitorPhotoUrl) {
-                    <img [src]="v.visitorPhotoUrl | assetUrl" alt="" class="thumb" />
-                  } @else {
-                    <div class="thumb thumb-placeholder"><mat-icon>person</mat-icon></div>
-                  }
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="visitor">
-                <th mat-header-cell *matHeaderCellDef>Visitor</th>
-                <td mat-cell *matCellDef="let v">{{ v.visitorName }}</td>
-              </ng-container>
-              <ng-container matColumnDef="flat">
-                <th mat-header-cell *matHeaderCellDef>Flat</th>
-                <td mat-cell *matCellDef="let v">{{ v.flatNumber }}</td>
-              </ng-container>
-              <ng-container matColumnDef="purpose">
-                <th mat-header-cell *matHeaderCellDef>Purpose</th>
-                <td mat-cell *matCellDef="let v">{{ v.purposeName }}</td>
-              </ng-container>
-              <ng-container matColumnDef="time">
-                <th mat-header-cell *matHeaderCellDef>Time</th>
-                <td mat-cell *matCellDef="let v">{{ v.requestedAt | date: 'short' }}</td>
-              </ng-container>
-              <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef>Status</th>
-                <td mat-cell *matCellDef="let v">{{ statusLabels[v.status] }}</td>
-              </ng-container>
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="clickable-row" (click)="openDetail(row)"></tr>
-            </table>
-          }
-        }
+        <app-data-table
+          [loading]="tableLoading()" [totalCount]="totalCount()" [pageSize]="pageSize()" [pageIndex]="pageIndex()"
+          searchPlaceholder="Search visitor, mobile or flat..." emptyTitle="No visitors found" emptyMessage="No visitors match the current filters."
+          (page)="onPage($event)" (search)="onSearch($event)">
+          <div toolbar class="date-filters">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>From</mat-label>
+              <input matInput [matDatepicker]="fromPicker" [(ngModel)]="fromDate" (dateChange)="onDateChange()" />
+              <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+              <mat-datepicker #fromPicker></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>To</mat-label>
+              <input matInput [matDatepicker]="toPicker" [(ngModel)]="toDate" (dateChange)="onDateChange()" />
+              <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+              <mat-datepicker #toPicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+          <table mat-table [dataSource]="recent()" matSort (matSortChange)="onSort($event)" table>
+            <ng-container matColumnDef="photo">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let v">
+                @if (v.visitorPhotoUrl) {
+                  <img [src]="v.visitorPhotoUrl | assetUrl" alt="" class="thumb" />
+                } @else {
+                  <div class="thumb thumb-placeholder"><mat-icon>person</mat-icon></div>
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="visitorName">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Visitor</th>
+              <td mat-cell *matCellDef="let v">{{ v.visitorName }}</td>
+            </ng-container>
+            <ng-container matColumnDef="flatNumber">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Flat</th>
+              <td mat-cell *matCellDef="let v">{{ v.flatNumber }}</td>
+            </ng-container>
+            <ng-container matColumnDef="purposeName">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Purpose</th>
+              <td mat-cell *matCellDef="let v">{{ v.purposeName }}</td>
+            </ng-container>
+            <ng-container matColumnDef="requestedAt">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Time</th>
+              <td mat-cell *matCellDef="let v">{{ v.requestedAt | date: 'short' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+              <td mat-cell *matCellDef="let v">{{ statusLabels[v.status] }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="clickable-row" (click)="openDetail(row)"></tr>
+          </table>
+        </app-data-table>
       }
     </div>
   `,
@@ -118,6 +143,8 @@ import { VisitorVisitDetailDialogComponent } from './visitor-visit-detail-dialog
     .clickable-row:hover { background: var(--app-primary-light); }
     h3 { margin: 24px 0 12px; font-size: 15px; }
     .pending-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 8px; }
+    .date-filters { display: flex; gap: 12px; }
+    .date-filters mat-form-field { width: 160px; }
     table { width: 100%; }
     .thumb { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
     .thumb-placeholder { display: flex; align-items: center; justify-content: center; background: var(--app-primary-light); color: var(--app-primary); }
@@ -133,12 +160,21 @@ export class VisitorsLandingComponent implements OnInit {
   private readonly signalr = inject(SignalrService);
   readonly auth = inject(AuthService);
 
-  readonly loading = signal(true);
+  readonly initialLoading = signal(true);
+  readonly tableLoading = signal(true);
   readonly pending = signal<VisitorVisitDto[]>([]);
   readonly recent = signal<VisitorVisitDto[]>([]);
   readonly currentlyInsideCount = signal(0);
   readonly statusLabels: Record<number, string> = VISIT_STATUS_LABELS;
-  readonly displayedColumns = ['photo', 'visitor', 'flat', 'purpose', 'time', 'status'];
+  readonly displayedColumns = ['photo', 'visitorName', 'flatNumber', 'purposeName', 'requestedAt', 'status'];
+
+  readonly totalCount = signal(0);
+  readonly pageIndex = signal(0);
+  readonly pageSize = signal(10);
+  readonly searchTerm = signal('');
+  readonly sortState = signal<Sort | null>(null);
+  fromDate: Date | null = null;
+  toDate: Date | null = null;
 
   private societyId = 0;
 
@@ -153,43 +189,80 @@ export class VisitorsLandingComponent implements OnInit {
   }
 
   isWatchman(): boolean {
-    return this.auth.roleName() === 'Watchman';
+    return this.auth.isWatchman();
   }
 
   ngOnInit(): void {
     this.societyService.getSocieties().subscribe((societies) => {
-      if (societies.length === 0) { this.loading.set(false); return; }
+      if (societies.length === 0) { this.initialLoading.set(false); return; }
       this.societyId = societies[0].id;
-      this.load();
+      this.loadPending();
+
+      if (this.isWatchman() || this.auth.isAdmin()) {
+        this.visitorService.getCurrentlyInside(this.societyId).subscribe((rows) => this.currentlyInsideCount.set(rows.length));
+      }
+
+      this.loadTable();
+      this.initialLoading.set(false);
     });
   }
 
-  private load(): void {
-    this.loading.set(true);
-    this.loadPending();
+  private loadTable(): void {
+    this.tableLoading.set(true);
+    const sort = this.sortState();
+    const params = {
+      fromDate: toDateOnlyString(this.fromDate) ?? undefined,
+      toDate: toDateOnlyString(this.toDate) ?? undefined,
+      search: this.searchTerm() || undefined,
+      sortBy: sort?.direction ? sort.active : undefined,
+      sortDescending: sort?.direction ? sort.direction === 'desc' : true,
+      pageNumber: this.pageIndex() + 1,
+      pageSize: this.pageSize()
+    };
 
-    if (this.isWatchman() || this.auth.isAdmin()) {
-      this.visitorService.getCurrentlyInside(this.societyId).subscribe((rows) => this.currentlyInsideCount.set(rows.length));
-      this.visitorService.getVisits({ societyId: this.societyId, pageNumber: 1, pageSize: 10 }).subscribe((result) => {
-        this.recent.set(result.items);
-        this.loading.set(false);
-      });
-    } else {
-      this.visitorService.getMyVisits(1, 10).subscribe((result) => {
-        this.recent.set(result.items);
-        this.loading.set(false);
-      });
-    }
+    const request = this.isWatchman() || this.auth.isAdmin()
+      ? this.visitorService.getVisits({ societyId: this.societyId, ...params })
+      : this.visitorService.getMyVisits(params);
+
+    request.subscribe((result) => {
+      this.recent.set(result.items);
+      this.totalCount.set(result.totalCount);
+      this.tableLoading.set(false);
+    });
   }
 
   private loadPending(): void {
     this.visitorService.getPendingApprovals().subscribe((rows) => this.pending.set(rows));
   }
 
+  onPage(event: PageEvent): void {
+    this.pageIndex.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+    this.loadTable();
+  }
+
+  onSearch(term: string): void {
+    this.searchTerm.set(term);
+    this.pageIndex.set(0);
+    this.loadTable();
+  }
+
+  onSort(sort: Sort): void {
+    this.sortState.set(sort);
+    this.pageIndex.set(0);
+    this.loadTable();
+  }
+
+  onDateChange(): void {
+    this.pageIndex.set(0);
+    this.loadTable();
+  }
+
   approveVisit(id: number): void {
     this.visitorService.approveVisit(id).subscribe(() => {
       this.toast.success('Visitor approved.');
       this.loadPending();
+      this.loadTable();
     });
   }
 
@@ -203,6 +276,7 @@ export class VisitorsLandingComponent implements OnInit {
       this.visitorService.rejectVisit(id, result.reason || undefined).subscribe(() => {
         this.toast.success('Visitor rejected.');
         this.loadPending();
+        this.loadTable();
       });
     });
   }

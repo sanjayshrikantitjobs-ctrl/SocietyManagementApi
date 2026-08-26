@@ -17,9 +17,11 @@ public class VisitorVisitsController : ApiControllerBase
     public async Task<IActionResult> GetAll(
         [FromQuery] int societyId, [FromQuery] VisitorVisitStatus? status, [FromQuery] int? gateId,
         [FromQuery] int? flatId, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate,
+        [FromQuery] string? search = null, [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = true,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
-        var result = await Mediator.Send(new GetVisitsQuery(societyId, status, gateId, flatId, fromDate, toDate, pageNumber, pageSize));
+        var result = await Mediator.Send(new GetVisitsQuery(
+            societyId, status, gateId, flatId, fromDate, toDate, search, sortBy, sortDescending, pageNumber, pageSize));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
@@ -34,9 +36,11 @@ public class VisitorVisitsController : ApiControllerBase
     [HttpGet("mine")]
     [HasPermission(Permissions.Visitors.View)]
     public async Task<IActionResult> GetMine(
+        [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null, [FromQuery] string? search = null,
+        [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = true,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
-        var result = await Mediator.Send(new GetMyVisitsQuery(pageNumber, pageSize));
+        var result = await Mediator.Send(new GetMyVisitsQuery(fromDate, toDate, search, sortBy, sortDescending, pageNumber, pageSize));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 

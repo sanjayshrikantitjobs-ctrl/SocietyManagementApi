@@ -28,6 +28,7 @@ export class AuthService {
   // `adminOnly` nav/route gate should keep working for them unchanged,
   // rather than needing every one updated to list both role names.
   readonly isAdmin = computed(() => this.roleName() === 'Admin' || this.isSuperAdmin());
+  readonly isWatchman = computed(() => this.roleName() === 'Watchman');
 
   hasPermission(code: string): boolean {
     return this.permissions().includes(code);

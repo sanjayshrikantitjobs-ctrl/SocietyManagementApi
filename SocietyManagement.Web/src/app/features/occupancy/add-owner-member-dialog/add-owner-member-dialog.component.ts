@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,6 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { AssetUrlPipe } from '../../../shared/pipes/asset-url.pipe';
 import { FileUploadService } from '../../../core/services/file-upload.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { parseDateOnly, toDateOnlyString } from '../../../shared/utils/date.util';
 import { PERSON_RELATIONSHIP_LABELS, PersonDto } from '../models/occupancy.model';
 import { OccupancyService } from '../services/occupancy.service';
 
@@ -28,7 +30,7 @@ export interface AddOwnerMemberDialogData {
   selector: 'app-add-owner-member-dialog',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, MatButtonModule, MatCheckboxModule, MatDialogModule,
+    CommonModule, ReactiveFormsModule, MatButtonModule, MatCheckboxModule, MatDatepickerModule, MatDialogModule,
     MatFormFieldModule, MatIconModule, MatInputModule, MatProgressSpinnerModule, MatSelectModule, AssetUrlPipe
   ],
   template: `
@@ -63,7 +65,12 @@ export interface AddOwnerMemberDialogData {
             <mat-option [value]="3">Other</mat-option>
           </mat-select>
         </mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Date of Birth</mat-label><input matInput type="date" formControlName="dateOfBirth" [readonly]="!!foundPerson()" /></mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Date of Birth</mat-label>
+          <input matInput [matDatepicker]="dobPicker" formControlName="dateOfBirth" [readonly]="!!foundPerson()" />
+          <mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle>
+          <mat-datepicker #dobPicker></mat-datepicker>
+        </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Relationship</mat-label>
           <mat-select formControlName="relationship">
@@ -74,7 +81,12 @@ export interface AddOwnerMemberDialogData {
         </mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Aadhaar (optional)</mat-label><input matInput formControlName="aadhaarNumber" [readonly]="!!foundPerson()" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>PAN (optional)</mat-label><input matInput formControlName="panNumber" [readonly]="!!foundPerson()" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Move-in Date</mat-label><input matInput type="date" formControlName="moveInDate" /></mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Move-in Date</mat-label>
+          <input matInput [matDatepicker]="moveInPicker" formControlName="moveInDate" />
+          <mat-datepicker-toggle matSuffix [for]="moveInPicker"></mat-datepicker-toggle>
+          <mat-datepicker #moveInPicker></mat-datepicker>
+        </mat-form-field>
 
         <div class="upload-field span-2">
           <label>Profile Photo</label>
@@ -128,13 +140,13 @@ export class AddOwnerMemberDialogComponent {
     email: [''],
     whatsAppNumber: [''],
     gender: [null as number | null],
-    dateOfBirth: [''],
+    dateOfBirth: [null as Date | null],
     relationship: [1, Validators.required],
     aadhaarNumber: [''],
     panNumber: [''],
     photoUrl: [''],
     isPrimary: [false],
-    moveInDate: [new Date().toISOString().substring(0, 10), Validators.required]
+    moveInDate: [new Date(), Validators.required]
   });
 
   onPhoneBlur(): void {
@@ -150,7 +162,7 @@ export class AddOwnerMemberDialogComponent {
           this.form.patchValue({
             firstName: person.firstName, lastName: person.lastName, email: person.email ?? '',
             whatsAppNumber: person.whatsAppNumber ?? '', gender: person.gender ?? null,
-            dateOfBirth: person.dateOfBirth?.substring(0, 10) ?? '',
+            dateOfBirth: parseDateOnly(person.dateOfBirth),
             aadhaarNumber: person.aadhaarNumber ?? '', panNumber: person.panNumber ?? '', photoUrl: person.photoUrl ?? ''
           });
         }
@@ -161,7 +173,7 @@ export class AddOwnerMemberDialogComponent {
 
   clearFoundPerson(): void {
     this.foundPerson.set(null);
-    this.form.patchValue({ firstName: '', lastName: '', email: '', whatsAppNumber: '', gender: null, dateOfBirth: '', aadhaarNumber: '', panNumber: '', photoUrl: '' });
+    this.form.patchValue({ firstName: '', lastName: '', email: '', whatsAppNumber: '', gender: null, dateOfBirth: null, aadhaarNumber: '', panNumber: '', photoUrl: '' });
   }
 
   onPhotoSelected(event: Event): void {
@@ -192,13 +204,13 @@ export class AddOwnerMemberDialogComponent {
       email: found ? undefined : (value.email || null),
       whatsAppNumber: found ? undefined : (value.whatsAppNumber || null),
       gender: found ? undefined : value.gender,
-      dateOfBirth: found ? undefined : (value.dateOfBirth || null),
+      dateOfBirth: found ? undefined : toDateOnlyString(value.dateOfBirth),
       photoUrl: found ? undefined : (value.photoUrl || null),
       aadhaarNumber: found ? undefined : (value.aadhaarNumber || null),
       panNumber: found ? undefined : (value.panNumber || null),
       relationship: value.relationship as any,
       isPrimary: value.isPrimary,
-      moveInDate: value.moveInDate
+      moveInDate: toDateOnlyString(value.moveInDate)
     }).subscribe({
       next: () => {
         this.toast.success('Owner added.');

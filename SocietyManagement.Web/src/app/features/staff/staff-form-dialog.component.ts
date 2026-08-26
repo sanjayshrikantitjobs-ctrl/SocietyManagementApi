@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { FileUploadService } from '../../core/services/file-upload.service';
+import { parseDateOnly, toDateOnlyString } from '../../shared/utils/date.util';
 import { STAFF_CATEGORY_LABELS, StaffDto } from './models/staff.model';
 
 export interface StaffFormDialogData {
@@ -23,7 +25,7 @@ export interface StaffFormDialogData {
   selector: 'app-staff-form-dialog',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, MatButtonModule, MatDialogModule,
+    CommonModule, ReactiveFormsModule, MatButtonModule, MatDatepickerModule, MatDialogModule,
     MatFormFieldModule, MatIconModule, MatInputModule, MatProgressSpinnerModule, MatSelectModule
   ],
   template: `
@@ -67,7 +69,9 @@ export interface StaffFormDialogData {
         <div class="row">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Joining Date</mat-label>
-            <input matInput type="date" formControlName="joiningDate" />
+            <input matInput [matDatepicker]="joiningPicker" formControlName="joiningDate" />
+            <mat-datepicker-toggle matSuffix [for]="joiningPicker"></mat-datepicker-toggle>
+            <mat-datepicker #joiningPicker></mat-datepicker>
           </mat-form-field>
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Salary (₹)</mat-label>
@@ -140,7 +144,7 @@ export class StaffFormDialogComponent {
     phone: [this.data.staff?.phone ?? '', Validators.required],
     email: [this.data.staff?.email ?? ''],
     address: [this.data.staff?.address ?? ''],
-    joiningDate: [this.data.staff?.joiningDate?.substring(0, 10) ?? new Date().toISOString().substring(0, 10), Validators.required],
+    joiningDate: [parseDateOnly(this.data.staff?.joiningDate) ?? new Date(), Validators.required],
     salary: [this.data.staff?.salary ?? 0, [Validators.required, Validators.min(0)]],
     salaryPayDay: [this.data.staff?.salaryPayDay ?? 1, [Validators.required, Validators.min(1), Validators.max(31)]],
     joiningDocumentUrl: [this.data.staff?.joiningDocumentUrl ?? ''],
@@ -167,6 +171,7 @@ export class StaffFormDialogComponent {
     const raw = this.form.getRawValue();
     this.dialogRef.close({
       ...raw,
+      joiningDate: toDateOnlyString(raw.joiningDate),
       category: Number(raw.category),
       salary: Number(raw.salary),
       salaryPayDay: Number(raw.salaryPayDay),

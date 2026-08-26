@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -10,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { AssetUrlPipe } from '../../../shared/pipes/asset-url.pipe';
 import { FileUploadService } from '../../../core/services/file-upload.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { parseDateOnly, toDateOnlyString } from '../../../shared/utils/date.util';
 import { POLICE_VERIFICATION_LABELS, RentalAgreementDto } from '../models/occupancy.model';
 import { OccupancyService } from '../services/occupancy.service';
 
@@ -21,7 +23,7 @@ import { OccupancyService } from '../services/occupancy.service';
   selector: 'app-rental-agreement-card',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatIconModule,
+    CommonModule, ReactiveFormsModule, MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatIconModule,
     MatInputModule, MatProgressSpinnerModule, MatSelectModule, AssetUrlPipe
   ],
   template: `
@@ -52,8 +54,18 @@ import { OccupancyService } from '../services/occupancy.service';
         }
       } @else {
         <form [formGroup]="form" (ngSubmit)="save()" class="edit-grid">
-          <mat-form-field appearance="outline"><mat-label>Agreement Start</mat-label><input matInput type="date" formControlName="agreementStartDate" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Agreement End</mat-label><input matInput type="date" formControlName="agreementEndDate" /></mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Agreement Start</mat-label>
+            <input matInput [matDatepicker]="startPicker" formControlName="agreementStartDate" />
+            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Agreement End</mat-label>
+            <input matInput [matDatepicker]="endPicker" formControlName="agreementEndDate" />
+            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+          </mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Security Deposit</mat-label><input matInput type="number" formControlName="securityDeposit" /></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Rent Amount (optional)</mat-label><input matInput type="number" formControlName="rentAmount" /></mat-form-field>
           <mat-form-field appearance="outline">
@@ -116,8 +128,8 @@ export class RentalAgreementCardComponent implements OnChanges {
   readonly policeLabels = POLICE_VERIFICATION_LABELS;
 
   form = this.fb.nonNullable.group({
-    agreementStartDate: ['', Validators.required],
-    agreementEndDate: ['', Validators.required],
+    agreementStartDate: [null as Date | null, Validators.required],
+    agreementEndDate: [null as Date | null, Validators.required],
     securityDeposit: [0, [Validators.required, Validators.min(0)]],
     rentAmount: [null as number | null],
     policeVerificationStatus: [1, Validators.required],
@@ -132,8 +144,8 @@ export class RentalAgreementCardComponent implements OnChanges {
   startEdit(): void {
     const a = this.agreement;
     this.form.reset({
-      agreementStartDate: a?.agreementStartDate?.substring(0, 10) ?? new Date().toISOString().substring(0, 10),
-      agreementEndDate: a?.agreementEndDate?.substring(0, 10) ?? '',
+      agreementStartDate: parseDateOnly(a?.agreementStartDate) ?? new Date(),
+      agreementEndDate: parseDateOnly(a?.agreementEndDate),
       securityDeposit: a?.securityDeposit ?? 0,
       rentAmount: a?.rentAmount ?? null,
       policeVerificationStatus: a?.policeVerificationStatus ?? 1,
@@ -161,7 +173,7 @@ export class RentalAgreementCardComponent implements OnChanges {
     if (this.form.invalid) return;
     const value = this.form.getRawValue();
     const payload = {
-      agreementStartDate: value.agreementStartDate, agreementEndDate: value.agreementEndDate,
+      agreementStartDate: toDateOnlyString(value.agreementStartDate), agreementEndDate: toDateOnlyString(value.agreementEndDate),
       securityDeposit: Number(value.securityDeposit), rentAmount: value.rentAmount ? Number(value.rentAmount) : null,
       policeVerificationStatus: Number(value.policeVerificationStatus), policeVerificationReference: value.policeVerificationReference || null,
       agreementDocumentUrl: value.agreementDocumentUrl || null

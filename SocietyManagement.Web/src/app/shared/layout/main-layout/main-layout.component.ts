@@ -30,6 +30,7 @@ interface NavItem {
   link: string;
   adminOnly?: boolean;
   superAdminOnly?: boolean;
+  hideForWatchman?: boolean;
   group?: string;
 }
 
@@ -38,7 +39,7 @@ type NavNode = { type: 'item'; item: NavItem } | { type: 'group'; name: string; 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: 'dashboard', link: '/dashboard' },
   { label: 'Societies', icon: 'domain', link: '/societies', superAdminOnly: true },
-  { label: 'Festivals & Events', icon: 'celebration', link: '/festivals' },
+  { label: 'Festivals & Events', icon: 'celebration', link: '/festivals', hideForWatchman: true },
   { label: 'Visitors', icon: 'badge', link: '/visitors' },
   { label: 'Maintenance', icon: 'receipt_long', link: '/maintenance', adminOnly: true },
   { label: 'Residents', icon: 'people', link: '/residents', adminOnly: true },
@@ -46,11 +47,11 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Services', icon: 'build', link: '/services', adminOnly: true },
   { label: 'Finance', icon: 'account_balance', link: '/finance', adminOnly: true },
   { label: 'Complaints', icon: 'report_problem', link: '/complaints', adminOnly: true },
-  { label: 'Committee', icon: 'groups', link: '/committee' },
-  { label: 'My Bills', icon: 'payments', link: '/my-bills', group: 'My Society' },
-  { label: 'My Water Tanker', icon: 'water_drop', link: '/my-water-tanker', group: 'My Society' },
-  { label: 'My Complaints', icon: 'report_problem', link: '/my-complaints', group: 'My Society' },
-  { label: 'My Family', icon: 'family_restroom', link: '/my-family', group: 'My Society' },
+  { label: 'Committee', icon: 'groups', link: '/committee', hideForWatchman: true },
+  { label: 'My Bills', icon: 'payments', link: '/my-bills', group: 'My Society', hideForWatchman: true },
+  { label: 'My Water Tanker', icon: 'water_drop', link: '/my-water-tanker', group: 'My Society', hideForWatchman: true },
+  { label: 'My Complaints', icon: 'report_problem', link: '/my-complaints', group: 'My Society', hideForWatchman: true },
+  { label: 'My Family', icon: 'family_restroom', link: '/my-family', group: 'My Society', hideForWatchman: true },
   { label: 'Society Setup', icon: 'apartment', link: '/society-setup', adminOnly: true },
   { label: 'Users', icon: 'group', link: '/users', adminOnly: true },
   { label: 'Roles & Permissions', icon: 'admin_panel_settings', link: '/roles', adminOnly: true }
@@ -173,7 +174,9 @@ export class MainLayoutComponent {
 
   visibleNavItems(): NavItem[] {
     return this.navItems.filter((item) =>
-      (!item.adminOnly || this.auth.isAdmin()) && (!item.superAdminOnly || this.auth.isSuperAdmin()));
+      (!item.adminOnly || this.auth.isAdmin()) &&
+      (!item.superAdminOnly || this.auth.isSuperAdmin()) &&
+      (!item.hideForWatchman || !this.auth.isWatchman()));
   }
 
   // Buckets consecutive same-`group` items into one node so the template

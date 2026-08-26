@@ -2,12 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FileUploadService } from '../../../core/services/file-upload.service';
+import { toDateOnlyString } from '../../../shared/utils/date.util';
 
 /** Small dedicated dialog for issuing a resale listing's society NOC — needs
  * a file upload, which the generic app-prompt-dialog doesn't support. */
@@ -15,7 +17,7 @@ import { FileUploadService } from '../../../core/services/file-upload.service';
   selector: 'app-issue-noc-dialog',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, MatButtonModule, MatDialogModule,
+    CommonModule, ReactiveFormsModule, MatButtonModule, MatDatepickerModule, MatDialogModule,
     MatFormFieldModule, MatIconModule, MatInputModule, MatProgressSpinnerModule
   ],
   template: `
@@ -24,7 +26,9 @@ import { FileUploadService } from '../../../core/services/file-upload.service';
       <mat-dialog-content class="content">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>NOC Issued Date</mat-label>
-          <input matInput type="date" formControlName="nocIssuedDate" />
+          <input matInput [matDatepicker]="nocPicker" formControlName="nocIssuedDate" />
+          <mat-datepicker-toggle matSuffix [for]="nocPicker"></mat-datepicker-toggle>
+          <mat-datepicker #nocPicker></mat-datepicker>
         </mat-form-field>
 
         <div class="upload-field">
@@ -64,7 +68,7 @@ export class IssueNocDialogComponent {
   readonly uploading = signal(false);
 
   form = this.fb.nonNullable.group({
-    nocIssuedDate: [new Date().toISOString().substring(0, 10), Validators.required],
+    nocIssuedDate: [new Date(), Validators.required],
     nocDocumentUrl: ['', Validators.required]
   });
 
@@ -84,6 +88,7 @@ export class IssueNocDialogComponent {
 
   submit(): void {
     if (this.form.invalid) return;
-    this.dialogRef.close(this.form.getRawValue());
+    const value = this.form.getRawValue();
+    this.dialogRef.close({ ...value, nocIssuedDate: toDateOnlyString(value.nocIssuedDate) });
   }
 }

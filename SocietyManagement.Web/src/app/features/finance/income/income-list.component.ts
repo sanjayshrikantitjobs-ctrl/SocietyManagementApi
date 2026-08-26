@@ -3,6 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -13,6 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { ToastService } from '../../../core/services/toast.service';
 import { SocietyService } from '../../society-setup/services/society.service';
+import { toDateOnlyString } from '../../../shared/utils/date.util';
 import { FINANCE_SOURCE_LABELS, FinanceIncomeRowDto } from '../models/finance.model';
 import { FinanceService } from '../services/finance.service';
 
@@ -20,8 +22,8 @@ import { FinanceService } from '../services/finance.service';
   selector: 'app-income-list',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, MatButtonModule, MatChipsModule, MatFormFieldModule, MatIconModule, MatInputModule,
-    MatSelectModule, MatTableModule, MatTooltipModule, DataTableComponent
+    CommonModule, FormsModule, MatButtonModule, MatChipsModule, MatDatepickerModule, MatFormFieldModule, MatIconModule,
+    MatInputModule, MatSelectModule, MatTableModule, MatTooltipModule, DataTableComponent
   ],
   template: `
     <div class="tab-content">
@@ -37,11 +39,15 @@ import { FinanceService } from '../services/finance.service';
         </mat-form-field>
         <mat-form-field appearance="outline" subscriptSizing="dynamic">
           <mat-label>From</mat-label>
-          <input matInput type="date" [(ngModel)]="dateFrom" (change)="onFilterChange()" />
+          <input matInput [matDatepicker]="fromPicker" [(ngModel)]="dateFrom" (dateChange)="onFilterChange()" />
+          <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+          <mat-datepicker #fromPicker></mat-datepicker>
         </mat-form-field>
         <mat-form-field appearance="outline" subscriptSizing="dynamic">
           <mat-label>To</mat-label>
-          <input matInput type="date" [(ngModel)]="dateTo" (change)="onFilterChange()" />
+          <input matInput [matDatepicker]="toPicker" [(ngModel)]="dateTo" (dateChange)="onFilterChange()" />
+          <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+          <mat-datepicker #toPicker></mat-datepicker>
         </mat-form-field>
       </div>
 
@@ -112,8 +118,8 @@ export class IncomeListComponent implements OnInit {
   readonly sourceLabels: Record<number, string> = FINANCE_SOURCE_LABELS;
 
   sourceFilter: number | null = null;
-  dateFrom = '';
-  dateTo = '';
+  dateFrom: Date | null = null;
+  dateTo: Date | null = null;
 
   private societyId = 0;
 
@@ -128,8 +134,8 @@ export class IncomeListComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.financeService.getIncome({
-      societyId: this.societyId, source: this.sourceFilter ?? undefined, dateFrom: this.dateFrom || undefined,
-      dateTo: this.dateTo || undefined, search: this.searchTerm() || undefined,
+      societyId: this.societyId, source: this.sourceFilter ?? undefined, dateFrom: toDateOnlyString(this.dateFrom) ?? undefined,
+      dateTo: toDateOnlyString(this.dateTo) ?? undefined, search: this.searchTerm() || undefined,
       pageNumber: this.pageIndex() + 1, pageSize: this.pageSize()
     }).subscribe((result) => {
       this.rows.set(result.items);

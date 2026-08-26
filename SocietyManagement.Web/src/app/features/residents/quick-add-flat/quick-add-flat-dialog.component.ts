@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,6 +14,7 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { Building, FLAT_TYPE_LABELS, Floor, Wing } from '../../../core/models/society.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { SocietyService } from '../../society-setup/services/society.service';
+import { toDateOnlyString } from '../../../shared/utils/date.util';
 import { GENDER_LABELS } from '../models/resident.model';
 import { ResidentService } from '../services/resident.service';
 
@@ -25,7 +27,7 @@ import { ResidentService } from '../services/resident.service';
   selector: 'app-quick-add-flat-dialog',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, MatButtonModule, MatDialogModule, MatFormFieldModule,
+    CommonModule, ReactiveFormsModule, MatButtonModule, MatDatepickerModule, MatDialogModule, MatFormFieldModule,
     MatIconModule, MatInputModule, MatProgressSpinnerModule, MatSelectModule, MatStepperModule
   ],
   template: `
@@ -131,7 +133,12 @@ import { ResidentService } from '../services/resident.service';
                 @for (g of genderOptions; track g.value) { <mat-option [value]="g.value">{{ g.label }}</mat-option> }
               </mat-select>
             </mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Date of Birth (optional)</mat-label><input matInput type="date" formControlName="dateOfBirth" /></mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Date of Birth (optional)</mat-label>
+              <input matInput [matDatepicker]="dobPicker" formControlName="dateOfBirth" />
+              <mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle>
+              <mat-datepicker #dobPicker></mat-datepicker>
+            </mat-form-field>
           </form>
           <div class="step-actions">
             <button mat-button matStepperPrevious>Back</button>
@@ -220,7 +227,7 @@ export class QuickAddFlatDialogComponent {
     phone: ['', Validators.required],
     email: [''],
     gender: [null as number | null],
-    dateOfBirth: ['']
+    dateOfBirth: [null as Date | null]
   });
 
   familyForm = this.fb.group({ familyMembers: this.fb.array<ReturnType<typeof this.newFamilyRow>>([]) });
@@ -340,7 +347,7 @@ export class QuickAddFlatDialogComponent {
       const resident = this.residentForm.getRawValue();
       const primaryMemberId = await firstValueFrom(this.residentService.createMember({
         societyId: location.societyId, firstName: resident.firstName, lastName: resident.lastName,
-        phone: resident.phone, email: resident.email || null, gender: resident.gender, dateOfBirth: resident.dateOfBirth || null
+        phone: resident.phone, email: resident.email || null, gender: resident.gender, dateOfBirth: toDateOnlyString(resident.dateOfBirth)
       }));
       await firstValueFrom(this.residentService.createResidency({
         flatId, memberId: primaryMemberId, memberType: resident.residencyType,

@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,6 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { FileUploadService } from '../../core/services/file-upload.service';
+import { parseDateOnly, toDateOnlyString } from '../../shared/utils/date.util';
 import { ContributionPoolDto, Festival } from './models/festival.model';
 import { FestivalService } from './services/festival.service';
 
@@ -30,7 +32,7 @@ export interface FestivalFormDialogData {
   selector: 'app-festival-form-dialog',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, MatButtonModule, MatCheckboxModule, MatDialogModule,
+    CommonModule, ReactiveFormsModule, MatButtonModule, MatCheckboxModule, MatDatepickerModule, MatDialogModule,
     MatFormFieldModule, MatIconModule, MatInputModule, MatProgressSpinnerModule, MatSelectModule
   ],
   template: `
@@ -45,8 +47,18 @@ export interface FestivalFormDialogData {
         <mat-form-field appearance="outline"><mat-label>Year</mat-label><input matInput type="number" formControlName="year" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Theme</mat-label><input matInput formControlName="theme" /></mat-form-field>
 
-        <mat-form-field appearance="outline"><mat-label>Start Date</mat-label><input matInput type="date" formControlName="startDate" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>End Date</mat-label><input matInput type="date" formControlName="endDate" /></mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Start Date</mat-label>
+          <input matInput [matDatepicker]="startPicker" formControlName="startDate" />
+          <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+          <mat-datepicker #startPicker></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>End Date</mat-label>
+          <input matInput [matDatepicker]="endPicker" formControlName="endDate" />
+          <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+          <mat-datepicker #endPicker></mat-datepicker>
+        </mat-form-field>
 
         <mat-form-field appearance="outline" class="span-2">
           <mat-label>Description</mat-label>
@@ -138,8 +150,8 @@ export class FestivalFormDialogComponent {
     name: [this.data.festival?.name ?? '', Validators.required],
     year: [this.data.festival?.year ?? new Date().getFullYear(), Validators.required],
     theme: [this.data.festival?.theme ?? ''],
-    startDate: [this.data.festival?.startDate?.substring(0, 10) ?? '', Validators.required],
-    endDate: [this.data.festival?.endDate?.substring(0, 10) ?? '', Validators.required],
+    startDate: [parseDateOnly(this.data.festival?.startDate) as Date | null, Validators.required],
+    endDate: [parseDateOnly(this.data.festival?.endDate) as Date | null, Validators.required],
     description: [this.data.festival?.description ?? ''],
     visibility: [this.data.festival?.visibility ?? 1, Validators.required],
     isRecurring: [this.data.festival?.isRecurring ?? false],
@@ -174,6 +186,8 @@ export class FestivalFormDialogComponent {
     const value = this.form.getRawValue();
     this.dialogRef.close({
       ...value,
+      startDate: toDateOnlyString(value.startDate),
+      endDate: toDateOnlyString(value.endDate),
       contributionPoolFestivalId: value.kind === 3 ? value.contributionPoolFestivalId : null,
       parentFestivalId: this.data.festival?.parentFestivalId ?? null,
       societyId: this.data.societyId

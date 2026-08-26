@@ -303,11 +303,14 @@ public class VisitorVisitCommandHandlers :
 // ---- Queries -------------------------------------------------------------------
 public record GetVisitsQuery(
     int SocietyId, VisitorVisitStatus? Status, int? GateId, int? FlatId, DateTime? FromDate, DateTime? ToDate,
+    string? Search = null, string? SortBy = null, bool SortDescending = true,
     int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<VisitorVisitDto>>;
 
 public record GetPendingApprovalsQuery : IRequest<List<VisitorVisitDto>>;
 
 public record GetMyVisitsQuery(
+    DateTime? FromDate = null, DateTime? ToDate = null, string? Search = null,
+    string? SortBy = null, bool SortDescending = true,
     int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<VisitorVisitDto>>;
 
 public record GetCurrentlyInsideQuery(int SocietyId) : IRequest<List<VisitorVisitDto>>;
@@ -338,6 +341,31 @@ public class VisitorVisitQueryHandlers :
             RejectionReason = v.RejectionReason, CheckInTime = v.CheckInTime, CheckOutTime = v.CheckOutTime
         });
 
+    private static IQueryable<VisitorVisit> ApplySearch(IQueryable<VisitorVisit> query, string? search)
+    {
+        if (string.IsNullOrWhiteSpace(search)) return query;
+        var term = search.Trim().ToLower();
+        return query.Where(v =>
+            v.Visitor.Name.ToLower().Contains(term) ||
+            v.Visitor.MobileNumber.ToLower().Contains(term) ||
+            v.Flat.FlatNumber.ToLower().Contains(term));
+    }
+
+    private static IQueryable<VisitorVisit> ApplySort(IQueryable<VisitorVisit> query, string? sortBy, bool sortDescending) =>
+        (sortBy?.ToLowerInvariant(), sortDescending) switch
+        {
+            ("visitorname", true) => query.OrderByDescending(v => v.Visitor.Name),
+            ("visitorname", false) => query.OrderBy(v => v.Visitor.Name),
+            ("flatnumber", true) => query.OrderByDescending(v => v.Flat.FlatNumber),
+            ("flatnumber", false) => query.OrderBy(v => v.Flat.FlatNumber),
+            ("purposename", true) => query.OrderByDescending(v => v.Purpose.Name),
+            ("purposename", false) => query.OrderBy(v => v.Purpose.Name),
+            ("status", true) => query.OrderByDescending(v => v.Status),
+            ("status", false) => query.OrderBy(v => v.Status),
+            ("requestedat", false) => query.OrderBy(v => v.RequestedAt),
+            _ => query.OrderByDescending(v => v.RequestedAt)
+        };
+
     public async Task<PaginatedResult<VisitorVisitDto>> Handle(GetVisitsQuery request, CancellationToken ct)
     {
         var query = _context.VisitorVisits.Where(v => v.SocietyId == request.SocietyId);
@@ -347,12 +375,13 @@ public class VisitorVisitQueryHandlers :
         if (request.FlatId.HasValue) query = query.Where(v => v.FlatId == request.FlatId);
         if (request.FromDate.HasValue) query = query.Where(v => v.RequestedAt >= request.FromDate);
         if (request.ToDate.HasValue) query = query.Where(v => v.RequestedAt <= request.ToDate);
+        query = ApplySearch(query, request.Search);
 
         var totalCount = await query.CountAsync(ct);
         var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
         var pageNumber = Math.Max(request.PageNumber, 1);
 
-        var items = await Project(query.OrderByDescending(v => v.RequestedAt))
+        var items = await Project(ApplySort(query, request.SortBy, request.SortDescending))
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(ct);
@@ -379,11 +408,15 @@ public class VisitorVisitQueryHandlers :
 
         var query = _context.VisitorVisits.Where(v => flatIds.Contains(v.FlatId));
 
+        if (request.FromDate.HasValue) query = query.Where(v => v.RequestedAt >= request.FromDate);
+        if (request.ToDate.HasValue) query = query.Where(v => v.RequestedAt <= request.ToDate);
+        query = ApplySearch(query, request.Search);
+
         var totalCount = await query.CountAsync(ct);
         var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
         var pageNumber = Math.Max(request.PageNumber, 1);
 
-        var items = await Project(query.OrderByDescending(v => v.RequestedAt))
+        var items = await Project(ApplySort(query, request.SortBy, request.SortDescending))
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(ct);

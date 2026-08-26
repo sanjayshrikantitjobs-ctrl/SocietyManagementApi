@@ -34,6 +34,10 @@ export const routes: Routes = [
         loadChildren: () => import('./features/visitors/visitors.routes').then((m) => m.VISITORS_ROUTES)
       },
       {
+        path: 'vehicle-security',
+        loadChildren: () => import('./features/vehicle-security/vehicle-security.routes').then((m) => m.VEHICLE_SECURITY_ROUTES)
+      },
+      {
         path: 'maintenance',
         canActivate: [roleGuard],
         data: { roles: ['Admin'] },
@@ -68,12 +72,6 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['Admin'] },
         loadChildren: () => import('./features/complaints/complaints.routes').then((m) => m.COMPLAINTS_ROUTES)
-      },
-      {
-        path: 'societies',
-        canActivate: [roleGuard],
-        data: { roles: ['SuperAdmin'] },
-        loadChildren: () => import('./features/societies/societies.routes').then((m) => m.SOCIETIES_ROUTES)
       },
       {
         path: 'committee',

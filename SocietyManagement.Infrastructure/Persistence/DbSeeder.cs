@@ -66,7 +66,8 @@ public class DbSeeder
         var watchmanPermissionCodes = new[]
         {
             Permissions.Society.View, Permissions.Visitors.View, Permissions.Visitors.Create,
-            Permissions.Visitors.CheckIn, Permissions.Visitors.CheckOut
+            Permissions.Visitors.CheckIn, Permissions.Visitors.CheckOut,
+            Permissions.Vehicles.Scan, Permissions.Vehicles.Search
         };
         await SeedRolePermissionsAsync(
             watchmanRole, allPermissions.Where(p => watchmanPermissionCodes.Contains(p.Code)).ToList());
@@ -274,7 +275,11 @@ public class DbSeeder
             ("Services", "View", Permissions.Services.View),
             ("Services", "Manage", Permissions.Services.Manage),
             ("Committee", "View", Permissions.Committee.View),
-            ("Committee", "Manage", Permissions.Committee.Manage)
+            ("Committee", "Manage", Permissions.Committee.Manage),
+            ("Vehicles", "Scan", Permissions.Vehicles.Scan),
+            ("Vehicles", "Search", Permissions.Vehicles.Search),
+            ("Vehicles", "ViewOwnerDetails", Permissions.Vehicles.ViewOwnerDetails),
+            ("Vehicles", "Register", Permissions.Vehicles.Register)
         };
 
         var existingCodes = await _context.Permissions.Select(p => p.Code).ToListAsync();

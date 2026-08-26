@@ -49,6 +49,7 @@ public interface IApplicationDbContext
     DbSet<Member> Members { get; }
     DbSet<FlatResidency> FlatResidencies { get; }
     DbSet<Vehicle> Vehicles { get; }
+    DbSet<VehicleScanLog> VehicleScanLogs { get; }
     DbSet<EmergencyContact> EmergencyContacts { get; }
     DbSet<FlatResaleListing> FlatResaleListings { get; }
 

@@ -1,9 +1,11 @@
 <div class="app-page">
-  <app-page-header title="Society Setup" subtitle="Manage societies, buildings, wings, floors, flats and parking"
-                    [breadcrumbs]="[{ label: 'Society Setup' }]">
-    <button mat-flat-button color="primary" (click)="add()">
-      <mat-icon>add</mat-icon> Add Society
-    </button>
+  <app-page-header title="Societies" subtitle="Manage societies, buildings, wings, floors, flats and parking"
+                    [breadcrumbs]="[{ label: 'Societies' }]">
+    @if (auth.hasPermission('society.create')) {
+      <button mat-flat-button color="primary" (click)="add()">
+        <mat-icon>add</mat-icon> Add Society
+      </button>
+    }
   </app-page-header>
 
   <app-data-table

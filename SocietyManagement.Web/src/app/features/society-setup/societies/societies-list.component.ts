@@ -6,6 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
+import { AuthService } from '../../../core/services/auth.service';
 import { Society } from '../../../core/models/society.model';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
@@ -28,6 +29,7 @@ export class SocietiesListComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly toast = inject(ToastService);
+  readonly auth = inject(AuthService);
 
   readonly loading = signal(true);
   readonly societies = signal<Society[]>([]);

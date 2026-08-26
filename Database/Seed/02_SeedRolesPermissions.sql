@@ -71,7 +71,11 @@ GO
         ('Visitors',   'ManageExpectedVisitors', 'visitors.manage_expected'),
         ('Visitors',   'ScanQr',      'visitors.scan_qr'),
         ('Reports',    'View',        'reports.view'),
-        ('AuditLogs',  'View',        'auditlogs.view')
+        ('AuditLogs',  'View',        'auditlogs.view'),
+        ('Vehicles',   'Scan',        'vehicles.scan'),
+        ('Vehicles',   'Search',      'vehicles.search'),
+        ('Vehicles',   'ViewOwnerDetails', 'vehicles.view_owner_details'),
+        ('Vehicles',   'Register',    'vehicles.register')
     ) AS p(Module, Action, Code)
 )
 INSERT INTO dbo.Permissions (Module, Action, Code, CreatedBy)
@@ -115,7 +119,8 @@ SELECT r.Id, p.Id, 'system'
 FROM dbo.Roles r
 CROSS JOIN dbo.Permissions p
 WHERE r.Name = 'Watchman'
-  AND p.Code IN ('society.view', 'visitors.view', 'visitors.create', 'visitors.checkin', 'visitors.checkout')
+  AND p.Code IN ('society.view', 'visitors.view', 'visitors.create', 'visitors.checkin', 'visitors.checkout',
+      'vehicles.scan', 'vehicles.search')
   AND NOT EXISTS (
       SELECT 1 FROM dbo.RolePermissions rp WHERE rp.RoleId = r.Id AND rp.PermissionId = p.Id
   );

@@ -172,4 +172,18 @@ public static class Permissions
         public const string View = "committee.view";
         public const string Manage = "committee.manage";
     }
+
+    /// <summary>Vehicle Security console (camera OCR + manual search +
+    /// scan history) — deliberately its own group, not Members.*, so
+    /// Watchman can reach Scan/Search without the broader Members grant.
+    /// The existing Vehicle CRUD in VehiclesController keeps using
+    /// Members.* unchanged; Register is enforced as a frontend visibility
+    /// gate only (see VehicleScanFeature.cs doc comment).</summary>
+    public static class Vehicles
+    {
+        public const string Scan = "vehicles.scan";
+        public const string Search = "vehicles.search";
+        public const string ViewOwnerDetails = "vehicles.view_owner_details";
+        public const string Register = "vehicles.register";
+    }
 }

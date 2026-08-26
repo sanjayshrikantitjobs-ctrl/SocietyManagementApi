@@ -49,6 +49,8 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, SmtpEmailService>();
         services.AddScoped<ISmsService, StubSmsService>();
         services.AddScoped<IWhatsAppService, StubWhatsAppService>();
+        // Stub-now/swap-later OCR provider — see Services/VehicleOcrServices.cs.
+        services.AddScoped<IVehicleOcrService, StubVehicleOcrService>();
 
         services.AddSignalR();
         services.AddScoped<INotificationService, NotificationService>();

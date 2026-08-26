@@ -52,6 +52,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Member> Members => Set<Member>();
     public DbSet<FlatResidency> FlatResidencies => Set<FlatResidency>();
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
+    public DbSet<VehicleScanLog> VehicleScanLogs => Set<VehicleScanLog>();
     public DbSet<EmergencyContact> EmergencyContacts => Set<EmergencyContact>();
     public DbSet<FlatResaleListing> FlatResaleListings => Set<FlatResaleListing>();
 

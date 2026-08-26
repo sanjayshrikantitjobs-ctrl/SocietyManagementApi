@@ -171,6 +171,15 @@ export class NewVisitorComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Pre-fill when arriving from Vehicle Security's "Create Visitor Entry"
+    // (see vehicle-scan.component.ts / vehicle-search.component.ts) — read
+    // via history.state rather than getCurrentNavigation(), which is only
+    // populated during the navigation itself, not by the time ngOnInit runs.
+    const state = history.state as { vehicleNumber?: string } | undefined;
+    if (state?.vehicleNumber) {
+      this.form.patchValue({ vehicleNumber: state.vehicleNumber });
+    }
+
     this.societyService.getSocieties().subscribe((societies) => {
       if (societies.length === 0) return;
       this.societyId = societies[0].id;

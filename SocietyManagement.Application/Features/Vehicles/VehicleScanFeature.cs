@@ -13,18 +13,6 @@ namespace SocietyManagement.Application.Features.Vehicles;
 
 // ---- DTOs ----------------------------------------------------------------------
 
-/// <summary>One OCR read, before the user confirms/edits it — no DB write
-/// happens for this step, so a retried/discarded photo never leaves a
-/// trace.</summary>
-public class VehicleOcrReadDto
-{
-    public bool Success { get; set; }
-    public string RawText { get; set; } = string.Empty;
-    public string NormalizedText { get; set; } = string.Empty;
-    public double Confidence { get; set; }
-    public string? ErrorMessage { get; set; }
-}
-
 /// <summary>Result of confirming a scan or opening a search hit. Owner
 /// fields are only populated when the caller holds Vehicles.ViewOwnerDetails
 /// — Watchman logins get vehicle/flat/building/wing/parking/status only.</summary>
@@ -79,16 +67,6 @@ public class VehicleScanHistoryDto
 
 // ---- Commands --------------------------------------------------------------------
 
-public record RecognizePlateCommand(int SocietyId, byte[] ImageBytes) : IRequest<VehicleOcrReadDto>;
-
-public class RecognizePlateCommandValidator : AbstractValidator<RecognizePlateCommand>
-{
-    public RecognizePlateCommandValidator()
-    {
-        RuleFor(x => x.ImageBytes).NotEmpty().WithMessage("An image is required.");
-    }
-}
-
 public record ConfirmVehicleScanCommand(
     int SocietyId, string NormalizedRegistrationNumber, string? RawOcrText, double? Confidence,
     VehicleScanSource Source, int? GateId, byte[]? ImageBytes) : IRequest<VehicleScanResultDto>;
@@ -112,39 +90,23 @@ public record GetScanHistoryQuery(
 // ---- Handlers --------------------------------------------------------------------
 
 public class VehicleScanHandlers :
-    IRequestHandler<RecognizePlateCommand, VehicleOcrReadDto>,
     IRequestHandler<ConfirmVehicleScanCommand, VehicleScanResultDto>,
     IRequestHandler<GetVehicleSearchQuery, List<VehicleSearchItemDto>>,
     IRequestHandler<GetScanHistoryQuery, PaginatedResult<VehicleScanHistoryDto>>
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
-    private readonly IVehicleOcrService _ocrService;
     private readonly IFileStorageService _fileStorage;
     private readonly IDateTime _dateTime;
 
     public VehicleScanHandlers(
-        IApplicationDbContext context, ICurrentUserService currentUserService, IVehicleOcrService ocrService,
+        IApplicationDbContext context, ICurrentUserService currentUserService,
         IFileStorageService fileStorage, IDateTime dateTime)
     {
         _context = context;
         _currentUserService = currentUserService;
-        _ocrService = ocrService;
         _fileStorage = fileStorage;
         _dateTime = dateTime;
-    }
-
-    public async Task<VehicleOcrReadDto> Handle(RecognizePlateCommand request, CancellationToken ct)
-    {
-        var read = await _ocrService.RecognizeAsync(request.ImageBytes, ct);
-        return new VehicleOcrReadDto
-        {
-            Success = read.Success,
-            RawText = read.RawText ?? string.Empty,
-            NormalizedText = VehicleNumberNormalizer.Normalize(read.RawText),
-            Confidence = read.Confidence,
-            ErrorMessage = read.ErrorMessage
-        };
     }
 
     public async Task<VehicleScanResultDto> Handle(ConfirmVehicleScanCommand request, CancellationToken ct)

@@ -4,20 +4,12 @@ export type VehicleScanSource = 1 | 2; // OcrCamera | ManualSearch
 export type VehicleScanResultStatus = 1 | 2; // Matched | NotRegistered
 
 export const SCAN_SOURCE_LABELS: Record<VehicleScanSource, string> = {
-  1: 'Camera Scan', 2: 'Manual Search'
+  1: 'Gate Entry', 2: 'Manual Search'
 };
 
 export const SCAN_RESULT_LABELS: Record<VehicleScanResultStatus, string> = {
   1: 'Registered', 2: 'Not Registered'
 };
-
-export interface VehicleOcrReadDto {
-  success: boolean;
-  rawText: string;
-  normalizedText: string;
-  confidence: number;
-  errorMessage?: string | null;
-}
 
 /** Owner fields are only populated by the API when the caller holds
  * Vehicles.ViewOwnerDetails — Watchman logins get undefined here, not an

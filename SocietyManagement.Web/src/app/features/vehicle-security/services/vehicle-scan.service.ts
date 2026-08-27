@@ -4,7 +4,7 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../../../core/models/api-response.model';
 import {
-  VehicleOcrReadDto, VehicleScanHistoryDto, VehicleScanResultDto, VehicleScanSource, VehicleSearchItemDto
+  VehicleScanHistoryDto, VehicleScanResultDto, VehicleScanSource, VehicleSearchItemDto
 } from '../models/vehicle-scan.model';
 
 function toHttpParams(params: Record<string, unknown>): HttpParams {
@@ -21,14 +21,6 @@ function toHttpParams(params: Record<string, unknown>): HttpParams {
 export class VehicleScanService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/vehicle-scans`;
-
-  /** No DB write — a retried/discarded photo never leaves a trace. */
-  recognize(societyId: number, file: File): Observable<VehicleOcrReadDto> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<ApiResponse<VehicleOcrReadDto>>(`${this.baseUrl}/recognize`, formData, { params: { societyId } })
-      .pipe(map((r) => r.data!));
-  }
 
   confirm(payload: {
     societyId: number; normalizedRegistrationNumber: string; rawOcrText?: string | null; confidence?: number | null;

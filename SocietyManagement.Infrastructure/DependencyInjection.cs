@@ -62,31 +62,6 @@ public static class DependencyInjection
         {
             services.AddScoped<IWhatsAppService, StubWhatsAppService>();
         }
-        // Vehicle plate OCR: AsposeOcrVehicleOcrService, replacing every earlier
-        // attempt this session (Tesseract — inadequate even correctly cropped;
-        // a from-scratch PaddleOCR pipeline — accurate, but its native libraries
-        // alone added ~540MB to the Linux deployment package and broke the Azure
-        // App Service deploy; Azure AI Vision — accurate but a cloud dependency
-        // the user chose to avoid). Aspose.OCR's purpose-built car-plate mode,
-        // confirmed live against the real gate photo used throughout this
-        // session, reads it far more accurately than anything tried before, and
-        // its only heavy dependency (Microsoft.ML.OnnxRuntime) doesn't
-        // reintroduce PaddleOCR's deployment-size problem. See
-        // AsposeOcrVehicleOcrService.cs.
-        //
-        // Aspose.OCR is a COMMERCIAL product (perpetual licenses from $799,
-        // metered from $1,999/month) — currently running unlicensed/trial,
-        // which AsposeOcrVehicleOcrService already strips the watermark text
-        // from. Once a license is purchased, set Aspose:LicenseFilePath to the
-        // .lic file's path — no code change needed, same "swap in once
-        // configured" pattern as Blob Storage/WhatsApp below.
-        var asposeLicensePath = configuration["Aspose:LicenseFilePath"];
-        if (!string.IsNullOrWhiteSpace(asposeLicensePath) && File.Exists(asposeLicensePath))
-        {
-            new Aspose.OCR.License().SetLicense(asposeLicensePath);
-        }
-        services.AddScoped<IVehicleOcrService, AsposeOcrVehicleOcrService>();
-
         services.AddSignalR();
         services.AddScoped<INotificationService, NotificationService>();
 

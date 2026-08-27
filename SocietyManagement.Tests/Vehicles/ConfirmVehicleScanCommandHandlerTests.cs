@@ -67,7 +67,7 @@ public class ConfirmVehicleScanCommandHandlerTests
             UserId = userId, SocietyId = societyId, RoleName = "Watchman",
             Permissions = canViewOwnerDetails ? new[] { Permissions.Vehicles.ViewOwnerDetails } : Array.Empty<string>()
         };
-        return new VehicleScanHandlers(db, currentUser, new FakeVehicleOcrService(), fileStorage ?? new FakeFileStorageService(), new FakeDateTime());
+        return new VehicleScanHandlers(db, currentUser, fileStorage ?? new FakeFileStorageService(), new FakeDateTime());
     }
 
     [Fact]

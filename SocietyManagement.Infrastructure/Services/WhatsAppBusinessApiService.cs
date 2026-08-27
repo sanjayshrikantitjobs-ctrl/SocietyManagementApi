@@ -146,11 +146,14 @@ public class WhatsAppBusinessApiService : IWhatsAppService
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
         form.Add(fileContent, "file", fileName);
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, $"https://graph.facebook.com/{apiVersion}/{phoneNumberId}/media")
+        var url = $"https://graph.facebook.com/{apiVersion}/{phoneNumberId}/media";
+        using var request = new HttpRequestMessage(HttpMethod.Post, url)
         {
             Content = form
         };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _configuration["WhatsApp:AccessToken"]);
+
+        _logger.LogInformation("WhatsApp media upload: POST {Url}", url);
 
         var response = await _httpClient.SendAsync(request, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
@@ -171,12 +174,22 @@ public class WhatsAppBusinessApiService : IWhatsAppService
     {
         var phoneNumberId = _configuration["WhatsApp:PhoneNumberId"];
         var apiVersion = _configuration["WhatsApp:ApiVersion"] ?? "v21.0";
+        var accessToken = _configuration["WhatsApp:AccessToken"];
+        var url = $"https://graph.facebook.com/{apiVersion}/{phoneNumberId}/messages";
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, $"https://graph.facebook.com/{apiVersion}/{phoneNumberId}/messages")
+        using var request = new HttpRequestMessage(HttpMethod.Post, url)
         {
             Content = JsonContent.Create(payload)
         };
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _configuration["WhatsApp:AccessToken"]);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        // Logged deliberately every attempt, not just on failure: the response body
+        // alone (a real message ID, HTTP 200) was indistinguishable between the old
+        // test number and the new production number in prior debugging — only the
+        // request URL/token actually prove which credentials were used. Token is
+        // truncated, never logged in full.
+        var tokenSuffix = accessToken?.Length > 6 ? accessToken[^6..] : accessToken;
+        _logger.LogInformation("WhatsApp {Attempt} send: POST {Url} using token ending in ...{TokenSuffix}", attemptLabel, url, tokenSuffix);
 
         var response = await _httpClient.SendAsync(request, ct);
         var body = await response.Content.ReadAsStringAsync(ct);

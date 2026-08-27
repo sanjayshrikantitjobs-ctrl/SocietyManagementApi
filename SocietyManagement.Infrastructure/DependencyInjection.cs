@@ -62,56 +62,30 @@ public static class DependencyInjection
         {
             services.AddScoped<IWhatsAppService, StubWhatsAppService>();
         }
-        // Vehicle plate OCR provider, in priority order:
-        //   1. AzureVisionOcrService, once VisionOcr:Endpoint/ApiKey are configured —
-        //      opt-in cloud OCR, not the default (the user explicitly chose to stay
-        //      free/local — kept here only in case that changes later).
-        //   2. PaddleOcrVehicleOcrService, if its native model/runtime actually loads —
-        //      the real default. Chosen after Tesseract (below) proved architecturally
-        //      unable to read real plate photos even with a custom plate-region locator
-        //      in front of it (a document-OCR engine, not a scene-text one) — confirmed
-        //      live against a real gate photo across multiple preprocessing variants and
-        //      both official trained-data releases. PaddleOCR's models are trained on
-        //      diverse real-world scene text and do their own detection internally.
-        //      Constructed eagerly here (not gated on a file-existence check like
-        //      Tesseract/tessdata) because its models ship inside the NuGet package —
-        //      there's no file to check for. Its failure mode is a native-library load
-        //      failure, so construction is wrapped in try/catch: a problem surfaces once,
-        //      clearly, in the startup log, instead of as a 500 on the first scan.
-        //   3. TesseractVehicleOcrService, once its trained-data folder is present next
-        //      to the app — Windows-dev-only in practice: the `Tesseract` NuGet package
-        //      (5.2.0) ships no Linux native binaries, so on the real Azure App Service
-        //      Linux deployment this branch would throw if ever reached. Kept only as a
-        //      harmless local-dev fallback, not a real Linux safety net.
-        //   4. StubVehicleOcrService — logging-only, always a low-confidence empty read.
-        // Not named "AzureVisionOcr..."/"PaddleOcr..." with an "Azure" prefix in config —
-        // see the BlobStorage comment below on why that gets rejected on Azure App Service.
-        if (!string.IsNullOrWhiteSpace(configuration["VisionOcr:Endpoint"]) &&
-            !string.IsNullOrWhiteSpace(configuration["VisionOcr:ApiKey"]))
+        // Vehicle plate OCR: AsposeOcrVehicleOcrService, replacing every earlier
+        // attempt this session (Tesseract — inadequate even correctly cropped;
+        // a from-scratch PaddleOCR pipeline — accurate, but its native libraries
+        // alone added ~540MB to the Linux deployment package and broke the Azure
+        // App Service deploy; Azure AI Vision — accurate but a cloud dependency
+        // the user chose to avoid). Aspose.OCR's purpose-built car-plate mode,
+        // confirmed live against the real gate photo used throughout this
+        // session, reads it far more accurately than anything tried before, and
+        // its only heavy dependency (Microsoft.ML.OnnxRuntime) doesn't
+        // reintroduce PaddleOCR's deployment-size problem. See
+        // AsposeOcrVehicleOcrService.cs.
+        //
+        // Aspose.OCR is a COMMERCIAL product (perpetual licenses from $799,
+        // metered from $1,999/month) — currently running unlicensed/trial,
+        // which AsposeOcrVehicleOcrService already strips the watermark text
+        // from. Once a license is purchased, set Aspose:LicenseFilePath to the
+        // .lic file's path — no code change needed, same "swap in once
+        // configured" pattern as Blob Storage/WhatsApp below.
+        var asposeLicensePath = configuration["Aspose:LicenseFilePath"];
+        if (!string.IsNullOrWhiteSpace(asposeLicensePath) && File.Exists(asposeLicensePath))
         {
-            services.AddHttpClient<IVehicleOcrService, AzureVisionOcrService>();
+            new Aspose.OCR.License().SetLicense(asposeLicensePath);
         }
-        else
-        {
-            var paddleOcr = TryCreatePaddleOcrService();
-            if (paddleOcr is not null)
-            {
-                services.AddSingleton<IVehicleOcrService>(paddleOcr);
-            }
-            else
-            {
-                var tessDataPath = Path.Combine(AppContext.BaseDirectory, "tessdata");
-                if (Directory.Exists(tessDataPath) && File.Exists(Path.Combine(tessDataPath, "eng.traineddata")))
-                {
-                    services.AddScoped<IVehicleOcrService>(provider =>
-                        new TesseractVehicleOcrService(tessDataPath, provider.GetRequiredService<ILogger<TesseractVehicleOcrService>>()));
-                }
-                else
-                {
-                    services.AddScoped<IVehicleOcrService, StubVehicleOcrService>();
-                }
-            }
-        }
+        services.AddScoped<IVehicleOcrService, AsposeOcrVehicleOcrService>();
 
         services.AddSignalR();
         services.AddScoped<INotificationService, NotificationService>();
@@ -145,32 +119,5 @@ public static class DependencyInjection
         services.AddScoped<DbSeeder>();
 
         return services;
-    }
-
-    /// <summary>Constructs PaddleOcrVehicleOcrService eagerly at startup, inside
-    /// a try/catch — its native model/inference library can fail to load
-    /// (DllNotFoundException, BadImageFormatException, an unsupported CPU
-    /// instruction set) in a way no config value or file-existence check can
-    /// predict in advance. Returns null on failure so the caller falls through
-    /// to Tesseract/Stub instead of crashing the whole app at startup; the
-    /// failure itself is still logged once, clearly, here.</summary>
-    private static PaddleOcrVehicleOcrService? TryCreatePaddleOcrService()
-    {
-        // Deliberately not disposed: the logger handed to a successfully
-        // constructed singleton service must keep working for the app's whole
-        // lifetime, not just this one startup call.
-        var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-        var logger = loggerFactory.CreateLogger<PaddleOcrVehicleOcrService>();
-
-        try
-        {
-            return new PaddleOcrVehicleOcrService(logger);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Vehicle OCR: PaddleOCR engine failed to initialize; falling back to the next provider.");
-            loggerFactory.Dispose();
-            return null;
-        }
     }
 }

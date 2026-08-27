@@ -42,18 +42,23 @@ function fileToBase64(file: File): Promise<string> {
  * capture="environment"> (same pattern as new-visitor.component.ts's photo
  * capture) rather than an in-app getUserMedia video stream.
  *
- * The crop box is optional, not required: the backend OCR provider
- * (PaddleOcrVehicleOcrService.cs) does its own plate *detection* internally —
- * unlike the earlier Tesseract-based provider it replaced, which only did
- * text *recognition* and needed a human to crop tightly to the plate first.
- * The box is kept as a manual override for edge cases (multiple plates in
- * frame, heavy clutter) where auto-detection might pick the wrong region.
+ * OCR is Aspose.OCR's purpose-built car-plate mode (see
+ * AsposeOcrVehicleOcrService.cs), which does its own plate *detection* within
+ * the full photo — confirmed live reading the plate correctly straight out of
+ * an uncropped gate photo. Earlier attempts needed a crop first: Tesseract
+ * only does text *recognition* (no detection, reads noise from an uncropped
+ * photo), and a from-scratch PaddleOCR pipeline worked but its native
+ * libraries alone added ~540MB to the Linux deployment package and broke
+ * Azure App Service deploys. The crop box here is kept only as a manual
+ * override for edge cases (multiple plates in frame, heavy clutter), not a
+ * required step.
  *
- * Either way, every read — regardless of confidence — always goes through
- * the confirm/edit step below before a search fires: watchmen, admins, and
- * super admins (whoever holds Vehicles.Scan) always see the recognized text
- * in an editable field and must confirm or correct it, never search on a
- * blind auto-accept. */
+ * Either way, every read — regardless of confidence, including a failed one —
+ * always goes through the confirm/edit step below before a search fires:
+ * watchmen, admins, and super admins (whoever holds Vehicles.Scan) always see
+ * the recognized text in an editable field and must confirm or correct it,
+ * never search on a blind auto-accept. Manual entry (typing the plate
+ * directly if OCR is unavailable or wrong) is always the reliable fallback. */
 @Component({
   selector: 'app-vehicle-scan',
   standalone: true,

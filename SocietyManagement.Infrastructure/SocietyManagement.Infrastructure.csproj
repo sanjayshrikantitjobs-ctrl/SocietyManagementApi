@@ -35,12 +35,21 @@
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
     <PackageReference Include="QuestPDF" Version="2025.1.0" />
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
     <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SocietyManagement.Application\SocietyManagement.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The Ganpati/Durga festival receipt background template — user-generated
+         (Gemini), embedded directly in the assembly rather than copied to
+         output, so there's no separate file-path dependency to keep in sync
+         across environments. See PdfReceiptService.cs. -->
+    <EmbeddedResource Include="Resources\FestivalReceiptTemplate.png" />
   </ItemGroup>
 
 </Project>

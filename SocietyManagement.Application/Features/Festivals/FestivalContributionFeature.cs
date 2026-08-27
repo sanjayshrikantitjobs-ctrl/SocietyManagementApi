@@ -330,9 +330,14 @@ public class ContributionQueryHandlers :
             {
                 c.ReceiptNumber,
                 SocietyName = c.Festival.Society.Name,
+                SocietyAddress = c.Festival.Society.Address,
+                SocietyCity = c.Festival.Society.City,
+                SocietyState = c.Festival.Society.State,
+                SocietyPincode = c.Festival.Society.Pincode,
                 SocietyLogoUrl = c.Festival.Society.LogoUrl,
                 FestivalId = c.FestivalId,
                 FestivalName = c.Festival.Name,
+                FestivalYear = c.Festival.Year,
                 c.MemberName,
                 c.FlatId,
                 FlatNumber = c.Flat != null ? c.Flat.FlatNumber : null,
@@ -358,8 +363,11 @@ public class ContributionQueryHandlers :
                 .SumAsync(c => c.Amount, ct);
         }
 
+        var societyAddress = $"{data.SocietyAddress}, {data.SocietyCity}, {data.SocietyState} - {data.SocietyPincode}";
+
         return new ContributionReceiptData(
-            data.ReceiptNumber, data.SocietyName, data.SocietyLogoUrl, data.FestivalName, data.MemberName, data.FlatNumber,
+            data.ReceiptNumber, data.SocietyName, societyAddress, data.SocietyLogoUrl, data.FestivalName, data.FestivalYear,
+            data.MemberName, data.FlatNumber,
             data.Amount, data.PaymentMethod.ToString(), data.PaymentDate, data.TransactionId,
             targetAmount, totalPaidForFlat);
     }

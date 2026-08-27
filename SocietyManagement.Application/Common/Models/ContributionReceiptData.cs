@@ -5,8 +5,10 @@ namespace SocietyManagement.Application.Common.Models;
 public record ContributionReceiptData(
     string ReceiptNumber,
     string SocietyName,
+    string SocietyAddress,
     string? SocietyLogoUrl,
     string FestivalName,
+    int FestivalYear,
     string DonorName,
     string? FlatNumber,
     decimal Amount,

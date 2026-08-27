@@ -108,6 +108,7 @@ export interface FestivalContributionDto {
   receiptNumber: string;
   isAnonymous: boolean;
   createdAt: string;
+  whatsAppNumber?: string | null;
 }
 
 export interface TopContributorDto {

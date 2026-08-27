@@ -93,6 +93,10 @@ export class FestivalService {
   downloadReceipt(id: number): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/festival-contributions/${id}/receipt`, { responseType: 'blob' });
   }
+  resendContributionReceipt(id: number, whatsAppNumber?: string): Observable<void> {
+    return this.http.post<ApiResponse<void>>(`${this.baseUrl}/festival-contributions/${id}/resend-whatsapp`, { whatsAppNumber: whatsAppNumber || null })
+      .pipe(map(() => void 0));
+  }
   getFlatContributions(params: {
     festivalId: number; search?: string; status?: FlatContributionStatus; sortBy?: string; sortDescending?: boolean;
     pageNumber?: number; pageSize?: number;

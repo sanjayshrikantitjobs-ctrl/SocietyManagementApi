@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="SocietyManagement.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
@@ -22,6 +26,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.0" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Serilog" Version="4.2.0" />
@@ -32,6 +37,18 @@
     <PackageReference Include="QuestPDF" Version="2025.1.0" />
     <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
+    <PackageReference Include="Tesseract" Version="5.2.0" />
+    <PackageReference Include="Sdcb.PaddleOCR" Version="3.3.1" />
+    <PackageReference Include="Sdcb.PaddleOCR.Models.Local" Version="3.3.1" />
+    <!-- Sdcb.PaddleOCR.Models.Local's own dependency floor (>= 3.0.0) resolves to
+         3.0.0 by default, which only bundles the Chinese model — EnglishV5 isn't
+         present until 3.3.1. Pin directly so English OCR actually works. -->
+    <PackageReference Include="Sdcb.PaddleOCR.Models.LocalV5" Version="3.3.1" />
+    <PackageReference Include="Sdcb.PaddleInference.runtime.win64.mkl" Version="3.3.1.70" />
+    <PackageReference Include="Sdcb.PaddleInference.runtime.linux-x64.openblas" Version="3.3.1.70" />
+    <PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
+    <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.13.0.20260627" />
+    <PackageReference Include="OpenCvSharp4.official.runtime.linux-x64.slim" Version="4.13.0.20260627" />
   </ItemGroup>
 
   <ItemGroup>

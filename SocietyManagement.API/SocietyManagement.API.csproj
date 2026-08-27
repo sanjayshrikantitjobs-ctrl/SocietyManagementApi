@@ -29,4 +29,11 @@
     <ProjectReference Include="..\SocietyManagement.Shared\SocietyManagement.Shared.csproj" />
   </ItemGroup>
 
+  <!-- Tesseract OCR's English trained data — DependencyInjection.cs checks for this
+       folder next to the running app to decide whether to use the real OCR service
+       or fall back to the stub. See TesseractVehicleOcrService.cs. -->
+  <ItemGroup>
+    <None Include="tessdata\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

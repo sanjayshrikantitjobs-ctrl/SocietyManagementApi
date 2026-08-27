@@ -68,6 +68,7 @@ const NO_FLAT_OPTION_VALUE = 0;
                 <td mat-cell *matCellDef="let c">
                   {{ c.receiptNumber }}
                   <button mat-icon-button (click)="downloadReceipt(c)" matTooltip="Download PDF receipt"><mat-icon>download</mat-icon></button>
+                  <button mat-icon-button (click)="resendToWhatsApp(c)" matTooltip="Resend receipt to WhatsApp"><mat-icon>chat</mat-icon></button>
                 </td>
               </ng-container>
 
@@ -198,6 +199,7 @@ export class FestivalContributionLedgerTabComponent implements OnInit {
             },
             { key: 'paymentDate', label: 'Payment Date', type: 'date' },
             { key: 'transactionId', label: 'Transaction ID', type: 'text', required: false },
+            { key: 'whatsAppNumber', label: 'WhatsApp Number (optional — defaults to the flat\'s number on file)', type: 'text', required: false },
             { key: 'isAnonymous', label: 'Keep donor anonymous on public displays', type: 'checkbox' }
           ]
         }
@@ -209,7 +211,8 @@ export class FestivalContributionLedgerTabComponent implements OnInit {
           festivalId: this.festivalId(), flatId: flatId === NO_FLAT_OPTION_VALUE ? null : flatId,
           memberName: result.memberName, amount: Number(result.amount),
           paymentMethod: Number(result.paymentMethod), paymentDate: result.paymentDate,
-          transactionId: result.transactionId, isAnonymous: !!result.isAnonymous
+          transactionId: result.transactionId, isAnonymous: !!result.isAnonymous,
+          whatsAppNumber: result.whatsAppNumber || null
         }).subscribe(() => {
           this.toast.success('Contribution recorded.');
           this.load();
@@ -227,6 +230,29 @@ export class FestivalContributionLedgerTabComponent implements OnInit {
       link.download = `receipt-${contribution.receiptNumber}.pdf`;
       link.click();
       window.URL.revokeObjectURL(url);
+    });
+  }
+
+  resendToWhatsApp(contribution: FestivalContributionDto): void {
+    const ref = this.dialog.open(PromptDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Resend Receipt to WhatsApp',
+        submitLabel: 'Send',
+        fields: [
+          {
+            key: 'whatsAppNumber', label: 'WhatsApp Number', type: 'text',
+            defaultValue: contribution.whatsAppNumber ?? ''
+          }
+        ]
+      }
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (!result) return;
+      this.festivalService.resendContributionReceipt(contribution.id, result.whatsAppNumber).subscribe(() => {
+        this.toast.success('Receipt resent to WhatsApp.');
+        this.load();
+      });
     });
   }
 }

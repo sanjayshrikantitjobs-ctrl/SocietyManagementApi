@@ -6,6 +6,13 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "SocietyManagement.Web", "start"],
       "port": 4200
+    },
+    {
+      "name": "society-management-api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "SocietyManagement.API/SocietyManagement.API.csproj", "--launch-profile", "SocietyManagement.API"],
+      "port": 7001,
+      "url": "https://localhost:7001"
     }
   ]
 }

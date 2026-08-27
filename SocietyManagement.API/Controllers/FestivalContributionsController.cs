@@ -55,6 +55,14 @@ public class FestivalContributionsController : ApiControllerBase
         return Created(string.Empty, ApiResponse<int>.SuccessResponse(id, "Contribution recorded."));
     }
 
+    [HttpPost("{id:int}/resend-whatsapp")]
+    [HasPermission(Permissions.Festivals.Contribute)]
+    public async Task<IActionResult> ResendWhatsApp(int id, [FromBody] ResendWhatsAppRequest? request)
+    {
+        await Mediator.Send(new ResendContributionReceiptCommand(id, request?.WhatsAppNumber));
+        return Ok(ApiResponse.SuccessResponse("Receipt resent."));
+    }
+
     [HttpGet("flat-summary")]
     [HasPermission(Permissions.Festivals.View)]
     public async Task<IActionResult> GetFlatSummary(
@@ -98,3 +106,5 @@ public class FestivalContributionsController : ApiControllerBase
         return Ok(ApiResponse.SuccessResponse("Target updated."));
     }
 }
+
+public record ResendWhatsAppRequest(string? WhatsAppNumber);

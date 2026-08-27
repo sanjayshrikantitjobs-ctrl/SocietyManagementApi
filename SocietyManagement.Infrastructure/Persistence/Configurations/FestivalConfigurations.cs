@@ -82,6 +82,7 @@ public class FestivalContributionConfiguration : IEntityTypeConfiguration<Festiv
         builder.Property(c => c.Amount).HasColumnType("decimal(12,2)");
         builder.Property(c => c.TransactionId).HasMaxLength(100);
         builder.Property(c => c.ReceiptNumber).HasMaxLength(30).IsRequired();
+        builder.Property(c => c.WhatsAppNumber).HasMaxLength(15);
         builder.HasIndex(c => c.ReceiptNumber).IsUnique();
         builder.HasIndex(c => c.FestivalId);
 

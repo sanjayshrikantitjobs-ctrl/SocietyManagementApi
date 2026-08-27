@@ -28,4 +28,11 @@ public class FestivalContribution : BaseAuditableEntity
     public string ReceiptNumber { get; set; } = default!;
 
     public bool IsAnonymous { get; set; }
+
+    /// <summary>The number the receipt was actually WhatsApp'd to — an
+    /// explicit override at record time, or the flat's resolved phone
+    /// (primary FlatResidency contact, else Flat.OwnerPhone). Null if
+    /// neither was available (e.g. a Guest contribution with no number
+    /// given) — no WhatsApp send happens in that case.</summary>
+    public string? WhatsAppNumber { get; set; }
 }

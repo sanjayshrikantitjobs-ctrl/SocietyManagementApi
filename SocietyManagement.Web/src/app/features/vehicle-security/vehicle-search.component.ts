@@ -3,6 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -15,6 +16,7 @@ import { SocietyService } from '../society-setup/services/society.service';
 import { VEHICLE_TYPE_LABELS } from '../residents/models/resident.model';
 import { VehicleScanResultDto, VehicleSearchItemDto } from './models/vehicle-scan.model';
 import { VehicleScanResultComponent } from './vehicle-scan-result.component';
+import { VehicleScanResultDialogComponent } from './vehicle-scan-result-dialog.component';
 import { VehicleScanService } from './services/vehicle-scan.service';
 import { VehicleRegisterDialogService } from './services/vehicle-register-dialog.service';
 
@@ -36,7 +38,7 @@ import { VehicleRegisterDialogService } from './services/vehicle-register-dialog
       @if (!scanResult()) {
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Search</mat-label>
-          <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange($event)" placeholder="Reg. no., owner, or flat..." />
+          <input matInput [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)" placeholder="Reg. no., owner, or flat..." />
           <mat-icon matPrefix>search</mat-icon>
         </mat-form-field>
 
@@ -72,6 +74,7 @@ export class VehicleSearchComponent implements OnInit {
   private readonly vehicleScanService = inject(VehicleScanService);
   private readonly societyService = inject(SocietyService);
   private readonly registerDialog = inject(VehicleRegisterDialogService);
+  private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
   readonly auth = inject(AuthService);
@@ -101,6 +104,7 @@ export class VehicleSearchComponent implements OnInit {
   }
 
   onSearchChange(term: string): void {
+    this.searchTerm.set(term);
     this.searchSubject.next(term);
   }
 
@@ -108,7 +112,24 @@ export class VehicleSearchComponent implements OnInit {
     this.vehicleScanService.confirm({
       societyId: this.societyId, normalizedRegistrationNumber: item.registrationNumber,
       source: 2, gateId: null
-    }).subscribe((result) => this.scanResult.set(result));
+    }).subscribe((result) => {
+      if (result.result === 1) {
+        this.openMatchedVehicleDialog(result);
+      } else {
+        this.scanResult.set(result);
+      }
+    });
+  }
+
+  private openMatchedVehicleDialog(result: VehicleScanResultDto): void {
+    const ref = this.dialog.open(VehicleScanResultDialogComponent, {
+      data: { result, canCreateVisitor: this.canCreateVisitor() }
+    });
+    ref.afterClosed().subscribe((closeResult) => {
+      if (closeResult?.createVisitor) {
+        this.onCreateVisitor(closeResult.vehicleNumber);
+      }
+    });
   }
 
   onRegister(registrationNumber: string): void {

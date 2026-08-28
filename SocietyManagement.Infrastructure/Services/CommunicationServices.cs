@@ -58,4 +58,12 @@ public class StubWhatsAppService : IWhatsAppService
             mobileNumber, caption, fileName, documentBytes.Length);
         return Task.CompletedTask;
     }
+
+    public Task SendWhatsAppImageAsync(string mobileNumber, string caption, string imageUrl, CancellationToken ct = default)
+    {
+        _logger.LogInformation(
+            "[WHATSAPP STUB] To: {Mobile} | Caption: {Caption} | Image: {ImageUrl}",
+            mobileNumber, caption, imageUrl);
+        return Task.CompletedTask;
+    }
 }

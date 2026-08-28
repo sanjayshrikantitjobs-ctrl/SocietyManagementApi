@@ -24,4 +24,9 @@ public interface IWhatsAppService
     /// <summary>Sends a message with a document attachment (e.g. a bill PDF).</summary>
     Task SendWhatsAppDocumentAsync(
         string mobileNumber, string caption, byte[] documentBytes, string fileName, CancellationToken ct = default);
+
+    /// <summary>Sends a message with an image, referenced by a publicly-reachable
+    /// URL (e.g. a visitor photo already sitting in blob storage) rather than raw
+    /// bytes — avoids a redundant download-then-reupload round trip.</summary>
+    Task SendWhatsAppImageAsync(string mobileNumber, string caption, string imageUrl, CancellationToken ct = default);
 }

@@ -69,10 +69,12 @@ public class VisitorVisitConfiguration : IEntityTypeConfiguration<VisitorVisit>
         builder.ToTable("VisitorVisits");
         builder.HasQueryFilter(v => !v.IsDeleted);
         builder.Property(v => v.RejectionReason).HasMaxLength(500);
+        builder.Property(v => v.ApprovalToken).HasMaxLength(64);
         builder.HasIndex(v => new { v.SocietyId, v.Status });
         builder.HasIndex(v => new { v.FlatId, v.Status });
         builder.HasIndex(v => v.GateId);
         builder.HasIndex(v => v.RequestedAt);
+        builder.HasIndex(v => v.ApprovalToken).HasFilter("[ApprovalToken] IS NOT NULL");
 
         builder.HasOne(v => v.Society)
             .WithMany()

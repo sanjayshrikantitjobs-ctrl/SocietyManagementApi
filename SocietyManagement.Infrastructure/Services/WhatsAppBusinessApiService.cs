@@ -88,7 +88,7 @@ public class WhatsAppBusinessApiService : IWhatsAppService
         string mobileNumber, string caption, byte[] documentBytes, string fileName, CancellationToken ct = default)
     {
         var to = ToE164(mobileNumber);
-        var mediaId = await UploadMediaAsync(documentBytes, fileName, ct);
+        var mediaId = await UploadMediaAsync(documentBytes, fileName, "application/pdf", ct);
         if (mediaId == null) return;
 
         var directPayload = new
@@ -132,7 +132,81 @@ public class WhatsAppBusinessApiService : IWhatsAppService
         await PostMessageAsync(templatePayload, "template document fallback", ct);
     }
 
-    private async Task<string?> UploadMediaAsync(byte[] content, string fileName, CancellationToken ct)
+    public async Task SendWhatsAppImageAsync(string mobileNumber, string caption, string imageUrl, CancellationToken ct = default)
+    {
+        var to = ToE164(mobileNumber);
+
+        // Uploaded by "id", not sent by "link": a first attempt referenced the
+        // blob storage URL directly via the "link" field, which Meta accepted
+        // into its queue but never actually delivered — unlike the document
+        // path (SendWhatsAppDocumentAsync), which downloads/uploads to Meta's
+        // /media endpoint first and *does* work reliably. This mirrors that
+        // proven path instead of trusting Meta to fetch an arbitrary URL itself.
+        byte[] imageBytes;
+        string contentType;
+        try
+        {
+            using var response = await _httpClient.GetAsync(imageUrl, ct);
+            response.EnsureSuccessStatusCode();
+            imageBytes = await response.Content.ReadAsByteArrayAsync(ct);
+            contentType = response.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not download image from {ImageUrl} for WhatsApp send to {Mobile} — sending the caption as plain text instead.", imageUrl, mobileNumber);
+            await SendWhatsAppAsync(mobileNumber, caption, ct);
+            return;
+        }
+
+        var mediaId = await UploadMediaAsync(imageBytes, "photo.jpg", contentType, ct);
+        if (mediaId == null)
+        {
+            await SendWhatsAppAsync(mobileNumber, caption, ct);
+            return;
+        }
+
+        var directPayload = new
+        {
+            messaging_product = "whatsapp",
+            to,
+            type = "image",
+            image = new { id = mediaId, caption }
+        };
+        if (await PostMessageAsync(directPayload, "direct image", ct)) return;
+
+        var templateName = _configuration["WhatsApp:ImageTemplateName"];
+        if (string.IsNullOrWhiteSpace(templateName))
+        {
+            _logger.LogWarning(
+                "Direct WhatsApp image send failed and WhatsApp:ImageTemplateName is not configured — " +
+                "cannot fall back for {ImageUrl} to {Mobile}. This is expected outside a 24h customer service " +
+                "window until an image-header template is created and approved.",
+                imageUrl, mobileNumber);
+            return;
+        }
+
+        var language = _configuration["WhatsApp:ImageTemplateLanguage"] ?? "en_US";
+        var templatePayload = new
+        {
+            messaging_product = "whatsapp",
+            to,
+            type = "template",
+            template = new
+            {
+                name = templateName,
+                language = new { code = language },
+                components = new object[]
+                {
+                    new { type = "header", parameters = new object[] { new { type = "image", image = new { id = mediaId } } } },
+                    new { type = "body", parameters = new object[] { new { type = "text", text = caption } } }
+                }
+            }
+        };
+
+        await PostMessageAsync(templatePayload, "template image fallback", ct);
+    }
+
+    private async Task<string?> UploadMediaAsync(byte[] content, string fileName, string mimeType, CancellationToken ct)
     {
         var phoneNumberId = _configuration["WhatsApp:PhoneNumberId"];
         var apiVersion = _configuration["WhatsApp:ApiVersion"] ?? "v21.0";
@@ -140,10 +214,10 @@ public class WhatsAppBusinessApiService : IWhatsAppService
         using var form = new MultipartFormDataContent
         {
             { new StringContent("whatsapp"), "messaging_product" },
-            { new StringContent("application/pdf"), "type" }
+            { new StringContent(mimeType), "type" }
         };
         var fileContent = new ByteArrayContent(content);
-        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
         form.Add(fileContent, "file", fileName);
 
         var url = $"https://graph.facebook.com/{apiVersion}/{phoneNumberId}/media";

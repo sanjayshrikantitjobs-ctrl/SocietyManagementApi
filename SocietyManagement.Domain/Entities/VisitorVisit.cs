@@ -52,4 +52,11 @@ public class VisitorVisit : BaseAuditableEntity
     public DateTime? CheckOutTime { get; set; }
     public int? CheckedOutByUserId { get; set; }
     public User? CheckedOutByUser { get; set; }
+
+    /// <summary>Set only while Status is PendingApproval — lets the WhatsApp
+    /// approval link authorize approve/reject without a login, since a flat
+    /// may have no resident user account at all. Not cleared once actioned;
+    /// the Status guard (must still be PendingApproval) is what prevents a
+    /// stale/reused link from doing anything.</summary>
+    public string? ApprovalToken { get; set; }
 }

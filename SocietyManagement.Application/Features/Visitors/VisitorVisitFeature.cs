@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SocietyManagement.Application.Common.Helpers;
 using SocietyManagement.Application.Common.Interfaces;
 using SocietyManagement.Domain.Entities;
@@ -63,6 +64,13 @@ public record CheckInVisitCommand(int Id) : IRequest<Unit>;
 public record CheckOutVisitCommand(int Id) : IRequest<Unit>;
 public record CancelVisitCommand(int Id) : IRequest<Unit>;
 
+/// <summary>The no-login counterparts of Approve/RejectVisitCommand, driven by
+/// the token in the WhatsApp approval link rather than a signed-in resident —
+/// not every flat has a resident user account. Never exposed except through
+/// VisitorApprovalPublicController's [AllowAnonymous] endpoints.</summary>
+public record ApproveVisitByTokenCommand(string Token) : IRequest<Unit>;
+public record RejectVisitByTokenCommand(string Token, string? Reason) : IRequest<Unit>;
+
 /// <summary>Not exposed on any controller directly by user action — only the
 /// background expiry job dispatches this.</summary>
 public record ExpireVisitRequestCommand(int Id) : IRequest<Unit>;
@@ -71,6 +79,8 @@ public class VisitorVisitCommandHandlers :
     IRequestHandler<CreateVisitCommand, VisitorVisitDto>,
     IRequestHandler<ApproveVisitCommand, Unit>,
     IRequestHandler<RejectVisitCommand, Unit>,
+    IRequestHandler<ApproveVisitByTokenCommand, Unit>,
+    IRequestHandler<RejectVisitByTokenCommand, Unit>,
     IRequestHandler<CheckInVisitCommand, Unit>,
     IRequestHandler<CheckOutVisitCommand, Unit>,
     IRequestHandler<CancelVisitCommand, Unit>,
@@ -80,15 +90,23 @@ public class VisitorVisitCommandHandlers :
     private readonly IAuditService _auditService;
     private readonly ICurrentUserService _currentUserService;
     private readonly INotificationService _notificationService;
+    private readonly IWhatsAppService _whatsAppService;
+    private readonly IAppUrlService _appUrlService;
+    private readonly ILogger<VisitorVisitCommandHandlers> _logger;
 
     public VisitorVisitCommandHandlers(
         IApplicationDbContext context, IAuditService auditService,
-        ICurrentUserService currentUserService, INotificationService notificationService)
+        ICurrentUserService currentUserService, INotificationService notificationService,
+        IWhatsAppService whatsAppService, IAppUrlService appUrlService,
+        ILogger<VisitorVisitCommandHandlers> logger)
     {
         _context = context;
         _auditService = auditService;
         _currentUserService = currentUserService;
         _notificationService = notificationService;
+        _whatsAppService = whatsAppService;
+        _appUrlService = appUrlService;
+        _logger = logger;
     }
 
     public async Task<VisitorVisitDto> Handle(CreateVisitCommand request, CancellationToken ct)
@@ -134,7 +152,8 @@ public class VisitorVisitCommandHandlers :
             SocietyId = flat.SocietyId, VisitorId = visitorId, FlatId = flat.Id, PurposeId = purpose.Id,
             GateId = gate.Id, NumberOfVisitors = request.NumberOfVisitors, CreatedByUserId = watchmanUserId,
             RequestedAt = DateTime.UtcNow,
-            Status = purpose.RequiresApproval ? VisitorVisitStatus.PendingApproval : VisitorVisitStatus.Approved
+            Status = purpose.RequiresApproval ? VisitorVisitStatus.PendingApproval : VisitorVisitStatus.Approved,
+            ApprovalToken = purpose.RequiresApproval ? Guid.NewGuid().ToString("N") : null
         };
         if (!purpose.RequiresApproval)
         {
@@ -153,48 +172,153 @@ public class VisitorVisitCommandHandlers :
             {
                 await _notificationService.SendToUserAsync(userId, "VisitorApprovalRequested", dto, ct);
             }
+
+            // Additive to the SignalR push above, not a replacement — this reaches
+            // the flat's primary owner/tenant even when no resident user account
+            // (and so no SignalR connection) exists for the flat at all.
+            await SendWhatsAppApprovalRequestAsync(flat.Id, visit, dto, ct);
         }
 
         return await ProjectAsync(visit.Id, ct);
     }
 
+    /// <summary>Two resident data models coexist in this codebase — the newer
+    /// FlatOccupancy/OccupancyMember/Person model (what the Residents > Owners
+    /// UI actually manages, including a dedicated WhatsAppNumber field) and the
+    /// older FlatResidency/Member model (what MaintenanceBillFeature/
+    /// FestivalContributionFeature's own inline lookups still use, and which has
+    /// no WhatsApp-specific field at all). A flat's residents typically live in
+    /// only one of the two, so this checks the current one first, then the
+    /// legacy one, before finally falling back to Flat.OwnerPhone — a stale
+    /// snapshot from whenever the flat record was first created, which is what
+    /// was silently winning for flat 1602: it has no FlatResidency row (its
+    /// residents were entered via Owner Occupancy), so the old resolver fell
+    /// straight through to that leftover value.</summary>
+    private async Task<string?> ResolveFlatOwnerPhoneAsync(int flatId, CancellationToken ct)
+    {
+        // Tenant preferred over Owner when a flat has both open episodes — the
+        // tenant is who's actually there to approve/reject a visitor, not an
+        // absentee owner. WhatsAppNumber preferred over Phone per Person's own
+        // doc comment ("left null means same as mobile for messaging purposes").
+        var occupant = await _context.OccupancyMembers
+            .Where(m => !m.IsDeleted && m.LeftDate == null && m.IsPrimary &&
+                !m.FlatOccupancy.IsDeleted && m.FlatOccupancy.EndDate == null && m.FlatOccupancy.FlatId == flatId)
+            .OrderBy(m => m.FlatOccupancy.Type == OccupancyType.Tenant ? 0 : 1)
+            .Select(m => new { m.Person.WhatsAppNumber, m.Person.Phone })
+            .FirstOrDefaultAsync(ct);
+        var occupantPhone = occupant?.WhatsAppNumber ?? occupant?.Phone;
+        if (!string.IsNullOrWhiteSpace(occupantPhone)) return occupantPhone;
+
+        var primaryContactPhone = await _context.FlatResidencies
+            .Where(r => !r.IsDeleted && r.MoveOutDate == null && r.IsPrimaryContact && r.FlatId == flatId)
+            .Select(r => r.Member.Phone)
+            .FirstOrDefaultAsync(ct);
+        if (!string.IsNullOrWhiteSpace(primaryContactPhone)) return primaryContactPhone;
+
+        return await _context.Flats.Where(f => f.Id == flatId).Select(f => f.OwnerPhone).FirstOrDefaultAsync(ct);
+    }
+
+    private async Task SendWhatsAppApprovalRequestAsync(int flatId, VisitorVisit visit, VisitorVisitDto dto, CancellationToken ct)
+    {
+        var ownerPhone = await ResolveFlatOwnerPhoneAsync(flatId, ct);
+        if (string.IsNullOrWhiteSpace(ownerPhone))
+        {
+            _logger.LogWarning(
+                "Flat {FlatId} has no resident contact on file (no current primary FlatResidency, no Flat.OwnerPhone) — " +
+                "visit {VisitId} created but no WhatsApp approval request sent.",
+                flatId, visit.Id);
+            return;
+        }
+
+        var approvalUrl = _appUrlService.BuildAbsoluteUrl($"api/public/visitor-approvals/{visit.ApprovalToken}");
+        var caption =
+            $"🔔 New Visitor Request\n\n" +
+            $"Visitor: {dto.VisitorName}\n" +
+            $"Mobile: {dto.VisitorMobile}\n" +
+            $"Purpose: {dto.PurposeName}\n" +
+            $"Flat: {dto.FlatNumber}\n" +
+            $"Gate: {dto.GateName}\n" +
+            $"Visitors: {dto.NumberOfVisitors}\n" +
+            $"Requested: {dto.RequestedAt:dd MMM yyyy, hh:mm tt}" +
+            (approvalUrl != null ? $"\n\nApprove or reject here:\n{approvalUrl}" : "");
+
+        if (!string.IsNullOrWhiteSpace(dto.VisitorPhotoUrl))
+        {
+            await _whatsAppService.SendWhatsAppImageAsync(ownerPhone, caption, dto.VisitorPhotoUrl, ct);
+        }
+        else
+        {
+            await _whatsAppService.SendWhatsAppAsync(ownerPhone, caption, ct);
+        }
+    }
+
     public async Task<Unit> Handle(ApproveVisitCommand request, CancellationToken ct)
     {
         var visit = await GetVisitAsync(request.Id, ct);
-        if (visit.Status != VisitorVisitStatus.PendingApproval)
-        {
-            throw new ConflictAppException("Only a pending request can be approved.");
-        }
+        RequirePendingApproval(visit, "approved");
         await EnsureCurrentUserResidesAtAsync(visit.FlatId, ct);
-
-        visit.Status = VisitorVisitStatus.Approved;
-        visit.ApprovedAt = DateTime.UtcNow;
-        visit.ApprovedByUserId = _currentUserService.UserId;
-
-        await _context.SaveChangesAsync(ct);
-        await _auditService.LogAsync(AuditAction.Approve, "Visitors", nameof(VisitorVisit), visit.Id.ToString(), ct: ct);
-        await _notificationService.SendToUserAsync(visit.CreatedByUserId, "VisitorApproved", await ProjectAsync(visit.Id, ct), ct);
+        await ApproveInternalAsync(visit, _currentUserService.UserId, ct);
         return Unit.Value;
     }
 
     public async Task<Unit> Handle(RejectVisitCommand request, CancellationToken ct)
     {
         var visit = await GetVisitAsync(request.Id, ct);
+        RequirePendingApproval(visit, "rejected");
+        await EnsureCurrentUserResidesAtAsync(visit.FlatId, ct);
+        await RejectInternalAsync(visit, _currentUserService.UserId, request.Reason, ct);
+        return Unit.Value;
+    }
+
+    /// <summary>No residency check — the WhatsApp link's unguessable token
+    /// (validated by GetVisitByTokenAsync) is the only authorization here,
+    /// since not every flat has a resident user account to check residency
+    /// against in the first place.</summary>
+    public async Task<Unit> Handle(ApproveVisitByTokenCommand request, CancellationToken ct)
+    {
+        var visit = await GetVisitByTokenAsync(request.Token, ct);
+        RequirePendingApproval(visit, "approved");
+        await ApproveInternalAsync(visit, approvedByUserId: null, ct);
+        return Unit.Value;
+    }
+
+    public async Task<Unit> Handle(RejectVisitByTokenCommand request, CancellationToken ct)
+    {
+        var visit = await GetVisitByTokenAsync(request.Token, ct);
+        RequirePendingApproval(visit, "rejected");
+        await RejectInternalAsync(visit, rejectedByUserId: null, request.Reason, ct);
+        return Unit.Value;
+    }
+
+    private static void RequirePendingApproval(VisitorVisit visit, string action)
+    {
         if (visit.Status != VisitorVisitStatus.PendingApproval)
         {
-            throw new ConflictAppException("Only a pending request can be rejected.");
+            throw new ConflictAppException($"Only a pending request can be {action}.");
         }
-        await EnsureCurrentUserResidesAtAsync(visit.FlatId, ct);
+    }
 
+    private async Task ApproveInternalAsync(VisitorVisit visit, int? approvedByUserId, CancellationToken ct)
+    {
+        visit.Status = VisitorVisitStatus.Approved;
+        visit.ApprovedAt = DateTime.UtcNow;
+        visit.ApprovedByUserId = approvedByUserId;
+
+        await _context.SaveChangesAsync(ct);
+        await _auditService.LogAsync(AuditAction.Approve, "Visitors", nameof(VisitorVisit), visit.Id.ToString(), ct: ct);
+        await _notificationService.SendToUserAsync(visit.CreatedByUserId, "VisitorApproved", await ProjectAsync(visit.Id, ct), ct);
+    }
+
+    private async Task RejectInternalAsync(VisitorVisit visit, int? rejectedByUserId, string? reason, CancellationToken ct)
+    {
         visit.Status = VisitorVisitStatus.Rejected;
         visit.RejectedAt = DateTime.UtcNow;
-        visit.RejectedByUserId = _currentUserService.UserId;
-        visit.RejectionReason = request.Reason;
+        visit.RejectedByUserId = rejectedByUserId;
+        visit.RejectionReason = reason;
 
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditAction.Reject, "Visitors", nameof(VisitorVisit), visit.Id.ToString(), ct: ct);
         await _notificationService.SendToUserAsync(visit.CreatedByUserId, "VisitorRejected", await ProjectAsync(visit.Id, ct), ct);
-        return Unit.Value;
     }
 
     public async Task<Unit> Handle(CheckInVisitCommand request, CancellationToken ct)
@@ -264,6 +388,10 @@ public class VisitorVisitCommandHandlers :
         await _context.VisitorVisits.FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted, ct)
         ?? throw new NotFoundException(nameof(VisitorVisit), id);
 
+    private async Task<VisitorVisit> GetVisitByTokenAsync(string token, CancellationToken ct) =>
+        await _context.VisitorVisits.FirstOrDefaultAsync(v => v.ApprovalToken == token && !v.IsDeleted, ct)
+        ?? throw new NotFoundException(nameof(VisitorVisit), token);
+
     /// <summary>Mirrors EventRsvpFeature's flat-resolution walk, in reverse:
     /// confirms the CURRENT user resides at a SPECIFIC flat, rather than
     /// resolving which flat they reside at. Never trust a client-supplied
@@ -315,11 +443,16 @@ public record GetMyVisitsQuery(
 
 public record GetCurrentlyInsideQuery(int SocietyId) : IRequest<List<VisitorVisitDto>>;
 
+/// <summary>Backs VisitorApprovalPublicController's [AllowAnonymous] page —
+/// the token, not a signed-in user, is what scopes this to one visit.</summary>
+public record GetVisitByApprovalTokenQuery(string Token) : IRequest<VisitorVisitDto>;
+
 public class VisitorVisitQueryHandlers :
     IRequestHandler<GetVisitsQuery, PaginatedResult<VisitorVisitDto>>,
     IRequestHandler<GetPendingApprovalsQuery, List<VisitorVisitDto>>,
     IRequestHandler<GetMyVisitsQuery, PaginatedResult<VisitorVisitDto>>,
-    IRequestHandler<GetCurrentlyInsideQuery, List<VisitorVisitDto>>
+    IRequestHandler<GetCurrentlyInsideQuery, List<VisitorVisitDto>>,
+    IRequestHandler<GetVisitByApprovalTokenQuery, VisitorVisitDto>
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
@@ -429,4 +562,8 @@ public class VisitorVisitQueryHandlers :
                 .Where(v => v.SocietyId == request.SocietyId && v.Status == VisitorVisitStatus.CheckedIn))
             .OrderBy(v => v.CheckInTime)
             .ToListAsync(ct);
+
+    public async Task<VisitorVisitDto> Handle(GetVisitByApprovalTokenQuery request, CancellationToken ct) =>
+        await Project(_context.VisitorVisits.Where(v => v.ApprovalToken == request.Token)).FirstOrDefaultAsync(ct)
+        ?? throw new NotFoundException(nameof(VisitorVisit), request.Token);
 }

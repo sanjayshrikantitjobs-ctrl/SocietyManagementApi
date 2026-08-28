@@ -64,6 +64,7 @@ public static class DependencyInjection
         }
         services.AddSignalR();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IAppUrlService, AppUrlService>();
 
         // Azure Blob Storage kicks in automatically once BlobStorage:ConnectionString
         // is set (see appsettings.json) — falls back to local disk otherwise, so

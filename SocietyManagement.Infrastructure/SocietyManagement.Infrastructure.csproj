@@ -50,6 +50,12 @@
          output, so there's no separate file-path dependency to keep in sync
          across environments. See PdfReceiptService.cs. -->
     <EmbeddedResource Include="Resources\FestivalReceiptTemplate.png" />
+    <!-- Pre-rendered "!!  ॐ श्री गणेशाय नमः  !!" header line. Rendered once via
+         WPF/DirectWrite (proper Indic text shaping for the श्री conjunct) rather
+         than drawn at request time — SkiaSharp's SKPaint.DrawText does plain
+         glyph-by-glyph rendering with no complex-script shaping, so it draws
+         the conjunct incorrectly. See PdfReceiptService.cs. -->
+    <EmbeddedResource Include="Resources\MantraHeader.png" />
   </ItemGroup>
 
 </Project>

@@ -87,57 +87,93 @@ public class PdfReceiptService : IPdfReceiptService
         EraseRegion(canvas, 325, 203, 705, 13, paperBackground);
         EraseRegion(canvas, 315, 172, 130, 100, paperBackground);
 
+        // The template's 3 remaining header lines (~y=83,127,167, under the
+        // headline/society/address text) are erased too, per the "remove
+        // every underline" request — the text above each still reads fine
+        // without them. A 5th, separate divider line (~y=248, between the
+        // receipt number and the "Payment Receipt" title) is erased too.
+        EraseRegion(canvas, 400, 78, 630, 92, paperBackground);
+        EraseRegion(canvas, 330, 240, 700, 14, paperBackground);
+
         const float fieldSize = 18f;
         const float labelSize = 21f;
 
-        // Top block: society name, address, receipt number, then the festival + year headline.
-        DrawCentered(canvas, $"Shree {data.FestivalName} {data.FestivalYear}", TemplateWidth / 2f, 75, maroon, 28, bold: true);
-        DrawCentered(canvas, data.SocietyName, TemplateWidth / 2f, 119, navy, 26, bold: true);
-        DrawCentered(canvas, data.SocietyAddress, TemplateWidth / 2f, 159, SKColors.DimGray, 17);
-        DrawCentered(canvas, $"Receipt No.: {data.ReceiptNumber}", TemplateWidth / 2f, 202, maroon, 20, bold: true);
+        // Top block: opening invocation, society name, address, receipt number.
+        // The invocation is a pre-rendered image (Resources/MantraHeader.png),
+        // not live-drawn text: SkiaSharp's SKPaint.DrawText has no complex-script
+        // shaping, so it renders the "श्री" conjunct as broken/disconnected
+        // glyphs. The image was rendered once via WPF/DirectWrite, which shapes
+        // Devanagari correctly, and is just scaled/placed here.
+        using (var mantraStream = typeof(PdfReceiptService).Assembly
+            .GetManifestResourceStream("SocietyManagement.Infrastructure.Resources.MantraHeader.png")
+            ?? throw new InvalidOperationException("MantraHeader.png embedded resource not found."))
+        using (var mantraBitmap = SKBitmap.Decode(mantraStream))
+        {
+            const float mantraHeight = 44f;
+            var mantraWidth = mantraBitmap.Width * (mantraHeight / mantraBitmap.Height);
+            var mantraRect = new SKRect(
+                TemplateWidth / 2f - mantraWidth / 2f, 60f,
+                TemplateWidth / 2f + mantraWidth / 2f, 60f + mantraHeight);
+            canvas.DrawBitmap(mantraBitmap, mantraRect);
+        }
+
+        // Shifted down ~22px from the template's original line positions to
+        // clear the top border decoration, which the mantra image was sitting
+        // too close to.
+        DrawCentered(canvas, data.SocietyName, TemplateWidth / 2f, 141, navy, 26, bold: true);
+        DrawCentered(canvas, data.SocietyAddress, TemplateWidth / 2f, 181, SKColors.DimGray, 17);
+        DrawCentered(canvas, $"Receipt No.: {data.ReceiptNumber}", TemplateWidth / 2f, 224, maroon, 20, bold: true);
 
         // Every row label below is also baked into the template at a much
         // larger size than the values read comfortably at, so each one is
         // erased and redrawn here at labelSize instead of left as-is.
-        EraseRegion(canvas, 100, 335, 1050, 43, paperBackground);
+        // Right-column labels (Date/Flat-Apt/Payment Method/Payment Date) all
+        // share one start x so they line up down the page.
+        const float rightLabelX = 900f;
+        const float rightValueX = 1160f;
+
+        EraseRegion(canvas, 100, 335, 1215, 47, paperBackground);
         DrawLeft(canvas, "Received with thanks from Mr./Ms./Mrs.:", 140, 370, SKColors.Black, labelSize, bold: true);
-        DrawLeft(canvas, "Date:", 1080, 370, SKColors.Black, labelSize, bold: true);
+        DrawLeft(canvas, "Date:", rightLabelX, 370, SKColors.Black, labelSize, bold: true);
         DrawLeft(canvas, data.DonorName, 650, 370, SKColors.Black, fieldSize, bold: true);
-        DrawLeft(canvas, data.PaymentDate.ToString("dd/MM/yyyy"), 1155, 370, SKColors.Black, fieldSize, bold: true);
+        DrawLeft(canvas, data.PaymentDate.ToString("dd/MM/yyyy"), rightValueX, 370, SKColors.Black, fieldSize, bold: true);
 
-        EraseRegion(canvas, 100, 377, 235, 41, paperBackground);
-        DrawLeft(canvas, "Festival Name:", 140, 411, SKColors.Black, labelSize, bold: true);
-        DrawLeft(canvas, $"{data.FestivalName} {data.FestivalYear}", 315, 411, SKColors.Black, fieldSize, bold: true);
+        EraseRegion(canvas, 100, 377, 1215, 45, paperBackground);
+        DrawLeft(canvas, "Collection purpose:", 140, 411, SKColors.Black, labelSize, bold: true);
+        DrawLeft(canvas, data.FestivalName, 420, 411, SKColors.Black, fieldSize, bold: true);
 
-        EraseRegion(canvas, 100, 418, 905, 42, paperBackground);
+        EraseRegion(canvas, 100, 418, 1215, 46, paperBackground);
         DrawLeft(canvas, "Donor Name:", 140, 453, SKColors.Black, labelSize, bold: true);
-        DrawLeft(canvas, "Flat/Apt. No.:", 875, 453, SKColors.Black, labelSize, bold: true);
+        DrawLeft(canvas, "Flat/Apt. No.:", rightLabelX, 453, SKColors.Black, labelSize, bold: true);
         DrawLeft(canvas, data.DonorName, 310, 453, SKColors.Black, fieldSize, bold: true);
         if (!string.IsNullOrWhiteSpace(data.FlatNumber))
         {
-            DrawLeft(canvas, data.FlatNumber, 1020, 453, SKColors.Black, fieldSize, bold: true);
+            DrawLeft(canvas, data.FlatNumber, rightValueX, 453, SKColors.Black, fieldSize, bold: true);
         }
 
-        EraseRegion(canvas, 100, 459, 305, 43, paperBackground);
+        // Payment Method/Date used to sit on their own row below; they now
+        // ride along the right column of the Amount Paid/Amount in Words
+        // rows instead, which shortens the receipt by a full row.
+        EraseRegion(canvas, 100, 459, 1215, 46, paperBackground);
         DrawLeft(canvas, "Amount Paid (INR):", 140, 494, SKColors.Black, labelSize, bold: true);
         DrawLeft(canvas, $"₹{amountDisplay}", 400, 494, SKColors.Black, fieldSize, bold: true);
+        DrawLeft(canvas, "Payment Method:", rightLabelX, 494, SKColors.Black, labelSize, bold: true);
+        DrawLeft(canvas, data.PaymentMethod, rightValueX, 494, SKColors.Black, fieldSize, bold: true);
 
-        EraseRegion(canvas, 100, 501, 255, 41, paperBackground);
+        EraseRegion(canvas, 100, 501, 1215, 45, paperBackground);
         DrawLeft(canvas, "Amount in Words:", 140, 536, SKColors.Black, labelSize, bold: true);
         DrawLeft(canvas, amountInWords, 350, 536, SKColors.Black, fieldSize, bold: true);
+        DrawLeft(canvas, "Payment Date:", rightLabelX, 536, SKColors.Black, labelSize, bold: true);
+        DrawLeft(canvas, data.PaymentDate.ToString("dd/MM/yyyy"), rightValueX, 536, SKColors.Black, fieldSize, bold: true);
 
-        EraseRegion(canvas, 100, 542, 1025, 43, paperBackground);
-        DrawLeft(canvas, "Payment Method:", 140, 577, SKColors.Black, labelSize, bold: true);
-        DrawLeft(canvas, "Payment Date:", 995, 577, SKColors.Black, labelSize, bold: true);
-        DrawLeft(canvas, data.PaymentMethod, 405, 577, SKColors.Black, fieldSize, bold: true);
-        DrawLeft(canvas, data.PaymentDate.ToString("dd/MM/yyyy"), 1155, 577, SKColors.Black, fieldSize, bold: true);
+        // The old Payment Method/Date row is now blank (its baked labels and
+        // line still need erasing) and Status moves up into that freed slot.
+        EraseRegion(canvas, 100, 542, 1215, 46, paperBackground);
 
         // The template's two decorative amount pills are erased and replaced
-        // with plain Amount Paid / Remaining / Status rows: the pills only
-        // had room for a single figure, not the three fields needed here.
+        // with Amount Remaining — the amount itself is already shown above
+        // in "Amount Paid (INR)", so it isn't repeated here.
         EraseRegion(canvas, 90, 588, 830, 70, paperBackground);
-
-        DrawLeft(canvas, $"Amount Paid: ₹{amountDisplay}", 150, 618, SKColors.Black, 17, bold: true);
 
         if (data.TargetAmount.HasValue)
         {
@@ -145,12 +181,12 @@ public class PdfReceiptService : IPdfReceiptService
             if (remaining > 0m)
             {
                 var remainingDisplay = $"{(long)Math.Truncate(remaining):N0}/-";
-                DrawLeft(canvas, "Status: Partially Paid", 650, 618, partialOrange, 17, bold: true);
-                DrawLeft(canvas, $"Amount Remaining: ₹{remainingDisplay}", 150, 650, partialOrange, 17, bold: true);
+                DrawLeft(canvas, "Status: Partially Paid", 140, 577, partialOrange, 21, bold: true);
+                DrawLeft(canvas, $"Amount Remaining: ₹{remainingDisplay}", 140, 615, partialOrange, 21, bold: true);
             }
             else
             {
-                DrawLeft(canvas, "Status: Fully Paid", 650, 618, fullyPaidGreen, 17, bold: true);
+                DrawLeft(canvas, "Status: Fully Paid", 140, 577, fullyPaidGreen, 21, bold: true);
             }
         }
 
@@ -230,15 +266,15 @@ public class PdfReceiptService : IPdfReceiptService
         return document.GeneratePdf();
     }
 
-    private static void DrawLeft(SKCanvas canvas, string text, float x, float y, SKColor color, float size, bool bold = false)
+    private static void DrawLeft(SKCanvas canvas, string text, float x, float y, SKColor color, float size, bool bold = false, string fontFamily = "Arial")
     {
-        using var paint = BuildTextPaint(color, size, bold, SKTextAlign.Left);
+        using var paint = BuildTextPaint(color, size, bold, SKTextAlign.Left, fontFamily);
         canvas.DrawText(text, x, y, paint);
     }
 
-    private static void DrawCentered(SKCanvas canvas, string text, float centerX, float y, SKColor color, float size, bool bold = false)
+    private static void DrawCentered(SKCanvas canvas, string text, float centerX, float y, SKColor color, float size, bool bold = false, string fontFamily = "Arial")
     {
-        using var paint = BuildTextPaint(color, size, bold, SKTextAlign.Center);
+        using var paint = BuildTextPaint(color, size, bold, SKTextAlign.Center, fontFamily);
         canvas.DrawText(text, centerX, y, paint);
     }
 
@@ -252,13 +288,13 @@ public class PdfReceiptService : IPdfReceiptService
         canvas.DrawRect(x, y, width, height, paint);
     }
 
-    private static SKPaint BuildTextPaint(SKColor color, float size, bool bold, SKTextAlign align) => new()
+    private static SKPaint BuildTextPaint(SKColor color, float size, bool bold, SKTextAlign align, string fontFamily = "Arial") => new()
     {
         Color = color,
         IsAntialias = true,
         TextSize = size,
         TextAlign = align,
-        Typeface = SKTypeface.FromFamilyName("Arial", bold ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
+        Typeface = SKTypeface.FromFamilyName(fontFamily, bold ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
     };
 
     private static readonly string[] Ones =

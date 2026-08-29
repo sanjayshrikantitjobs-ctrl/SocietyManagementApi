@@ -101,3 +101,34 @@ html, body {
 .app-toast-success { --mdc-snackbar-container-color: #16a34a; --mdc-snackbar-supporting-text-color: #fff; }
 .app-toast-error { --mdc-snackbar-container-color: #dc2626; --mdc-snackbar-supporting-text-color: #fff; }
 .app-toast-info { --mdc-snackbar-container-color: #4f6ef7; --mdc-snackbar-supporting-text-color: #fff; }
+
+// Make every mat-tab-group/mat-tab-nav-bar in the app swipeable on touch
+// devices. Material's MDC tab header only repositions via a JS-driven CSS
+// transform (_scrollTo in @angular/material/tabs), triggered solely by
+// clicking its pagination arrow buttons — the label container itself has
+// `overflow: hidden` and there's no touch/drag handling at all, so any tab
+// strip wider than its viewport (e.g. Festivals > Dashboard/Child
+// Festivals & Events/...) is completely unswipeable on mobile, only
+// scrollable via that arrow click. This swaps in native horizontal
+// scrolling instead, applied globally so it covers every current and
+// future tab strip in the app without a per-page fix.
+.mat-mdc-tab-label-container,
+.mat-mdc-tab-link-container {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.mat-mdc-tab-list {
+  // Neutralizes Angular's own inline transform (see above) so it can't
+  // fight the native scroll position set by a swipe/drag.
+  transform: none !important;
+}
+
+.mat-mdc-tab-header-pagination {
+  // These arrows drive that same transform, so once it's disabled above
+  // they'd otherwise still render (whenever Material detects overflow) and
+  // do nothing when clicked.
+  display: none !important;
+}

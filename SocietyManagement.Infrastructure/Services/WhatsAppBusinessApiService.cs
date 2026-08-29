@@ -84,12 +84,12 @@ public class WhatsAppBusinessApiService : IWhatsAppService
         await PostMessageAsync(templatePayload, "template text fallback", ct);
     }
 
-    public async Task SendWhatsAppDocumentAsync(
+    public async Task<bool> SendWhatsAppDocumentAsync(
         string mobileNumber, string caption, byte[] documentBytes, string fileName, CancellationToken ct = default)
     {
         var to = ToE164(mobileNumber);
         var mediaId = await UploadMediaAsync(documentBytes, fileName, "application/pdf", ct);
-        if (mediaId == null) return;
+        if (mediaId == null) return false;
 
         var directPayload = new
         {
@@ -98,7 +98,7 @@ public class WhatsAppBusinessApiService : IWhatsAppService
             type = "document",
             document = new { id = mediaId, filename = fileName, caption }
         };
-        if (await PostMessageAsync(directPayload, "direct document", ct)) return;
+        if (await PostMessageAsync(directPayload, "direct document", ct)) return true;
 
         var templateName = _configuration["WhatsApp:DocumentTemplateName"];
         if (string.IsNullOrWhiteSpace(templateName))
@@ -108,7 +108,7 @@ public class WhatsAppBusinessApiService : IWhatsAppService
                 "cannot fall back for {FileName} to {Mobile}. This is expected outside a 24h customer service " +
                 "window until a document-header template is created and approved.",
                 fileName, mobileNumber);
-            return;
+            return false;
         }
 
         var language = _configuration["WhatsApp:DocumentTemplateLanguage"] ?? "en_US";
@@ -129,7 +129,30 @@ public class WhatsAppBusinessApiService : IWhatsAppService
             }
         };
 
-        await PostMessageAsync(templatePayload, "template document fallback", ct);
+        return await PostMessageAsync(templatePayload, "template document fallback", ct);
+    }
+
+    public async Task<bool> SendWhatsAppTemplateAsync(
+        string mobileNumber, string templateName, string languageCode, IReadOnlyList<string> bodyParameters, CancellationToken ct = default)
+    {
+        var to = ToE164(mobileNumber);
+        var payload = new
+        {
+            messaging_product = "whatsapp",
+            to,
+            type = "template",
+            template = new
+            {
+                name = templateName,
+                language = new { code = languageCode },
+                components = new object[]
+                {
+                    new { type = "body", parameters = bodyParameters.Select(p => new { type = "text", text = p }).ToArray() }
+                }
+            }
+        };
+
+        return await PostMessageAsync(payload, $"template '{templateName}'", ct);
     }
 
     public async Task SendWhatsAppImageAsync(string mobileNumber, string caption, string imageUrl, CancellationToken ct = default)
@@ -209,7 +232,7 @@ public class WhatsAppBusinessApiService : IWhatsAppService
     private async Task<string?> UploadMediaAsync(byte[] content, string fileName, string mimeType, CancellationToken ct)
     {
         var phoneNumberId = _configuration["WhatsApp:PhoneNumberId"];
-        var apiVersion = _configuration["WhatsApp:ApiVersion"] ?? "v21.0";
+        var apiVersion = _configuration["WhatsApp:ApiVersion"] ?? "v25.0";
 
         using var form = new MultipartFormDataContent
         {
@@ -247,7 +270,7 @@ public class WhatsAppBusinessApiService : IWhatsAppService
     private async Task<bool> PostMessageAsync(object payload, string attemptLabel, CancellationToken ct)
     {
         var phoneNumberId = _configuration["WhatsApp:PhoneNumberId"];
-        var apiVersion = _configuration["WhatsApp:ApiVersion"] ?? "v21.0";
+        var apiVersion = _configuration["WhatsApp:ApiVersion"] ?? "v25.0";
         var accessToken = _configuration["WhatsApp:AccessToken"];
         var url = $"https://graph.facebook.com/{apiVersion}/{phoneNumberId}/messages";
 

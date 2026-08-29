@@ -50,13 +50,13 @@ public class StubWhatsAppService : IWhatsAppService
         return Task.CompletedTask;
     }
 
-    public Task SendWhatsAppDocumentAsync(
+    public Task<bool> SendWhatsAppDocumentAsync(
         string mobileNumber, string caption, byte[] documentBytes, string fileName, CancellationToken ct = default)
     {
         _logger.LogInformation(
             "[WHATSAPP STUB] To: {Mobile} | Caption: {Caption} | Attachment: {FileName} ({Size} bytes)",
             mobileNumber, caption, fileName, documentBytes.Length);
-        return Task.CompletedTask;
+        return Task.FromResult(true);
     }
 
     public Task SendWhatsAppImageAsync(string mobileNumber, string caption, string imageUrl, CancellationToken ct = default)
@@ -65,5 +65,14 @@ public class StubWhatsAppService : IWhatsAppService
             "[WHATSAPP STUB] To: {Mobile} | Caption: {Caption} | Image: {ImageUrl}",
             mobileNumber, caption, imageUrl);
         return Task.CompletedTask;
+    }
+
+    public Task<bool> SendWhatsAppTemplateAsync(
+        string mobileNumber, string templateName, string languageCode, IReadOnlyList<string> bodyParameters, CancellationToken ct = default)
+    {
+        _logger.LogInformation(
+            "[WHATSAPP STUB] To: {Mobile} | Template: {Template} ({Language}) | Params: {Params}",
+            mobileNumber, templateName, languageCode, string.Join(", ", bodyParameters));
+        return Task.FromResult(true);
     }
 }

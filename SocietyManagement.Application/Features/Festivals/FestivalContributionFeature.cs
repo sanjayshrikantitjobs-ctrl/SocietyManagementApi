@@ -192,7 +192,26 @@ internal static class ContributionReceiptHelper
         var receiptData = await ContributionQueryHandlers.BuildReceiptDataAsync(context, contributionId, ct);
         var pdfBytes = pdfReceiptService.GenerateContributionReceipt(receiptData);
         var message = $"Thank you for your contribution of ₹{receiptData.Amount:N0} to {receiptData.FestivalName}! Receipt {receiptData.ReceiptNumber} is attached.";
-        await whatsAppService.SendWhatsAppDocumentAsync(whatsAppNumber, message, pdfBytes, $"{receiptData.ReceiptNumber}.pdf", ct);
+        var delivered = await whatsAppService.SendWhatsAppDocumentAsync(whatsAppNumber, message, pdfBytes, $"{receiptData.ReceiptNumber}.pdf", ct);
+        if (delivered)
+        {
+            return;
+        }
+
+        // Outside a 24h session, the direct document send fails and the generic
+        // document-header template fallback is a no-op (no such template exists
+        // — see WhatsAppBusinessApiService). festival_payment_success is a real
+        // approved template, but body-only (no header), so it can't carry the
+        // PDF either — this at least confirms the payment to the resident
+        // instead of them hearing nothing. Body params must match the
+        // template's {{1}}..{{4}} order exactly: resident name, amount,
+        // festival name, transaction/payment ID.
+        await whatsAppService.SendWhatsAppTemplateAsync(
+            whatsAppNumber,
+            "festival_payment_success",
+            "en",
+            new[] { receiptData.DonorName, receiptData.Amount.ToString("N0"), receiptData.FestivalName, receiptData.TransactionId ?? receiptData.ReceiptNumber },
+            ct);
     }
 }
 

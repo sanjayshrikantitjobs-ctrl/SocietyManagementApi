@@ -193,21 +193,14 @@ public class WhatsAppBusinessApiService : IWhatsAppService
         // path (SendWhatsAppDocumentAsync), which downloads/uploads to Meta's
         // /media endpoint first and *does* work reliably. This mirrors that
         // proven path instead of trusting Meta to fetch an arbitrary URL itself.
-        byte[] imageBytes;
-        string contentType;
-        try
+        var downloaded = await DownloadImageAsync(imageUrl, ct);
+        if (downloaded == null)
         {
-            using var response = await _httpClient.GetAsync(imageUrl, ct);
-            response.EnsureSuccessStatusCode();
-            imageBytes = await response.Content.ReadAsByteArrayAsync(ct);
-            contentType = response.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Could not download image from {ImageUrl} for WhatsApp send to {Mobile} — sending the caption as plain text instead.", imageUrl, mobileNumber);
+            _logger.LogWarning("Could not download image from {ImageUrl} for WhatsApp send to {Mobile} — sending the caption as plain text instead.", imageUrl, mobileNumber);
             await SendWhatsAppAsync(mobileNumber, caption, ct);
             return;
         }
+        var (imageBytes, contentType) = downloaded.Value;
 
         var mediaId = await UploadMediaAsync(imageBytes, "photo.jpg", contentType, ct);
         if (mediaId == null)
@@ -257,6 +250,76 @@ public class WhatsAppBusinessApiService : IWhatsAppService
         await PostMessageAsync(templatePayload, "template image fallback", ct);
     }
 
+    public async Task<bool> SendWhatsAppImageTemplateAsync(
+        string mobileNumber, string templateName, string languageCode, IReadOnlyList<string> bodyParameters,
+        string imageUrl, IReadOnlyList<string> buttonUrlParameters, CancellationToken ct = default)
+    {
+        var to = ToE164(mobileNumber);
+
+        var downloaded = await DownloadImageAsync(imageUrl, ct);
+        if (downloaded == null)
+        {
+            _logger.LogWarning("Could not download image from {ImageUrl} for WhatsApp template '{Template}' send to {Mobile}.", imageUrl, templateName, mobileNumber);
+            return false;
+        }
+        var (imageBytes, contentType) = downloaded.Value;
+
+        var mediaId = await UploadMediaAsync(imageBytes, "photo.jpg", contentType, ct);
+        if (mediaId == null) return false;
+
+        var components = new List<object>
+        {
+            new { type = "header", parameters = new object[] { new { type = "image", image = new { id = mediaId } } } },
+            new { type = "body", parameters = bodyParameters.Select(p => new { type = "text", text = p }).ToArray() }
+        };
+
+        // One "button" component per dynamic URL button, in template order —
+        // each supplies just that button's {{1}} value; the fixed base URL
+        // itself is baked into the approved template, not sent here.
+        for (var i = 0; i < buttonUrlParameters.Count; i++)
+        {
+            components.Add(new
+            {
+                type = "button",
+                sub_type = "url",
+                index = i.ToString(),
+                parameters = new object[] { new { type = "text", text = buttonUrlParameters[i] } }
+            });
+        }
+
+        var payload = new
+        {
+            messaging_product = "whatsapp",
+            to,
+            type = "template",
+            template = new
+            {
+                name = templateName,
+                language = new { code = languageCode },
+                components
+            }
+        };
+
+        return await PostMessageAsync(payload, $"image template '{templateName}'", ct);
+    }
+
+    private async Task<(byte[] Bytes, string ContentType)?> DownloadImageAsync(string imageUrl, CancellationToken ct)
+    {
+        try
+        {
+            using var response = await _httpClient.GetAsync(imageUrl, ct);
+            response.EnsureSuccessStatusCode();
+            var bytes = await response.Content.ReadAsByteArrayAsync(ct);
+            var contentType = response.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
+            return (bytes, contentType);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to download image from {ImageUrl}.", imageUrl);
+            return null;
+        }
+    }
+
     private async Task<string?> UploadMediaAsync(byte[] content, string fileName, string mimeType, CancellationToken ct)
     {
         var phoneNumberId = _configuration["WhatsApp:PhoneNumberId"];
@@ -301,8 +364,6 @@ public class WhatsAppBusinessApiService : IWhatsAppService
         var apiVersion = _configuration["WhatsApp:ApiVersion"] ?? "v25.0";
         var accessToken = _configuration["WhatsApp:AccessToken"];
         var url = $"https://graph.facebook.com/{apiVersion}/{phoneNumberId}/messages";
-
-        var aa = JsonContent.Create(payload);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, url)
         {

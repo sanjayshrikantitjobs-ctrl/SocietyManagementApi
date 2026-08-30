@@ -230,6 +230,29 @@ public class VisitorVisitCommandHandlers :
             return;
         }
 
+        // visitor_approval_request carries the photo plus one-tap Approve/Reject
+        // buttons whose fixed base URLs are baked into the approved template —
+        // only each button's dynamic {{1}} (this visit's token) is sent here.
+        // Requires a photo (the template's header is a mandatory image), so a
+        // photo-less visit — or a failed template attempt — falls back to the
+        // older plain message below, with the approval link as text instead of
+        // native buttons.
+        if (!string.IsNullOrWhiteSpace(dto.VisitorPhotoUrl))
+        {
+            var bodyParams = new[]
+            {
+                dto.VisitorName, dto.VisitorMobile, dto.PurposeName, dto.FlatNumber, dto.GateName,
+                dto.NumberOfVisitors.ToString(), dto.RequestedAt.ToString("dd MMM yyyy, hh:mm tt"),
+                string.IsNullOrWhiteSpace(dto.VisitorVehicleNumber) ? "N/A" : dto.VisitorVehicleNumber
+            };
+            var buttonParams = new[] { visit.ApprovalToken!, visit.ApprovalToken! };
+            if (await _whatsAppService.SendWhatsAppImageTemplateAsync(
+                    ownerPhone, "visitor_approval_request", "en_US", bodyParams, dto.VisitorPhotoUrl, buttonParams, ct))
+            {
+                return;
+            }
+        }
+
         var approvalUrl = _appUrlService.BuildAbsoluteUrl($"api/public/visitor-approvals/{visit.ApprovalToken}");
         var caption =
             $"🔔 New Visitor Request\n\n" +

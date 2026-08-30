@@ -80,6 +80,41 @@ public class VisitorApprovalPublicController : ControllerBase
         }
     }
 
+    /// <summary>One-tap counterparts of Approve/Reject above, at "verb-first"
+    /// routes (action/{token} rather than {token}/action) — required because
+    /// these are the actual URLs behind the WhatsApp template's "Approve"/
+    /// "Reject" buttons, and a WhatsApp URL button only ever issues a GET
+    /// with its dynamic {{1}} value appended as the LAST path segment; Meta
+    /// doesn't support appending anything after it, so the verb can't come
+    /// after the token the way the form-based routes above do. No reason
+    /// field here (a WhatsApp button can't collect text) — a rejecter who
+    /// wants to give a reason can still open the plain link instead.</summary>
+    [HttpGet("approve/{token}")]
+    public async Task<IActionResult> ApproveViaButton(string token)
+    {
+        try
+        {
+            await _mediator.Send(new ApproveVisitByTokenCommand(token));
+        }
+        catch (NotFoundException) { }
+        catch (ConflictAppException) { }
+
+        return RedirectToAction(nameof(Get), new { token, justActioned = "approved" });
+    }
+
+    [HttpGet("reject/{token}")]
+    public async Task<IActionResult> RejectViaButton(string token)
+    {
+        try
+        {
+            await _mediator.Send(new RejectVisitByTokenCommand(token, Reason: null));
+        }
+        catch (NotFoundException) { }
+        catch (ConflictAppException) { }
+
+        return RedirectToAction(nameof(Get), new { token, justActioned = "rejected" });
+    }
+
     private static string RenderBody(VisitorVisitDto visit, string token, string? justActioned)
     {
         var photoHtml = string.IsNullOrWhiteSpace(visit.VisitorPhotoUrl)

@@ -54,4 +54,19 @@ public interface IWhatsAppService
     Task<bool> SendWhatsAppDocumentTemplateAsync(
         string mobileNumber, string templateName, string languageCode, IReadOnlyList<string> bodyParameters,
         byte[] documentBytes, string fileName, CancellationToken ct = default);
+
+    /// <summary>Sends a template with an image header and, optionally, one or
+    /// more dynamic URL buttons (e.g. Approve/Reject links) — for a caller
+    /// with its own approved template of this shape. buttonUrlParameters
+    /// supplies, in order, the dynamic {{1}} value for each URL button in the
+    /// template by position/index (e.g. the same approval token for both an
+    /// Approve and a Reject button, each resolving against a different fixed
+    /// base URL baked into the template); pass an empty list if the template
+    /// has no dynamic URL buttons. The image is referenced by a publicly-
+    /// reachable URL and downloaded here before uploading to Meta's /media
+    /// endpoint — sending by "link" was tried first for a similar case and
+    /// silently failed to deliver (see SendWhatsAppImageAsync).</summary>
+    Task<bool> SendWhatsAppImageTemplateAsync(
+        string mobileNumber, string templateName, string languageCode, IReadOnlyList<string> bodyParameters,
+        string imageUrl, IReadOnlyList<string> buttonUrlParameters, CancellationToken ct = default);
 }

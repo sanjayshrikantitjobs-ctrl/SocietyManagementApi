@@ -85,4 +85,14 @@ public class StubWhatsAppService : IWhatsAppService
             mobileNumber, templateName, languageCode, string.Join(", ", bodyParameters), fileName, documentBytes.Length);
         return Task.FromResult(true);
     }
+
+    public Task<bool> SendWhatsAppImageTemplateAsync(
+        string mobileNumber, string templateName, string languageCode, IReadOnlyList<string> bodyParameters,
+        string imageUrl, IReadOnlyList<string> buttonUrlParameters, CancellationToken ct = default)
+    {
+        _logger.LogInformation(
+            "[WHATSAPP STUB] To: {Mobile} | Image Template: {Template} ({Language}) | Params: {Params} | Image: {ImageUrl} | Button params: {ButtonParams}",
+            mobileNumber, templateName, languageCode, string.Join(", ", bodyParameters), imageUrl, string.Join(", ", buttonUrlParameters));
+        return Task.FromResult(true);
+    }
 }

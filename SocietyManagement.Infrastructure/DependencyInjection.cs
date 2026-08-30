@@ -60,7 +60,7 @@ public static class DependencyInjection
         }
         else
         {
-            services.AddScoped<IWhatsAppService, StubWhatsAppService>();
+            services.AddScoped<IWhatsAppService, WhatsAppBusinessApiService>();
         }
         services.AddSignalR();
         services.AddScoped<INotificationService, NotificationService>();

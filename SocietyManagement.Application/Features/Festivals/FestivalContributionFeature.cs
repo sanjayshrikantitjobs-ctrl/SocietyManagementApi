@@ -194,11 +194,15 @@ internal static class ContributionReceiptHelper
         var fileName = $"{receiptData.ReceiptNumber}.pdf";
         var message = $"Thank you for your contribution of ₹{receiptData.Amount:N0} to {receiptData.FestivalName}! Receipt {receiptData.ReceiptNumber} is attached.";
         // Body params match both approved templates' {{1}}..{{4}} order:
-        // resident name, amount, festival name, transaction/payment ID.
+        // resident name, amount, festival name, transaction/payment ID. Meta
+        // rejects a template send outright (error 131008, "missing text
+        // value") if any text parameter is blank — TransactionId is optional
+        // and the create-contribution form can submit "" rather than a true
+        // null when left empty, which `??` alone wouldn't catch.
         var bodyParams = new[]
         {
             receiptData.DonorName, receiptData.Amount.ToString("N0"), receiptData.FestivalName,
-            receiptData.TransactionId ?? receiptData.ReceiptNumber
+            string.IsNullOrWhiteSpace(receiptData.TransactionId) ? receiptData.ReceiptNumber : receiptData.TransactionId
         };
 
         // The document-header template is tried FIRST, not as a fallback:

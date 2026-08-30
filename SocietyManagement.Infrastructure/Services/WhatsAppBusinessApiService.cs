@@ -302,6 +302,8 @@ public class WhatsAppBusinessApiService : IWhatsAppService
         var accessToken = _configuration["WhatsApp:AccessToken"];
         var url = $"https://graph.facebook.com/{apiVersion}/{phoneNumberId}/messages";
 
+        var aa = JsonContent.Create(payload);
+
         using var request = new HttpRequestMessage(HttpMethod.Post, url)
         {
             Content = JsonContent.Create(payload)

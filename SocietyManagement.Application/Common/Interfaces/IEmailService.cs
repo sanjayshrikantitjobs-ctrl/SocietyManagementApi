@@ -43,4 +43,15 @@ public interface IWhatsAppService
     /// outside-a-session fallback when the PDF document send itself fails.</summary>
     Task<bool> SendWhatsAppTemplateAsync(
         string mobileNumber, string templateName, string languageCode, IReadOnlyList<string> bodyParameters, CancellationToken ct = default);
+
+    /// <summary>Sends a document via a specific approved document-HEADER
+    /// template (uploading the file to Meta's /media endpoint first) — for a
+    /// caller with its own such template. Deliberately separate from
+    /// SendWhatsAppDocumentAsync's generic WhatsApp:DocumentTemplateName
+    /// fallback: that config is shared across every document-send call site,
+    /// so it can't safely hold one caller's specific template/params without
+    /// breaking another caller that hits the same fallback path.</summary>
+    Task<bool> SendWhatsAppDocumentTemplateAsync(
+        string mobileNumber, string templateName, string languageCode, IReadOnlyList<string> bodyParameters,
+        byte[] documentBytes, string fileName, CancellationToken ct = default);
 }

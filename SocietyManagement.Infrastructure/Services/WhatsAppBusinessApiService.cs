@@ -155,6 +155,34 @@ public class WhatsAppBusinessApiService : IWhatsAppService
         return await PostMessageAsync(payload, $"template '{templateName}'", ct);
     }
 
+    public async Task<bool> SendWhatsAppDocumentTemplateAsync(
+        string mobileNumber, string templateName, string languageCode, IReadOnlyList<string> bodyParameters,
+        byte[] documentBytes, string fileName, CancellationToken ct = default)
+    {
+        var to = ToE164(mobileNumber);
+        var mediaId = await UploadMediaAsync(documentBytes, fileName, "application/pdf", ct);
+        if (mediaId == null) return false;
+
+        var payload = new
+        {
+            messaging_product = "whatsapp",
+            to,
+            type = "template",
+            template = new
+            {
+                name = templateName,
+                language = new { code = languageCode },
+                components = new object[]
+                {
+                    new { type = "header", parameters = new object[] { new { type = "document", document = new { id = mediaId, filename = fileName } } } },
+                    new { type = "body", parameters = bodyParameters.Select(p => new { type = "text", text = p }).ToArray() }
+                }
+            }
+        };
+
+        return await PostMessageAsync(payload, $"document template '{templateName}'", ct);
+    }
+
     public async Task SendWhatsAppImageAsync(string mobileNumber, string caption, string imageUrl, CancellationToken ct = default)
     {
         var to = ToE164(mobileNumber);

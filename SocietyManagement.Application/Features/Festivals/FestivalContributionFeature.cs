@@ -201,24 +201,34 @@ internal static class ContributionReceiptHelper
             receiptData.TransactionId ?? receiptData.ReceiptNumber
         };
 
-        if (await whatsAppService.SendWhatsAppDocumentAsync(whatsAppNumber, message, pdfBytes, fileName, ct))
-        {
-            return;
-        }
-
-        // Outside a 24h session, the direct send above fails. Try the approved
-        // document-HEADER template next — it carries the actual PDF, same as
-        // the direct send, just via a template instead of a live session.
+        // The document-header template is tried FIRST, not as a fallback:
+        // Meta's synchronous response for a "direct" (session-only) send can
+        // report success — a real 200 and wamid — even when the recipient has
+        // no open 24h session and the message is never actually delivered.
+        // Confirmed directly: a real direct send to a fresh number returned a
+        // successful response but never arrived, while the identical PDF sent
+        // via this same template (verified independently via Postman)
+        // delivered correctly. So "direct succeeded" can't be trusted as
+        // proof of delivery — the template is the reliable path and goes
+        // first regardless of session state.
         if (await whatsAppService.SendWhatsAppDocumentTemplateAsync(
                 whatsAppNumber, "society_festival_payment_receipt", "en_US", bodyParams, pdfBytes, fileName, ct))
         {
             return;
         }
 
+        // Falls back to a direct send only if the template attempt itself
+        // fails outright (e.g. a transient API error, or the template isn't
+        // approved yet) — worth trying since it's free within an active
+        // session, even though its "success" can't be trusted the other way.
+        if (await whatsAppService.SendWhatsAppDocumentAsync(whatsAppNumber, message, pdfBytes, fileName, ct))
+        {
+            return;
+        }
+
         // Last resort: festival_payment_success is body-only (no header), so
         // it can't carry the PDF — this at least confirms the payment instead
-        // of the resident hearing nothing. Reached whenever the document
-        // template above isn't approved yet, or itself fails for some reason.
+        // of the resident hearing nothing.
         await whatsAppService.SendWhatsAppTemplateAsync(whatsAppNumber, "festival_payment_success", "en", bodyParams, ct);
     }
 }

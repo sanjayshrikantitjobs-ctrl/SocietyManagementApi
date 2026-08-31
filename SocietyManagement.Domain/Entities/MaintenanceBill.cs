@@ -8,6 +8,13 @@ namespace SocietyManagement.Domain.Entities;
 /// silently change if the flat's owner record is edited later.</summary>
 public class MaintenanceBill : BaseAuditableEntity
 {
+    /// <summary>Denormalized from Flat.Floor.Wing.Building.SocietyId at
+    /// creation time — that 4-table join chain has no supporting index and
+    /// doesn't scale once many societies share this table, so every query
+    /// that used to walk it filters on this column directly instead.</summary>
+    public int SocietyId { get; set; }
+    public Society Society { get; set; } = default!;
+
     public int FlatId { get; set; }
     public Flat Flat { get; set; } = default!;
 

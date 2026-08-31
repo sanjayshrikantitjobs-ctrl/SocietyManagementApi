@@ -30,6 +30,18 @@ export class SocietyService {
   deleteSociety(id: number): Observable<void> {
     return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/societies/${id}`).pipe(map(() => void 0));
   }
+  /** Super Admin only (see SetSocietySubscriptionCommand) — deliberately its
+   * own call rather than folded into updateSociety, so a regular society
+   * Admin editing their own society can never touch these fields. */
+  setSubscription(id: number, subscriptionStartDate: string, subscriptionEndDate: string): Observable<void> {
+    return this.http.put<ApiResponse<void>>(`${this.baseUrl}/societies/${id}/subscription`,
+      { id, subscriptionStartDate, subscriptionEndDate }).pipe(map(() => void 0));
+  }
+  /** Manual restrict/reinstate toggle, independent of the date window above. */
+  setSuspension(id: number, isSuspended: boolean): Observable<void> {
+    return this.http.put<ApiResponse<void>>(`${this.baseUrl}/societies/${id}/suspension`,
+      { id, isSuspended }).pipe(map(() => void 0));
+  }
 
   // ---- Buildings -------------------------------------------------------------
   getBuildings(societyId: number): Observable<Building[]> {

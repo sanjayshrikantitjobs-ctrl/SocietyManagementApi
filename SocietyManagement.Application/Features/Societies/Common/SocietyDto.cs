@@ -17,5 +17,8 @@ public class SocietyDto : IMapFrom<Society>
     public string? ContactPhone { get; set; }
     public string? LogoUrl { get; set; }
     public DateTime? EstablishedDate { get; set; }
+    public DateTime SubscriptionStartDate { get; set; }
+    public DateTime SubscriptionEndDate { get; set; }
+    public bool IsSubscriptionSuspended { get; set; }
     public int BuildingCount { get; set; }
 }

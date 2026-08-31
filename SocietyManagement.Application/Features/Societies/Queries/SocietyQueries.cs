@@ -41,6 +41,9 @@ public class GetSocietiesQueryHandler : IRequestHandler<GetSocietiesQuery, List<
                 ContactPhone = s.ContactPhone,
                 LogoUrl = s.LogoUrl,
                 EstablishedDate = s.EstablishedDate,
+                SubscriptionStartDate = s.SubscriptionStartDate,
+                SubscriptionEndDate = s.SubscriptionEndDate,
+                IsSubscriptionSuspended = s.IsSubscriptionSuspended,
                 BuildingCount = s.Buildings.Count(b => !b.IsDeleted)
             })
             .OrderBy(s => s.Name)
@@ -82,6 +85,9 @@ public class GetSocietyByIdQueryHandler : IRequestHandler<GetSocietyByIdQuery, S
                 ContactPhone = s.ContactPhone,
                 LogoUrl = s.LogoUrl,
                 EstablishedDate = s.EstablishedDate,
+                SubscriptionStartDate = s.SubscriptionStartDate,
+                SubscriptionEndDate = s.SubscriptionEndDate,
+                IsSubscriptionSuspended = s.IsSubscriptionSuspended,
                 BuildingCount = s.Buildings.Count(b => !b.IsDeleted)
             })
             .FirstOrDefaultAsync(ct)

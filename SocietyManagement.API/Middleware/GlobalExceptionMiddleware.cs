@@ -60,6 +60,10 @@ public class GlobalExceptionMiddleware
                 (int)HttpStatusCode.Forbidden,
                 ApiResponse.FailureResponse(forbiddenEx.Message)),
 
+            SubscriptionExpiredException subscriptionEx => (
+                (int)HttpStatusCode.PaymentRequired,
+                ApiResponse.FailureResponse(subscriptionEx.Message)),
+
             ConflictAppException conflictEx => (
                 (int)HttpStatusCode.Conflict,
                 ApiResponse.FailureResponse(conflictEx.Message)),

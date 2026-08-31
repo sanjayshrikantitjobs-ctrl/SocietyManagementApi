@@ -52,3 +52,13 @@ public class ConflictAppException : AppException
 {
     public ConflictAppException(string message) : base(message) { }
 }
+
+/// <summary>Thrown by SubscriptionActiveFilter when a society's subscription
+/// has lapsed. Mapped to HTTP 402 (not 403) so the frontend can distinguish
+/// "your trial ended" from a generic permission error and show a dedicated
+/// lockout screen.</summary>
+public class SubscriptionExpiredException : AppException
+{
+    public SubscriptionExpiredException()
+        : base("Your society's subscription has expired. Please contact your platform administrator.") { }
+}

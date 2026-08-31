@@ -123,5 +123,6 @@ export const routes: Routes = [
   },
 
   { path: 'forbidden', loadComponent: () => import('./shared/pages/forbidden.component').then(m => m.ForbiddenComponent) },
+  { path: 'subscription-expired', loadComponent: () => import('./shared/pages/subscription-expired.component').then(m => m.SubscriptionExpiredComponent) },
   { path: '**', loadComponent: () => import('./shared/pages/not-found.component').then(m => m.NotFoundComponent) }
 ];

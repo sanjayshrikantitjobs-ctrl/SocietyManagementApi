@@ -11,6 +11,9 @@ export interface Society {
   contactPhone?: string | null;
   logoUrl?: string | null;
   establishedDate?: string | null;
+  subscriptionStartDate: string;
+  subscriptionEndDate: string;
+  isSubscriptionSuspended: boolean;
   buildingCount: number;
 }
 

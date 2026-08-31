@@ -9,9 +9,16 @@ using SocietyManagement.Shared.Exceptions;
 namespace SocietyManagement.Application.Features.Societies.Commands;
 
 // ---- Create ----------------------------------------------------------------
+// SubscriptionStartDate/EndDate are required, not optional — every society,
+// including ones created before this feature existed, carries an explicit
+// subscription window (see the migration backfill for those). Society.Create
+// is already Super Admin-only (see Permissions.Society.Create), so no extra
+// authorization check is needed here the way SetSocietySubscriptionCommand
+// needs one below.
 public record CreateSocietyCommand(
     string Name, string? RegistrationNumber, string Address, string City, string State, string Pincode,
-    string? ContactEmail, string? ContactPhone, DateTime? EstablishedDate, string? LogoUrl = null) : IRequest<int>;
+    string? ContactEmail, string? ContactPhone, DateTime? EstablishedDate,
+    DateTime SubscriptionStartDate, DateTime SubscriptionEndDate, string? LogoUrl = null) : IRequest<int>;
 
 public class CreateSocietyCommandValidator : AbstractValidator<CreateSocietyCommand>
 {
@@ -23,6 +30,7 @@ public class CreateSocietyCommandValidator : AbstractValidator<CreateSocietyComm
         RuleFor(x => x.State).NotEmpty();
         RuleFor(x => x.Pincode).NotEmpty().Length(6);
         RuleFor(x => x.ContactEmail).EmailAddress().When(x => !string.IsNullOrEmpty(x.ContactEmail));
+        RuleFor(x => x.SubscriptionEndDate).GreaterThan(x => x.SubscriptionStartDate);
     }
 }
 
@@ -51,6 +59,8 @@ public class CreateSocietyCommandHandler : IRequestHandler<CreateSocietyCommand,
             ContactEmail = request.ContactEmail,
             ContactPhone = request.ContactPhone,
             EstablishedDate = request.EstablishedDate,
+            SubscriptionStartDate = request.SubscriptionStartDate,
+            SubscriptionEndDate = request.SubscriptionEndDate,
             LogoUrl = request.LogoUrl
         };
         await _context.Societies.AddAsync(society, ct);
@@ -145,6 +155,109 @@ public class UpdateSocietyCommandHandler : IRequestHandler<UpdateSocietyCommand,
         society.LogoUrl = request.LogoUrl;
 
         await _context.SaveChangesAsync(ct);
+        await _auditService.LogAsync(Domain.Enums.AuditAction.Update, "Society", nameof(Society),
+            society.Id.ToString(), ct: ct);
+        return Unit.Value;
+    }
+}
+
+// ---- Set Subscription ---------------------------------------------------------
+// Deliberately separate from UpdateSocietyCommand: that command lets a
+// society's own Admin edit their own society (see its inline check above),
+// which would let a society extend its own trial. This command inverts that
+// check — only the Super Admin (no society_id claim) may call it.
+public record SetSocietySubscriptionCommand(int Id, DateTime SubscriptionStartDate, DateTime SubscriptionEndDate) : IRequest<Unit>;
+
+public class SetSocietySubscriptionCommandValidator : AbstractValidator<SetSocietySubscriptionCommand>
+{
+    public SetSocietySubscriptionCommandValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.SubscriptionEndDate).GreaterThan(x => x.SubscriptionStartDate);
+    }
+}
+
+public class SetSocietySubscriptionCommandHandler : IRequestHandler<SetSocietySubscriptionCommand, Unit>
+{
+    private readonly IApplicationDbContext _context;
+    private readonly IAuditService _auditService;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly ISubscriptionCacheInvalidator _cacheInvalidator;
+
+    public SetSocietySubscriptionCommandHandler(IApplicationDbContext context, IAuditService auditService,
+        ICurrentUserService currentUserService, ISubscriptionCacheInvalidator cacheInvalidator)
+    {
+        _context = context;
+        _auditService = auditService;
+        _currentUserService = currentUserService;
+        _cacheInvalidator = cacheInvalidator;
+    }
+
+    public async Task<Unit> Handle(SetSocietySubscriptionCommand request, CancellationToken ct)
+    {
+        if (_currentUserService.SocietyId.HasValue)
+        {
+            throw new ForbiddenAccessException("Only the platform administrator can manage subscriptions.");
+        }
+
+        var society = await _context.Societies.FirstOrDefaultAsync(s => s.Id == request.Id && !s.IsDeleted, ct)
+            ?? throw new NotFoundException(nameof(Society), request.Id);
+
+        society.SubscriptionStartDate = request.SubscriptionStartDate;
+        society.SubscriptionEndDate = request.SubscriptionEndDate;
+
+        await _context.SaveChangesAsync(ct);
+        _cacheInvalidator.Invalidate(society.Id);
+        await _auditService.LogAsync(Domain.Enums.AuditAction.Update, "Society", nameof(Society),
+            society.Id.ToString(), ct: ct);
+        return Unit.Value;
+    }
+}
+
+// ---- Set Suspension -------------------------------------------------------------
+// Manual override, independent of SetSocietySubscriptionCommand's date
+// window — lets the Super Admin cut a society off immediately or reinstate
+// it without touching dates. Same inverted-check pattern as above.
+public record SetSocietySuspensionCommand(int Id, bool IsSuspended) : IRequest<Unit>;
+
+public class SetSocietySuspensionCommandValidator : AbstractValidator<SetSocietySuspensionCommand>
+{
+    public SetSocietySuspensionCommandValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0);
+    }
+}
+
+public class SetSocietySuspensionCommandHandler : IRequestHandler<SetSocietySuspensionCommand, Unit>
+{
+    private readonly IApplicationDbContext _context;
+    private readonly IAuditService _auditService;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly ISubscriptionCacheInvalidator _cacheInvalidator;
+
+    public SetSocietySuspensionCommandHandler(IApplicationDbContext context, IAuditService auditService,
+        ICurrentUserService currentUserService, ISubscriptionCacheInvalidator cacheInvalidator)
+    {
+        _context = context;
+        _auditService = auditService;
+        _currentUserService = currentUserService;
+        _cacheInvalidator = cacheInvalidator;
+    }
+
+    public async Task<Unit> Handle(SetSocietySuspensionCommand request, CancellationToken ct)
+    {
+        if (_currentUserService.SocietyId.HasValue)
+        {
+            throw new ForbiddenAccessException("Only the platform administrator can manage subscriptions.");
+        }
+
+        var society = await _context.Societies.FirstOrDefaultAsync(s => s.Id == request.Id && !s.IsDeleted, ct)
+            ?? throw new NotFoundException(nameof(Society), request.Id);
+
+        society.IsSubscriptionSuspended = request.IsSuspended;
+
+        await _context.SaveChangesAsync(ct);
+        _cacheInvalidator.Invalidate(society.Id);
         await _auditService.LogAsync(Domain.Enums.AuditAction.Update, "Society", nameof(Society),
             society.Id.ToString(), ct: ct);
         return Unit.Value;

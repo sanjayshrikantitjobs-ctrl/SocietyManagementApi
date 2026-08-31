@@ -136,5 +136,9 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.Property(a => a.UserName).HasMaxLength(256);
         builder.HasIndex(a => a.Timestamp);
         builder.HasIndex(a => a.UserId);
+        // For a per-society Audit Logs screen — not built yet, but the
+        // permission is already seeded, and without this the query would be
+        // a full scan across every tenant sharing this table.
+        builder.HasIndex(a => new { a.SocietyId, a.Timestamp });
     }
 }

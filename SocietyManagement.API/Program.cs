@@ -33,7 +33,16 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
 // SocietyScopeFilter: global multi-tenant enforcement — see its own doc
 // comment. Stateless (reads only from the request's ClaimsPrincipal), so a
 // plain instance is fine; no DI registration needed.
-builder.Services.AddControllers(options => options.Filters.Add(new SocietyManagement.API.Authorization.SocietyScopeFilter()));
+// SubscriptionActiveFilter: global subscription-gating enforcement — needs
+// IApplicationDbContext/IMemoryCache, so it's added generically and resolved
+// via DI per-request instead of being instantiated directly.
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(new SocietyManagement.API.Authorization.SocietyScopeFilter());
+    options.Filters.Add<SocietyManagement.API.Authorization.SubscriptionActiveFilter>();
+});
+builder.Services.AddSingleton<SocietyManagement.Application.Common.Interfaces.ISubscriptionCacheInvalidator,
+    SocietyManagement.API.Authorization.SubscriptionCacheInvalidator>();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);

@@ -128,7 +128,7 @@ public class MaintenanceBillCommandHandlers :
             .ToListAsync(ct);
 
         var alreadyBilledFlatIds = await _context.MaintenanceBills
-            .Where(b => !b.IsDeleted && b.BillMonth == billMonth && b.Flat.Floor.Wing.Building.SocietyId == request.SocietyId)
+            .Where(b => !b.IsDeleted && b.BillMonth == billMonth && b.SocietyId == request.SocietyId)
             .Select(b => b.FlatId)
             .ToListAsync(ct);
 
@@ -226,7 +226,7 @@ public class MaintenanceBillCommandHandlers :
 
             var bill = new MaintenanceBill
             {
-                FlatId = flat.Id, BillMonth = billMonth, InvoiceNumber = invoiceNumber,
+                SocietyId = request.SocietyId, FlatId = flat.Id, BillMonth = billMonth, InvoiceNumber = invoiceNumber,
                 PreviousBalance = previousBalance, FineAmount = fineTotal, TotalAmount = totalAmount,
                 AmountPaid = 0, DueDate = dueDate, Status = BillStatus.Pending, GeneratedAt = DateTime.UtcNow,
                 OwnerNameSnapshot = ownerName, OwnerPhoneSnapshot = ownerPhone
@@ -302,7 +302,7 @@ public class MaintenanceBillCommandHandlers :
             throw new ConflictAppException("This flat has no owner phone number on file.");
         }
 
-        var society = await _context.Societies.FirstAsync(s => s.Id == bill.Flat.Floor.Wing.Building.SocietyId, ct);
+        var society = await _context.Societies.FirstAsync(s => s.Id == bill.SocietyId, ct);
         var settings = await _context.MaintenanceSettings.FirstAsync(s => s.SocietyId == society.Id && !s.IsDeleted, ct);
         var pdfBytes = _pdfService.GenerateBillPdf(BuildPdfData(society, settings, bill.Flat.FlatNumber, bill));
 
@@ -359,7 +359,7 @@ public class MaintenanceBillQueryHandlers :
     public async Task<PaginatedResult<MaintenanceBillDto>> Handle(GetBillsQuery request, CancellationToken ct)
     {
         var query = _context.MaintenanceBills
-            .Where(b => !b.IsDeleted && b.Flat.Floor.Wing.Building.SocietyId == request.SocietyId);
+            .Where(b => !b.IsDeleted && b.SocietyId == request.SocietyId);
 
         if (request.FlatId.HasValue) query = query.Where(b => b.FlatId == request.FlatId);
         if (request.BillMonth.HasValue)
@@ -428,14 +428,13 @@ public class MaintenanceBillQueryHandlers :
     public async Task<byte[]> Handle(GetBillPdfQuery request, CancellationToken ct)
     {
         var bill = await _context.MaintenanceBills
-            .Include(b => b.Flat).ThenInclude(f => f.Floor).ThenInclude(fl => fl.Wing).ThenInclude(w => w.Building)
+            .Include(b => b.Flat)
             .Include(b => b.Items)
             .FirstOrDefaultAsync(b => b.Id == request.Id && !b.IsDeleted, ct)
             ?? throw new NotFoundException(nameof(MaintenanceBill), request.Id);
 
-        var societyId = bill.Flat.Floor.Wing.Building.SocietyId;
-        var society = await _context.Societies.FirstAsync(s => s.Id == societyId, ct);
-        var settings = await _context.MaintenanceSettings.FirstAsync(s => s.SocietyId == societyId && !s.IsDeleted, ct);
+        var society = await _context.Societies.FirstAsync(s => s.Id == bill.SocietyId, ct);
+        var settings = await _context.MaintenanceSettings.FirstAsync(s => s.SocietyId == bill.SocietyId && !s.IsDeleted, ct);
 
         return _pdfService.GenerateBillPdf(
             MaintenanceBillCommandHandlers.BuildPdfData(society, settings, bill.Flat.FlatNumber, bill));

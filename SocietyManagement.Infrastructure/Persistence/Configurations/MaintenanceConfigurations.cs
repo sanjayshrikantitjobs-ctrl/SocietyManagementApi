@@ -91,7 +91,15 @@ public class MaintenanceBillConfiguration : IEntityTypeConfiguration<Maintenance
         builder.Property(b => b.OwnerPhoneSnapshot).HasMaxLength(20);
         builder.HasIndex(b => b.InvoiceNumber).IsUnique();
         builder.HasIndex(b => new { b.FlatId, b.BillMonth }).IsUnique().HasFilter("[IsDeleted] = 0");
-        builder.HasIndex(b => b.Status);
+        // Composite, SocietyId-first — replaces the old bare Status index,
+        // which returned matches across every tenant sharing this table.
+        builder.HasIndex(b => new { b.SocietyId, b.Status });
+        builder.HasIndex(b => new { b.SocietyId, b.BillMonth });
+
+        builder.HasOne(b => b.Society)
+            .WithMany()
+            .HasForeignKey(b => b.SocietyId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(b => b.Flat)
             .WithMany()

@@ -32,6 +32,26 @@ public class Society : BaseAuditableEntity
 
     public DateTime? EstablishedDate { get; set; }
 
+    /// <summary>Every society carries an explicit subscription window — a
+    /// free trial or a paid validity period, set by the Super Admin (see
+    /// SetSocietySubscriptionCommand). SubscriptionActiveFilter checks
+    /// SubscriptionEndDate on every request from a non-Super-Admin user of
+    /// this society; expired means blocked until extended. Not nullable —
+    /// existing societies are backfilled with a 1-year window by the
+    /// migration that introduces these columns, rather than being exempt.</summary>
+    public DateTime SubscriptionStartDate { get; set; }
+
+    public DateTime SubscriptionEndDate { get; set; }
+
+    /// <summary>Manual Super Admin override, independent of the date window
+    /// above — lets a society be cut off immediately (e.g. non-payment) or
+    /// reinstated without doing date math, matching "restrict... until super
+    /// admin enable it" from the original request. Checked by
+    /// SubscriptionActiveFilter alongside SubscriptionEndDate; either one
+    /// blocks. Defaults false (not suspended) for every existing and new
+    /// society.</summary>
+    public bool IsSubscriptionSuspended { get; set; }
+
     public ICollection<Building> Buildings { get; set; } = new List<Building>();
 
     public ICollection<ParkingSlot> ParkingSlots { get; set; } = new List<ParkingSlot>();

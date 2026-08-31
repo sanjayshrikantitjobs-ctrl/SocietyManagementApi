@@ -16,6 +16,12 @@ public class AuditLog
 
     public string? UserName { get; set; }
 
+    /// <summary>Null for a Super Admin action (no tenant boundary — matches
+    /// ICurrentUserService.SocietyId's own nullability), populated for every
+    /// regular user's action. Added so a per-society Audit Logs screen
+    /// doesn't need a full-table scan once many societies share this table.</summary>
+    public int? SocietyId { get; set; }
+
     public AuditAction Action { get; set; }
 
     public string Module { get; set; } = default!;

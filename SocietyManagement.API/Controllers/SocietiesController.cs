@@ -53,4 +53,27 @@ public class SocietiesController : ApiControllerBase
         await Mediator.Send(new DeleteSocietyCommand(id));
         return Ok(ApiResponse.SuccessResponse("Society deleted."));
     }
+
+    /// <summary>Super Admin only — gated by Permissions.Society.Create (the
+    /// one permission never granted to a regular Admin) plus the handler's
+    /// own inline check, same belt-and-suspenders pattern used elsewhere.</summary>
+    [HttpPut("{id:int}/subscription")]
+    [HasPermission(Permissions.Society.Create)]
+    public async Task<IActionResult> SetSubscription(int id, SetSocietySubscriptionCommand command)
+    {
+        if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
+        await Mediator.Send(command);
+        return Ok(ApiResponse.SuccessResponse("Subscription updated."));
+    }
+
+    /// <summary>Manual restrict/reinstate toggle, independent of the date
+    /// window above — same Super Admin-only gating.</summary>
+    [HttpPut("{id:int}/suspension")]
+    [HasPermission(Permissions.Society.Create)]
+    public async Task<IActionResult> SetSuspension(int id, SetSocietySuspensionCommand command)
+    {
+        if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
+        await Mediator.Send(command);
+        return Ok(ApiResponse.SuccessResponse(command.IsSuspended ? "Society restricted." : "Society reinstated."));
+    }
 }

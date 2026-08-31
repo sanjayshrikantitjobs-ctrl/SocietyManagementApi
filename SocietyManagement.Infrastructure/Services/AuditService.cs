@@ -31,6 +31,7 @@ public class AuditService : IAuditService
         {
             UserId = _currentUser.UserId,
             UserName = _currentUser.Email,
+            SocietyId = _currentUser.SocietyId,
             Action = action,
             Module = module,
             EntityName = entityName,

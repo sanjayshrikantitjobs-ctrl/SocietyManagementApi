@@ -41,7 +41,7 @@ public class GetScanHistoryQueryHandlerTests
     private static VehicleScanHandlers BuildHandler(ApplicationDbContext db, int societyId, int userId, string roleName)
     {
         var currentUser = new FakeCurrentUserService { UserId = userId, SocietyId = societyId, RoleName = roleName };
-        return new VehicleScanHandlers(db, currentUser, new FakeFileStorageService(), new FakeDateTime());
+        return new VehicleScanHandlers(db, currentUser, new FakeFileStorageService(), new FakeDateTime(), new FakeVehiclePlateOcrService());
     }
 
     [Fact]

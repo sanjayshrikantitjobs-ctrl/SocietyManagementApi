@@ -4,7 +4,7 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../../../core/models/api-response.model';
 import {
-  VehicleScanHistoryDto, VehicleScanResultDto, VehicleScanSource, VehicleSearchItemDto
+  PlateOcrResultDto, VehicleScanHistoryDto, VehicleScanResultDto, VehicleScanSource, VehicleSearchItemDto
 } from '../models/vehicle-scan.model';
 
 function toHttpParams(params: Record<string, unknown>): HttpParams {
@@ -27,6 +27,16 @@ export class VehicleScanService {
     source: VehicleScanSource; gateId?: number | null; imageBytes?: string | null;
   }): Observable<VehicleScanResultDto> {
     return this.http.post<ApiResponse<VehicleScanResultDto>>(`${this.baseUrl}/confirm`, payload)
+      .pipe(map((r) => r.data!));
+  }
+
+  /** OCR assist — imageBase64 is the FULL photo; corners are the user's 4
+   * dragged points (TopLeft/TopRight/BottomRight/BottomLeft) in that photo's
+   * own natural pixel space. The server perspective-warps the marked region
+   * before running OCR. Purely advisory: the result is a prefill
+   * suggestion, never sent on its own to /confirm. */
+  recognizePlate(imageBase64: string, corners: { x: number; y: number }[]): Observable<PlateOcrResultDto> {
+    return this.http.post<ApiResponse<PlateOcrResultDto>>(`${this.baseUrl}/ocr-preview`, { imageBytes: imageBase64, corners })
       .pipe(map((r) => r.data!));
   }
 

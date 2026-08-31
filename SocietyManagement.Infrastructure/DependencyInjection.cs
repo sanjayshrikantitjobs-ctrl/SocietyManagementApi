@@ -89,6 +89,7 @@ public static class DependencyInjection
         services.AddScoped<IMaintenanceBillPdfService, MaintenanceBillPdfService>();
         services.AddScoped<IResidentImportService, ClosedXmlResidentImportService>();
         services.AddScoped<IFinanceReportService, FinanceReportService>();
+        services.AddScoped<IVehiclePlateOcrService, VehiclePlateOcrService>();
         services.AddHostedService<MaintenanceBillGenerationService>();
         services.AddHostedService<VisitorRequestExpiryService>();
 

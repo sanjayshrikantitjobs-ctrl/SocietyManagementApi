@@ -65,6 +65,16 @@ public class VehicleScanHistoryDto
     public string? ImageUrl { get; set; }
 }
 
+/// <summary>Ephemeral OCR-assist result for the drag-to-crop step — never
+/// persisted by itself. The caller (guard/resident) reviews/edits the
+/// NormalizedText before it's ever sent on to ConfirmVehicleScanCommand.</summary>
+public class PlateOcrResultDto
+{
+    public string RecognizedText { get; set; } = default!;
+    public string NormalizedText { get; set; } = default!;
+    public double Confidence { get; set; }
+}
+
 // ---- Commands --------------------------------------------------------------------
 
 public record ConfirmVehicleScanCommand(
@@ -87,26 +97,44 @@ public record GetScanHistoryQuery(
     int SocietyId, DateTime? FromDate, DateTime? ToDate, VehicleScanResultStatus? Result,
     int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<VehicleScanHistoryDto>>;
 
+/// <summary>Runs OCR on the full photo, perspective-correcting the plate
+/// region the user marked (Corners, in order TopLeft/TopRight/BottomRight/
+/// BottomLeft, in the photo's own natural pixel space). Never touches the
+/// database — see PlateOcrResultDto.</summary>
+public record RecognizePlateQuery(byte[] ImageBytes, IReadOnlyList<PlatePoint> Corners) : IRequest<PlateOcrResultDto>;
+
 // ---- Handlers --------------------------------------------------------------------
 
 public class VehicleScanHandlers :
     IRequestHandler<ConfirmVehicleScanCommand, VehicleScanResultDto>,
     IRequestHandler<GetVehicleSearchQuery, List<VehicleSearchItemDto>>,
-    IRequestHandler<GetScanHistoryQuery, PaginatedResult<VehicleScanHistoryDto>>
+    IRequestHandler<GetScanHistoryQuery, PaginatedResult<VehicleScanHistoryDto>>,
+    IRequestHandler<RecognizePlateQuery, PlateOcrResultDto>
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
     private readonly IFileStorageService _fileStorage;
     private readonly IDateTime _dateTime;
+    private readonly IVehiclePlateOcrService _plateOcr;
 
     public VehicleScanHandlers(
         IApplicationDbContext context, ICurrentUserService currentUserService,
-        IFileStorageService fileStorage, IDateTime dateTime)
+        IFileStorageService fileStorage, IDateTime dateTime, IVehiclePlateOcrService plateOcr)
     {
         _context = context;
         _currentUserService = currentUserService;
         _fileStorage = fileStorage;
         _dateTime = dateTime;
+        _plateOcr = plateOcr;
+    }
+
+    public async Task<PlateOcrResultDto> Handle(RecognizePlateQuery request, CancellationToken ct)
+    {
+        var result = await _plateOcr.RecognizeAsync(request.ImageBytes, request.Corners, ct);
+        return new PlateOcrResultDto
+        {
+            RecognizedText = result.RecognizedText, NormalizedText = result.NormalizedText, Confidence = result.Confidence
+        };
     }
 
     public async Task<VehicleScanResultDto> Handle(ConfirmVehicleScanCommand request, CancellationToken ct)

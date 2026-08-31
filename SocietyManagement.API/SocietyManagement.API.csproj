@@ -14,6 +14,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Tesseract's English trained-data model, used by VehiclePlateOcrService
+         (SocietyManagement.Infrastructure) — resolved relative to
+         AppContext.BaseDirectory at runtime, so it must publish alongside the
+         API host regardless of which project the OCR code lives in. -->
+    <Content Include="tessdata\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
     <PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />

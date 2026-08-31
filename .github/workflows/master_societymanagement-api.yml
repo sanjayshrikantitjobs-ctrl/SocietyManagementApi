@@ -27,7 +27,13 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+        # Scoped to the API project (not the whole .sln) — SocietyManagement.Tests
+        # was previously included too, shipping xunit/Moq/EF.InMemory/coverlet in
+        # the deployment package for no reason, and its own reference to
+        # Infrastructure was re-copying native OCR assets back in after
+        # SocietyManagement.API.csproj's own TrimUnneededNativeAssets target had
+        # already removed them (both projects publish to the same -o directory).
+        run: dotnet publish SocietyManagement.API/SocietyManagement.API.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4

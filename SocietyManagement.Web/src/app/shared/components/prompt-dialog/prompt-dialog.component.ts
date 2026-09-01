@@ -15,6 +15,11 @@ export interface PromptField {
   required?: boolean;
   options?: { value: number | string; label: string }[];
   defaultValue?: string | number | boolean;
+  /** Optional format constraint (e.g. a 10-digit mobile number) enforced in addition to `required`. */
+  pattern?: RegExp;
+  /** Shown under the field when `pattern` fails and the field has a value. */
+  patternError?: string;
+  maxLength?: number;
 }
 
 export interface PromptDialogData {
@@ -53,7 +58,10 @@ export interface PromptDialogData {
               } @else if (field.type === 'textarea') {
                 <textarea matInput rows="3" [formControlName]="field.key"></textarea>
               } @else {
-                <input matInput [type]="field.type" [formControlName]="field.key" />
+                <input matInput [type]="field.type" [formControlName]="field.key" [maxlength]="field.maxLength ?? null" />
+              }
+              @if (field.patternError && form.get(field.key)?.hasError('pattern')) {
+                <mat-error>{{ field.patternError }}</mat-error>
               }
             </mat-form-field>
           }
@@ -82,10 +90,12 @@ export class PromptDialogComponent {
 
   form = this.fb.group(
     Object.fromEntries(
-      this.data.fields.map((f) => [
-        f.key,
-        [f.defaultValue ?? (f.type === 'checkbox' ? false : ''), f.required !== false && f.type !== 'checkbox' ? [Validators.required] : []]
-      ])
+      this.data.fields.map((f) => {
+        const validators = [];
+        if (f.required !== false && f.type !== 'checkbox') validators.push(Validators.required);
+        if (f.pattern) validators.push(Validators.pattern(f.pattern));
+        return [f.key, [f.defaultValue ?? (f.type === 'checkbox' ? false : ''), validators]];
+      })
     )
   );
 

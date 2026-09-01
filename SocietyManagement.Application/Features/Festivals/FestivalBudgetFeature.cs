@@ -13,6 +13,7 @@ public class FestivalBudgetCategoryDto
     public int Id { get; set; }
     public int FestivalId { get; set; }
     public FestivalBudgetCategoryType Category { get; set; }
+    public string? CustomCategoryName { get; set; }
     public decimal EstimatedAmount { get; set; }
     public decimal ApprovedAmount { get; set; }
     public decimal ActualAmount { get; set; }
@@ -35,7 +36,7 @@ public class FestivalBudgetRevisionDto
 
 // ---- Commands ----------------------------------------------------------------
 public record CreateBudgetCategoryCommand(
-    int FestivalId, FestivalBudgetCategoryType Category, decimal EstimatedAmount,
+    int FestivalId, FestivalBudgetCategoryType Category, string? CustomCategoryName, decimal EstimatedAmount,
     decimal ApprovedAmount, string? Notes) : IRequest<int>;
 
 public class CreateBudgetCategoryCommandValidator : AbstractValidator<CreateBudgetCategoryCommand>
@@ -46,6 +47,12 @@ public class CreateBudgetCategoryCommandValidator : AbstractValidator<CreateBudg
         RuleFor(x => x.EstimatedAmount).GreaterThanOrEqualTo(0);
         RuleFor(x => x.ApprovedAmount).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Notes).MaximumLength(500);
+        RuleFor(x => x.CustomCategoryName).NotEmpty().MaximumLength(100)
+            .When(x => x.Category == FestivalBudgetCategoryType.Custom)
+            .WithMessage("A name is required for a custom category.");
+        RuleFor(x => x.CustomCategoryName).Empty()
+            .When(x => x.Category != FestivalBudgetCategoryType.Custom)
+            .WithMessage("Custom category name only applies when Category is 'Custom'.");
     }
 }
 
@@ -85,7 +92,9 @@ public class FestivalBudgetCommandHandlers :
             throw new NotFoundException(nameof(Festival), request.FestivalId);
         }
 
-        if (await _context.FestivalBudgetCategories.AnyAsync(
+        // Custom rows are excluded from the uniqueness rule (mirrors the DB's
+        // own filtered index) — any number of typed-in categories can coexist.
+        if (request.Category != FestivalBudgetCategoryType.Custom && await _context.FestivalBudgetCategories.AnyAsync(
             c => c.FestivalId == request.FestivalId && c.Category == request.Category && !c.IsDeleted, ct))
         {
             throw new ConflictAppException($"A budget category for '{request.Category}' already exists on this festival.");
@@ -95,6 +104,7 @@ public class FestivalBudgetCommandHandlers :
         {
             FestivalId = request.FestivalId,
             Category = request.Category,
+            CustomCategoryName = request.CustomCategoryName,
             EstimatedAmount = request.EstimatedAmount,
             ApprovedAmount = request.ApprovedAmount,
             Notes = request.Notes
@@ -172,6 +182,7 @@ public class FestivalBudgetQueryHandlers :
                 Id = c.Id,
                 FestivalId = c.FestivalId,
                 Category = c.Category,
+                CustomCategoryName = c.CustomCategoryName,
                 EstimatedAmount = c.EstimatedAmount,
                 ApprovedAmount = c.ApprovedAmount,
                 ActualAmount = c.Expenses.Where(e => ActualStatuses.Contains(e.ApprovalStatus)).Sum(e => (decimal?)e.Amount) ?? 0,

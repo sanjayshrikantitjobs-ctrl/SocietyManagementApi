@@ -60,10 +60,11 @@ public class FestivalDashboardQueryHandler : IRequestHandler<GetFestivalDashboar
 
     public async Task<FestivalDashboardDto> Handle(GetFestivalDashboardQuery request, CancellationToken ct)
     {
-        if (!await _context.Festivals.AnyAsync(f => f.Id == request.FestivalId && !f.IsDeleted, ct))
-        {
-            throw new NotFoundException(nameof(Festival), request.FestivalId);
-        }
+        var festivalKind = await _context.Festivals
+            .Where(f => f.Id == request.FestivalId && !f.IsDeleted)
+            .Select(f => (FestivalKind?)f.Kind)
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotFoundException(nameof(Festival), request.FestivalId);
 
         var categories = await _context.FestivalBudgetCategories
             .Where(c => c.FestivalId == request.FestivalId && !c.IsDeleted)
@@ -82,8 +83,21 @@ public class FestivalDashboardQueryHandler : IRequestHandler<GetFestivalDashboar
             .Select(c => new ExpenseCategoryPointDto { CategoryName = c.CategoryName, Amount = c.Actual })
             .ToList();
 
+        // A Pool festival's own FestivalId rarely has direct sponsors — its
+        // Child festivals do (see FestivalKind's doc comment). Additive, not
+        // either/or: a Pool could in principle also have direct sponsors.
+        var sponsorFestivalIds = new List<int> { request.FestivalId };
+        if (festivalKind == FestivalKind.Pool)
+        {
+            var childIds = await _context.Festivals
+                .Where(f => f.ContributionPoolFestivalId == request.FestivalId && !f.IsDeleted)
+                .Select(f => f.Id)
+                .ToListAsync(ct);
+            sponsorFestivalIds.AddRange(childIds);
+        }
+
         var sponsors = await _context.FestivalSponsors
-            .Where(s => s.FestivalId == request.FestivalId && !s.IsDeleted)
+            .Where(s => sponsorFestivalIds.Contains(s.FestivalId) && !s.IsDeleted) // sponsorFestivalIds is a small in-memory list — Contains translates to a SQL IN clause
             .Select(s => new SponsorContributionPointDto
             {
                 CompanyName = s.CompanyName,

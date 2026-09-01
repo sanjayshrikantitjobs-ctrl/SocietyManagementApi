@@ -50,6 +50,7 @@ public interface IApplicationDbContext
     DbSet<FlatResidency> FlatResidencies { get; }
     DbSet<Vehicle> Vehicles { get; }
     DbSet<VehicleScanLog> VehicleScanLogs { get; }
+    DbSet<ParkingFine> ParkingFines { get; }
     DbSet<EmergencyContact> EmergencyContacts { get; }
     DbSet<FlatResaleListing> FlatResaleListings { get; }
 
@@ -66,6 +67,7 @@ public interface IApplicationDbContext
     DbSet<FlatOccupancy> FlatOccupancies { get; }
     DbSet<OccupancyMember> OccupancyMembers { get; }
     DbSet<RentalAgreement> RentalAgreements { get; }
+    DbSet<ResidentDocument> ResidentDocuments { get; }
     DbSet<OccupancySettings> OccupancySettings { get; }
 
     DbSet<Staff> Staff { get; }

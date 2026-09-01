@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SocietyManagement.Application.Common.Interfaces;
 using SocietyManagement.Domain.Entities;
+using SocietyManagement.Domain.Enums;
 using SocietyManagement.Shared.Constants;
 
 namespace SocietyManagement.Infrastructure.Persistence;
@@ -67,7 +68,8 @@ public class DbSeeder
         {
             Permissions.Society.View, Permissions.Visitors.View, Permissions.Visitors.Create,
             Permissions.Visitors.CheckIn, Permissions.Visitors.CheckOut,
-            Permissions.Vehicles.Scan, Permissions.Vehicles.Search
+            Permissions.Vehicles.Scan, Permissions.Vehicles.Search,
+            Permissions.ParkingFines.View, Permissions.ParkingFines.Create
         };
         await SeedRolePermissionsAsync(
             watchmanRole, allPermissions.Where(p => watchmanPermissionCodes.Contains(p.Code)).ToList());
@@ -76,6 +78,7 @@ public class DbSeeder
         await PromoteExistingAdminsToSuperAdminAsync(adminRole, superAdminRole);
         await BackfillUserSocietyIdAsync();
         await BackfillSocietyCodesAsync();
+        await BackfillRentalAgreementDocumentsAsync();
 
         await _context.SaveChangesAsync();
         _logger.LogInformation("Database seeding completed.");
@@ -171,6 +174,50 @@ public class DbSeeder
         } while (!existingCodes.Add(code));
 
         return code;
+    }
+
+    /// <summary>ResidentDocument generalizes RentalAgreement's one-off
+    /// AgreementDocumentUrl field into a unified per-occupancy Documents
+    /// list — this makes every pre-existing agreement's document show up
+    /// there too, without touching RentalAgreement's own lease-metadata
+    /// fields (dates/deposit/police verification stay right where they
+    /// are). Idempotent: only inserts where no RentalAgreement-type
+    /// ResidentDocument already exists for that occupancy.</summary>
+    private async Task BackfillRentalAgreementDocumentsAsync()
+    {
+        var alreadyBackfilledOccupancyIds = await _context.ResidentDocuments
+            .Where(d => d.DocumentType == ResidentDocumentType.RentalAgreement && !d.IsDeleted)
+            .Select(d => d.FlatOccupancyId)
+            .ToListAsync();
+
+        var agreementsToBackfill = await _context.RentalAgreements
+            .Where(r => !r.IsDeleted && r.AgreementDocumentUrl != null
+                && !alreadyBackfilledOccupancyIds.Contains(r.FlatOccupancyId))
+            .ToListAsync();
+        if (agreementsToBackfill.Count == 0) return;
+
+        var usersByEmail = await _context.Users.ToDictionaryAsync(u => u.Email);
+        var fallbackAdmin = await _context.Users.Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Role.Name == Roles.SuperAdmin && !u.IsDeleted);
+
+        foreach (var agreement in agreementsToBackfill)
+        {
+            var uploadedBy = (agreement.CreatedBy != null && usersByEmail.TryGetValue(agreement.CreatedBy, out var user))
+                ? user : fallbackAdmin;
+            if (uploadedBy == null) continue; // no resolvable user at all — skip, nothing sane to attribute it to.
+
+            await _context.ResidentDocuments.AddAsync(new ResidentDocument
+            {
+                FlatOccupancyId = agreement.FlatOccupancyId,
+                DocumentType = ResidentDocumentType.RentalAgreement,
+                DocumentUrl = agreement.AgreementDocumentUrl!,
+                UploadedByUserId = uploadedBy.Id,
+                UploadedAt = agreement.CreatedAt
+            });
+        }
+
+        await _context.SaveChangesAsync();
+        _logger.LogInformation("Backfilled {Count} pre-existing rental agreement document(s) into ResidentDocuments.", agreementsToBackfill.Count);
     }
 
     /// <summary>One-time migration for databases seeded before Super Admin
@@ -279,7 +326,10 @@ public class DbSeeder
             ("Vehicles", "Scan", Permissions.Vehicles.Scan),
             ("Vehicles", "Search", Permissions.Vehicles.Search),
             ("Vehicles", "ViewOwnerDetails", Permissions.Vehicles.ViewOwnerDetails),
-            ("Vehicles", "Register", Permissions.Vehicles.Register)
+            ("Vehicles", "Register", Permissions.Vehicles.Register),
+            ("ParkingFines", "View", Permissions.ParkingFines.View),
+            ("ParkingFines", "Create", Permissions.ParkingFines.Create),
+            ("ParkingFines", "Delete", Permissions.ParkingFines.Delete)
         };
 
         var existingCodes = await _context.Permissions.Select(p => p.Code).ToListAsync();

@@ -73,11 +73,14 @@ export class FestivalService {
 
   // ---- Contributions -----------------------------------------------------------
   getContributions(params: {
-    festivalId: number; search?: string; paymentMethod?: number; sortBy?: string; sortDescending?: boolean;
+    festivalId: number; flatId?: number; search?: string; paymentMethod?: number; sortBy?: string; sortDescending?: boolean;
     pageNumber?: number; pageSize?: number;
   }): Observable<PaginatedResult<FestivalContributionDto>> {
     return this.http.get<ApiResponse<PaginatedResult<FestivalContributionDto>>>(`${this.baseUrl}/festival-contributions`, { params: toHttpParams(params) })
       .pipe(map((r) => r.data!));
+  }
+  updateContribution(id: number, payload: Record<string, unknown>): Observable<void> {
+    return this.http.put<ApiResponse<void>>(`${this.baseUrl}/festival-contributions/${id}`, { id, ...payload }).pipe(map(() => void 0));
   }
   getTopContributors(festivalId: number, top = 10): Observable<TopContributorDto[]> {
     return this.http.get<ApiResponse<TopContributorDto[]>>(`${this.baseUrl}/festival-contributions/top-contributors`, { params: { festivalId, top } })

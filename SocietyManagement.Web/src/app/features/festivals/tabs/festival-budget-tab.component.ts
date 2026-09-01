@@ -92,6 +92,11 @@ export class FestivalBudgetTabComponent implements OnInit {
         title: 'Add Budget Category',
         fields: [
           { key: 'category', label: 'Category', type: 'select', options: this.categoryOptions },
+          // Always present — PromptDialogComponent has no conditional field
+          // visibility — but only meaningful (and only sent) when Category
+          // is 'Custom'; ignored/nulled out otherwise. See the backend
+          // validator's matching Empty()/NotEmpty() pair.
+          { key: 'customCategoryName', label: 'Custom Category Name (only if Category = Custom)', type: 'text', required: false },
           { key: 'estimatedAmount', label: 'Estimated Amount', type: 'number' },
           { key: 'approvedAmount', label: 'Approved Amount', type: 'number' },
           { key: 'notes', label: 'Notes', type: 'textarea', required: false }
@@ -100,8 +105,10 @@ export class FestivalBudgetTabComponent implements OnInit {
     });
     ref.afterClosed().subscribe((result) => {
       if (!result) return;
+      const category = Number(result.category);
       this.festivalService.createBudgetCategory({
-        festivalId: this.festivalId(), category: Number(result.category),
+        festivalId: this.festivalId(), category,
+        customCategoryName: category === 13 ? result.customCategoryName : null,
         estimatedAmount: Number(result.estimatedAmount), approvedAmount: Number(result.approvedAmount), notes: result.notes
       }).subscribe(() => {
         this.toast.success('Budget category added.');
@@ -114,7 +121,7 @@ export class FestivalBudgetTabComponent implements OnInit {
     const ref = this.dialog.open(PromptDialogComponent, {
       width: '420px',
       data: {
-        title: `Edit ${BUDGET_CATEGORY_LABELS[category.category]} Budget`,
+        title: `Edit ${category.customCategoryName || BUDGET_CATEGORY_LABELS[category.category]} Budget`,
         submitLabel: 'Save',
         fields: [
           { key: 'estimatedAmount', label: 'Estimated Amount', type: 'number', defaultValue: category.estimatedAmount },
@@ -139,7 +146,7 @@ export class FestivalBudgetTabComponent implements OnInit {
   removeCategory(category: FestivalBudgetCategoryDto): void {
     this.confirmDialog.confirm({
       title: 'Delete Budget Category', destructive: true,
-      message: `Delete the "${BUDGET_CATEGORY_LABELS[category.category]}" budget category?`
+      message: `Delete the "${category.customCategoryName || BUDGET_CATEGORY_LABELS[category.category]}" budget category?`
     }).subscribe((confirmed) => {
       if (!confirmed) return;
       this.festivalService.deleteBudgetCategory(category.id).subscribe(() => {

@@ -14,6 +14,12 @@ public class FestivalBudgetCategory : BaseAuditableEntity
 
     public FestivalBudgetCategoryType Category { get; set; }
 
+    /// <summary>Set only when Category == Custom — the typed-in name for a
+    /// category not in the predefined list. Multiple Custom rows can coexist
+    /// per festival (the DB uniqueness constraint on (FestivalId, Category)
+    /// is filtered to exclude Custom rows — see the entity configuration).</summary>
+    public string? CustomCategoryName { get; set; }
+
     public decimal EstimatedAmount { get; set; }
 
     public decimal ApprovedAmount { get; set; }

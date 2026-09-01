@@ -11,11 +11,13 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AddOwnerMemberDialogComponent } from '../add-owner-member-dialog/add-owner-member-dialog.component';
 import { FlatOccupancyDto, PERSON_RELATIONSHIP_LABELS } from '../models/occupancy.model';
 import { OccupancyService } from '../services/occupancy.service';
+import { MOBILE_PATTERN, MOBILE_PATTERN_ERROR } from '../../../shared/validators/mobile.validator';
+import { ResidentDocumentsCardComponent } from '../resident-documents-card/resident-documents-card.component';
 
 @Component({
   selector: 'app-owner-occupancy-panel',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatTableModule, MatTooltipModule, AssetUrlPipe],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatTableModule, MatTooltipModule, AssetUrlPipe, ResidentDocumentsCardComponent],
   template: `
     <div class="panel">
       <div class="panel-header">
@@ -26,6 +28,7 @@ import { OccupancyService } from '../services/occupancy.service';
       @if (!occupancy || occupancy.members.length === 0) {
         <p class="empty">No owner on file for this flat yet.</p>
       } @else {
+        <app-resident-documents-card [flatOccupancyId]="occupancy.id" />
         <table mat-table [dataSource]="occupancy.members" class="members-table">
           <ng-container matColumnDef="photo">
             <th mat-header-cell *matHeaderCellDef></th>
@@ -107,9 +110,9 @@ export class OwnerOccupancyPanelComponent {
           fields: [
             { key: 'firstName', label: 'First Name', type: 'text' as const, defaultValue: person.firstName },
             { key: 'lastName', label: 'Last Name', type: 'text' as const, defaultValue: person.lastName },
-            { key: 'phone', label: 'Phone', type: 'text' as const, defaultValue: person.phone },
+            { key: 'phone', label: 'Phone', type: 'text' as const, defaultValue: person.phone, pattern: MOBILE_PATTERN, patternError: MOBILE_PATTERN_ERROR, maxLength: 10 },
             { key: 'email', label: 'Email', type: 'text' as const, required: false, defaultValue: person.email ?? '' },
-            { key: 'whatsAppNumber', label: 'WhatsApp Number', type: 'text' as const, required: false, defaultValue: person.whatsAppNumber ?? '' }
+            { key: 'whatsAppNumber', label: 'WhatsApp Number', type: 'text' as const, required: false, defaultValue: person.whatsAppNumber ?? '', pattern: MOBILE_PATTERN, patternError: MOBILE_PATTERN_ERROR, maxLength: 10 }
           ]
         }
       });

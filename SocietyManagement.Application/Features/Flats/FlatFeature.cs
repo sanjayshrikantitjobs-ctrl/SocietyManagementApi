@@ -7,6 +7,7 @@ using SocietyManagement.Domain.Entities;
 using SocietyManagement.Domain.Enums;
 using SocietyManagement.Shared.Constants;
 using SocietyManagement.Shared.Exceptions;
+using SocietyManagement.Shared.Extensions;
 using SocietyManagement.Shared.Wrappers;
 
 namespace SocietyManagement.Application.Features.Flats;
@@ -33,6 +34,8 @@ public class CreateFlatCommandValidator : AbstractValidator<CreateFlatCommand>
     {
         RuleFor(x => x.FloorId).GreaterThan(0);
         RuleFor(x => x.FlatNumber).NotEmpty().MaximumLength(20);
+        RuleFor(x => x.OwnerPhone).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.OwnerPhone))
+            .WithMessage("A valid 10-digit mobile number is required.");
         RuleFor(x => x.OwnerEmail).EmailAddress().When(x => !string.IsNullOrWhiteSpace(x.OwnerEmail));
     }
 }
@@ -46,6 +49,8 @@ public class UpdateFlatCommandValidator : AbstractValidator<UpdateFlatCommand>
     {
         RuleFor(x => x.Id).GreaterThan(0);
         RuleFor(x => x.FlatNumber).NotEmpty().MaximumLength(20);
+        RuleFor(x => x.OwnerPhone).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.OwnerPhone))
+            .WithMessage("A valid 10-digit mobile number is required.");
         RuleFor(x => x.OwnerEmail).EmailAddress().When(x => !string.IsNullOrWhiteSpace(x.OwnerEmail));
     }
 }

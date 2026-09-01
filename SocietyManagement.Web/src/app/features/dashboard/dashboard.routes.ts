@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { Routes } from '@angular/router';
+import { Router, Routes } from '@angular/router';
 import { roleGuard } from '../../core/guards/role.guard';
 import { AuthService } from '../../core/services/auth.service';
 
@@ -10,7 +10,17 @@ export const DASHBOARD_ROUTES: Routes = [
     // into the Admin-only 'admin' route, which roleGuard then bounced to
     // /forbidden — every Member/Watchman hit this on first login, since
     // that's exactly where the login flow lands (see login.component.ts).
-    redirectTo: () => (inject(AuthService).isAdmin() ? 'admin' : 'member')
+    // Watchman bounces to /visitors instead of the 'member' branch — that
+    // dashboard is Member-shaped (maintenance due, my bills) and meaningless
+    // for a Watchman; /visitors is their actual job (gate/approval duty).
+    // This also covers a Watchman reaching /dashboard by direct URL nav or
+    // browser back, not just the post-login redirect in login.component.ts.
+    redirectTo: () => {
+      const auth = inject(AuthService);
+      if (auth.isAdmin()) return 'admin';
+      if (auth.isWatchman()) return inject(Router).parseUrl('/visitors');
+      return 'member';
+    }
   },
   {
     path: 'admin',

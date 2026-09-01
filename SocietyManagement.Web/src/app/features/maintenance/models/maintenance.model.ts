@@ -51,6 +51,7 @@ export interface MaintenanceSettingsDto {
   nextInvoiceNumber: number;
   whatsAppMessageTemplate: string;
   pdfFooterMessage: string;
+  whatsAppEnabled: boolean;
 }
 
 export interface SpecialChargeDto {
@@ -93,6 +94,13 @@ export interface MaintenanceBillDto {
   status: BillStatus;
   pdfUrl?: string | null;
   ownerNameSnapshot?: string | null;
+}
+
+export interface BulkRecordPaymentResultDto {
+  maintenanceBillId: number;
+  invoiceNumber: string;
+  recorded: boolean;
+  skipReason?: string | null;
 }
 
 export interface MaintenanceBillItemDto {

@@ -37,7 +37,7 @@ interface NavItem {
 type NavNode = { type: 'item'; item: NavItem } | { type: 'group'; name: string; icon: string; items: NavItem[] };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', icon: 'dashboard', link: '/dashboard' },
+  { label: 'Dashboard', icon: 'dashboard', link: '/dashboard', hideForWatchman: true },
   { label: 'Festivals & Events', icon: 'celebration', link: '/festivals', hideForWatchman: true },
   { label: 'Visitors', icon: 'badge', link: '/visitors' },
   { label: 'Vehicle Security', icon: 'directions_car', link: '/vehicle-security' },

@@ -44,4 +44,10 @@ export class UserService {
   resetPassword(id: number): Observable<void> {
     return this.http.post<ApiResponse<void>>(`${this.baseUrl}/${id}/reset-password`, {}).pipe(map(() => void 0));
   }
+
+  /** Admin-typed counterpart to resetPassword above — see SetUserPasswordDialogComponent. */
+  setPassword(id: number, newPassword: string): Observable<void> {
+    return this.http.post<ApiResponse<void>>(`${this.baseUrl}/${id}/set-password`, { id, newPassword })
+      .pipe(map(() => void 0));
+  }
 }

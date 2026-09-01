@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, input, output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { FestivalSponsorDto, SPONSORSHIP_TYPE_LABELS } from '../../../features/festivals/models/festival.model';
+import { FestivalSponsorDto } from '../../../features/festivals/models/festival.model';
 import { AssetUrlPipe } from '../../pipes/asset-url.pipe';
 
 /** Reusable sponsor card for the sponsors tab grid — spec's "Sponsor Card"
@@ -23,7 +23,6 @@ import { AssetUrlPipe } from '../../pipes/asset-url.pipe';
       <div class="body">
         <div class="title-row">
           <h4>{{ sponsor().companyName }}</h4>
-          <span class="tier">{{ typeLabel() }}</span>
         </div>
         @if (sponsor().contactPerson) { <p class="contact">{{ sponsor().contactPerson }}</p> }
         <div class="amounts">
@@ -47,8 +46,6 @@ import { AssetUrlPipe } from '../../pipes/asset-url.pipe';
     .body { flex: 1; min-width: 0; }
     .title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     h4 { margin: 0; font-size: 14px; font-weight: 700; }
-    .tier { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 10px;
-      background: var(--app-primary-light); color: var(--app-primary); }
     .contact { margin: 2px 0 8px; font-size: 12px; color: var(--app-text-muted); }
     .amounts { display: flex; gap: 16px; margin-top: 8px; }
     .label { display: block; font-size: 10px; color: var(--app-text-muted); text-transform: uppercase; }
@@ -62,6 +59,4 @@ export class SponsorCardComponent {
   sponsor = input.required<FestivalSponsorDto>();
   edit = output<void>();
   remove = output<void>();
-
-  typeLabel = computed(() => SPONSORSHIP_TYPE_LABELS[this.sponsor().sponsorshipType]);
 }

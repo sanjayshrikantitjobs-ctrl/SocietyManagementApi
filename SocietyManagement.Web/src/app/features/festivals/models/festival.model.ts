@@ -1,6 +1,6 @@
 export type FestivalStatus = 1 | 2 | 3; // Planning | Ongoing | Completed
 export type FestivalVisibility = 1 | 2; // Public | MembersOnly
-export type FestivalBudgetCategoryType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+export type FestivalBudgetCategoryType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
 export type ContributionPaymentMethod = 1 | 2 | 3; // Cash | UPI | BankTransfer
 export type SponsorshipType = 1 | 2 | 3 | 4 | 5 | 6 | 7; // Title..Media
 export type ExpenseApprovalStatus = 1 | 2 | 3 | 4 | 5; // Draft|Pending|Approved|Rejected|Paid
@@ -16,9 +16,11 @@ export const FESTIVAL_VISIBILITY_LABELS: Record<FestivalVisibility, string> = {
   1: 'Public', 2: 'Members Only'
 };
 
+// Fallback label only — a Custom (13) row's real display name is its own
+// customCategoryName, not this generic label.
 export const BUDGET_CATEGORY_LABELS: Record<FestivalBudgetCategoryType, string> = {
   1: 'Decoration', 2: 'Lighting', 3: 'Sound', 4: 'Food', 5: 'Idol', 6: 'Pandal',
-  7: 'Stage', 8: 'Security', 9: 'Cleaning', 10: 'Generator', 11: 'Photography', 12: 'Miscellaneous'
+  7: 'Stage', 8: 'Security', 9: 'Cleaning', 10: 'Generator', 11: 'Photography', 12: 'Miscellaneous', 13: 'Custom'
 };
 
 export const PAYMENT_METHOD_LABELS: Record<ContributionPaymentMethod, string> = {
@@ -76,6 +78,7 @@ export interface FestivalBudgetCategoryDto {
   id: number;
   festivalId: number;
   category: FestivalBudgetCategoryType;
+  customCategoryName?: string | null;
   estimatedAmount: number;
   approvedAmount: number;
   actualAmount: number;

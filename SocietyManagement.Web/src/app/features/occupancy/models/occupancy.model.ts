@@ -3,6 +3,7 @@ export type OccupancyType = 1 | 2; // Owner | Tenant
 export type PersonRelationship = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; // Self..Other
 export type ResidentStatus = 1 | 2; // Residing | NotResiding
 export type PoliceVerificationStatus = 1 | 2; // Pending | Done
+export type ResidentDocumentType = 1 | 2 | 3 | 4 | 5; // PossessionLetter..Other
 
 export const OCCUPANCY_TYPE_LABELS: Record<OccupancyType, string> = { 1: 'Owner', 2: 'Tenant' };
 
@@ -13,6 +14,10 @@ export const PERSON_RELATIONSHIP_LABELS: Record<PersonRelationship, string> = {
 export const RESIDENT_STATUS_LABELS: Record<ResidentStatus, string> = { 1: 'Residing', 2: 'Not Residing' };
 
 export const POLICE_VERIFICATION_LABELS: Record<PoliceVerificationStatus, string> = { 1: 'Pending', 2: 'Done' };
+
+export const RESIDENT_DOCUMENT_TYPE_LABELS: Record<number, string> = {
+  1: 'Possession Letter', 2: 'Parking Allotment Letter', 3: 'Tenant Police NOC', 4: 'Rental Agreement', 5: 'Other'
+};
 
 export interface PersonDto {
   id: number;
@@ -69,6 +74,16 @@ export interface RentalAgreementDto {
   policeVerificationStatus: PoliceVerificationStatus;
   policeVerificationReference?: string | null;
   agreementDocumentUrl?: string | null;
+}
+
+export interface ResidentDocumentDto {
+  id: number;
+  flatOccupancyId: number;
+  documentType: ResidentDocumentType;
+  documentUrl: string;
+  notes?: string | null;
+  uploadedByName: string;
+  uploadedAt: string;
 }
 
 export interface FlatOccupancyDto {

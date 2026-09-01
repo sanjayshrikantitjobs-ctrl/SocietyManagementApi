@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using SocietyManagement.Application.Common.Interfaces;
 using SocietyManagement.Domain.Entities;
 using SocietyManagement.Shared.Exceptions;
+using SocietyManagement.Shared.Extensions;
 
 namespace SocietyManagement.Application.Features.Societies.Commands;
 
@@ -29,6 +30,8 @@ public class CreateSocietyCommandValidator : AbstractValidator<CreateSocietyComm
         RuleFor(x => x.City).NotEmpty();
         RuleFor(x => x.State).NotEmpty();
         RuleFor(x => x.Pincode).NotEmpty().Length(6);
+        RuleFor(x => x.ContactPhone).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.ContactPhone))
+            .WithMessage("A valid 10-digit mobile number is required.");
         RuleFor(x => x.ContactEmail).EmailAddress().When(x => !string.IsNullOrEmpty(x.ContactEmail));
         RuleFor(x => x.SubscriptionEndDate).GreaterThan(x => x.SubscriptionStartDate);
     }
@@ -103,6 +106,8 @@ public class UpdateSocietyCommandValidator : AbstractValidator<UpdateSocietyComm
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Address).NotEmpty();
         RuleFor(x => x.Pincode).NotEmpty().Length(6);
+        RuleFor(x => x.ContactPhone).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.ContactPhone))
+            .WithMessage("A valid 10-digit mobile number is required.");
     }
 }
 

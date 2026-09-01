@@ -57,6 +57,7 @@
               <span>{{ u.isLocked ? 'Unlock' : 'Lock' }}</span>
             </button>
             <button mat-menu-item (click)="resetPassword(u)"><mat-icon>vpn_key</mat-icon><span>Reset Password</span></button>
+            <button mat-menu-item (click)="setPassword(u)"><mat-icon>password</mat-icon><span>Set Password</span></button>
             <button mat-menu-item (click)="remove(u)"><mat-icon>delete</mat-icon><span>Delete</span></button>
           </mat-menu>
         </td>

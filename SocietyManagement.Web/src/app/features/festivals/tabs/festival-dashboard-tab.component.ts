@@ -25,9 +25,13 @@ import { FestivalService } from '../services/festival.service';
           <app-stat-card label="Spent" [value]="'₹' + (d.kpis.spent | number)" icon="shopping_cart" iconColor="#f59e0b" iconBg="#fffbeb" />
           <app-stat-card label="Remaining" [value]="'₹' + (d.kpis.remaining | number)" icon="savings" />
           <app-stat-card label="Sponsors" [value]="d.kpis.sponsorsCount" icon="handshake" />
-          <app-stat-card label="Volunteers" [value]="d.kpis.volunteersCount" icon="groups" />
+          @if (kind() !== 2) {
+            <app-stat-card label="Volunteers" [value]="d.kpis.volunteersCount" icon="groups" />
+          }
           <app-stat-card label="Pending Expenses" [value]="d.kpis.pendingExpensesCount" icon="pending_actions" iconColor="#dc2626" iconBg="#fef2f2" />
-          <app-stat-card label="Tasks Pending" [value]="d.kpis.tasksPendingCount" icon="checklist" />
+          @if (kind() !== 2) {
+            <app-stat-card label="Tasks Pending" [value]="d.kpis.tasksPendingCount" icon="checklist" />
+          }
         </div>
 
         <div class="charts-grid">
@@ -62,6 +66,9 @@ import { FestivalService } from '../services/festival.service';
 })
 export class FestivalDashboardTabComponent implements OnInit {
   festivalId = input.required<number>();
+  /** 2 = Pool — hides Volunteers/Tasks Pending (nothing can create either
+   * against a Pool's own FestivalId; those belong on Child dashboards). */
+  kind = input<number>(1);
 
   private readonly festivalService = inject(FestivalService);
   private readonly signalr = inject(SignalrService);

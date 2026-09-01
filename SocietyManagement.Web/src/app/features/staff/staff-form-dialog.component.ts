@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { FileUploadService } from '../../core/services/file-upload.service';
 import { parseDateOnly, toDateOnlyString } from '../../shared/utils/date.util';
+import { mobileValidator } from '../../shared/validators/mobile.validator';
 import { STAFF_CATEGORY_LABELS, StaffDto } from './models/staff.model';
 
 export interface StaffFormDialogData {
@@ -53,7 +54,8 @@ export interface StaffFormDialogData {
         <div class="row">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Phone</mat-label>
-            <input matInput formControlName="phone" />
+            <input matInput formControlName="phone" maxlength="10" />
+            @if (form.get('phone')?.hasError('pattern')) { <mat-error>Enter a valid 10-digit mobile number.</mat-error> }
           </mat-form-field>
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Email (optional)</mat-label>
@@ -141,7 +143,7 @@ export class StaffFormDialogComponent {
     firstName: [this.data.staff?.firstName ?? '', Validators.required],
     lastName: [this.data.staff?.lastName ?? '', Validators.required],
     category: [this.data.staff?.category ?? 1, Validators.required],
-    phone: [this.data.staff?.phone ?? '', Validators.required],
+    phone: [this.data.staff?.phone ?? '', mobileValidator()],
     email: [this.data.staff?.email ?? ''],
     address: [this.data.staff?.address ?? ''],
     joiningDate: [parseDateOnly(this.data.staff?.joiningDate) ?? new Date(), Validators.required],

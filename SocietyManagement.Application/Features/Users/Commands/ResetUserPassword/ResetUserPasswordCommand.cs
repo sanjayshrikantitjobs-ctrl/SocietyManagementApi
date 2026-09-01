@@ -18,23 +18,35 @@ public class ResetUserPasswordCommandHandler : IRequestHandler<ResetUserPassword
     private readonly IPasswordHasher _passwordHasher;
     private readonly IEmailService _emailService;
     private readonly IAuditService _auditService;
+    private readonly ICurrentUserService _currentUserService;
 
     public ResetUserPasswordCommandHandler(
         IApplicationDbContext context,
         IPasswordHasher passwordHasher,
         IEmailService emailService,
-        IAuditService auditService)
+        IAuditService auditService,
+        ICurrentUserService currentUserService)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _emailService = emailService;
         _auditService = auditService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Unit> Handle(ResetUserPasswordCommand request, CancellationToken cancellationToken)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.Id && !u.IsDeleted, cancellationToken)
             ?? throw new NotFoundException(nameof(User), request.Id);
+
+        // Uncovered by SocietyScopeFilter (its bound parameter is "Id", not
+        // "SocietyId" — see the filter's own doc comment) — without this, a
+        // scoped Admin could reset any OTHER society's user's password by
+        // guessing an id. Super Admin (no SocietyId claim) is unrestricted.
+        if (_currentUserService.SocietyId.HasValue && _currentUserService.SocietyId != user.SocietyId)
+        {
+            throw new ForbiddenAccessException("You can only manage users in your own society.");
+        }
 
         var temporaryPassword = Guid.NewGuid().ToString("N")[..10] + "!A1";
         user.PasswordHash = _passwordHasher.Hash(temporaryPassword);

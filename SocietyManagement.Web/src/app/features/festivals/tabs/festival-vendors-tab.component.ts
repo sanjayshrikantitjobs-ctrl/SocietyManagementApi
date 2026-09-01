@@ -12,6 +12,7 @@ import { PromptDialogComponent } from '../../../shared/components/prompt-dialog/
 import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.service';
 import { FestivalVendorDto, VENDOR_CATEGORY_LABELS } from '../models/festival.model';
 import { FestivalService } from '../services/festival.service';
+import { MOBILE_PATTERN, MOBILE_PATTERN_ERROR } from '../../../shared/validators/mobile.validator';
 
 @Component({
   selector: 'app-festival-vendors-tab',
@@ -129,7 +130,7 @@ export class FestivalVendorsTabComponent implements OnInit {
     return [
       { key: 'name', label: 'Vendor Name', type: 'text' as const, defaultValue: vendor?.name ?? '' },
       { key: 'category', label: 'Category', type: 'select' as const, options: this.categoryOptions, defaultValue: vendor?.category ?? 1 },
-      { key: 'phone', label: 'Phone', type: 'text' as const, required: false, defaultValue: vendor?.phone ?? '' },
+      { key: 'phone', label: 'Phone', type: 'text' as const, required: false, defaultValue: vendor?.phone ?? '', pattern: MOBILE_PATTERN, patternError: MOBILE_PATTERN_ERROR, maxLength: 10 },
       { key: 'email', label: 'Email', type: 'text' as const, required: false, defaultValue: vendor?.email ?? '' },
       { key: 'gstNumber', label: 'GST Number', type: 'text' as const, required: false, defaultValue: vendor?.gstNumber ?? '' },
       { key: 'address', label: 'Address', type: 'textarea' as const, required: false, defaultValue: vendor?.address ?? '' },

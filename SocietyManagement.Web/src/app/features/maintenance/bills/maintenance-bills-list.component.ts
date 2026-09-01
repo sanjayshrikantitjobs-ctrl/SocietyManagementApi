@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { SelectionModel } from '@angular/cdk/collections';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,7 +23,7 @@ import { MaintenanceService } from '../services/maintenance.service';
   selector: 'app-maintenance-bills-list',
   standalone: true,
   imports: [
-    CommonModule, MatButtonModule, MatChipsModule, MatIconModule, MatMenuModule, MatSelectModule,
+    CommonModule, MatButtonModule, MatCheckboxModule, MatChipsModule, MatIconModule, MatMenuModule, MatSelectModule,
     MatTableModule, DataTableComponent
   ],
   template: `
@@ -37,11 +39,28 @@ import { MaintenanceService } from '../services/maintenance.service';
         <button mat-flat-button color="primary" (click)="generateNow()"><mat-icon>bolt</mat-icon> Generate Bills</button>
       </div>
 
+      @if (selection.selected.length > 0) {
+        <div class="bulk-toolbar">
+          <span>{{ selection.selected.length }} bill(s) selected</span>
+          <button mat-flat-button color="primary" (click)="bulkMarkPaid()"><mat-icon>payments</mat-icon> Mark as Paid</button>
+        </div>
+      }
+
       <app-data-table
         [loading]="loading()" [totalCount]="totalCount()" [pageSize]="pageSize()" [pageIndex]="pageIndex()"
         [showSearch]="false" emptyTitle="No bills yet" emptyMessage="Click 'Generate Bills' to create this month's invoices."
         (page)="onPage($event)">
         <table mat-table [dataSource]="bills()" table>
+          <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef>
+              <mat-checkbox (change)="$event ? toggleAll() : null" [checked]="allSelected()" [indeterminate]="someSelected()" />
+            </th>
+            <td mat-cell *matCellDef="let b">
+              @if (b.status !== 3) {
+                <mat-checkbox (click)="$event.stopPropagation()" (change)="selection.toggle(b.id)" [checked]="selection.isSelected(b.id)" />
+              }
+            </td>
+          </ng-container>
           <ng-container matColumnDef="flat">
             <th mat-header-cell *matHeaderCellDef>Flat</th>
             <td mat-cell *matCellDef="let b">
@@ -92,6 +111,8 @@ import { MaintenanceService } from '../services/maintenance.service';
   styles: [`
     .tab-content { padding: 20px 0; }
     .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; }
+    .bulk-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 10px 14px; background: var(--app-primary-light); border-radius: 8px; }
+    .bulk-toolbar span { font-size: 13px; font-weight: 600; color: var(--app-primary); }
     .status-select { width: 200px; }
     .muted { color: var(--app-text-muted); font-size: 12px; }
     .badge { padding: 2px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; }
@@ -114,9 +135,10 @@ export class MaintenanceBillsListComponent implements OnInit {
   readonly pageIndex = signal(0);
   readonly pageSize = signal(10);
   readonly statusFilter = signal<BillStatus | null>(null);
-  readonly displayedColumns = ['flat', 'invoice', 'total', 'balance', 'dueDate', 'status', 'actions'];
+  readonly displayedColumns = ['select', 'flat', 'invoice', 'total', 'balance', 'dueDate', 'status', 'actions'];
   readonly statusLabels: Record<number, string> = BILL_STATUS_LABELS;
   readonly statusOptions = Object.entries(BILL_STATUS_LABELS).map(([value, label]) => ({ value: Number(value), label }));
+  readonly selection = new SelectionModel<number>(true, []);
 
   private societyId = 0;
 
@@ -130,6 +152,7 @@ export class MaintenanceBillsListComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
+    this.selection.clear();
     this.maintenanceService.getBills({
       societyId: this.societyId, status: this.statusFilter() ?? undefined,
       pageNumber: this.pageIndex() + 1, pageSize: this.pageSize()
@@ -137,6 +160,59 @@ export class MaintenanceBillsListComponent implements OnInit {
       this.bills.set(result.items);
       this.totalCount.set(result.totalCount);
       this.loading.set(false);
+    });
+  }
+
+  private payableBills(): MaintenanceBillDto[] {
+    return this.bills().filter((b) => b.status !== 3);
+  }
+
+  allSelected(): boolean {
+    const payable = this.payableBills();
+    return payable.length > 0 && payable.every((b) => this.selection.isSelected(b.id));
+  }
+
+  someSelected(): boolean {
+    return this.payableBills().some((b) => this.selection.isSelected(b.id)) && !this.allSelected();
+  }
+
+  toggleAll(): void {
+    if (this.allSelected()) {
+      this.payableBills().forEach((b) => this.selection.deselect(b.id));
+    } else {
+      this.payableBills().forEach((b) => this.selection.select(b.id));
+    }
+  }
+
+  bulkMarkPaid(): void {
+    const billIds = [...this.selection.selected];
+    const ref = this.dialog.open(PromptDialogComponent, {
+      width: '420px',
+      data: {
+        title: `Mark ${billIds.length} Bill(s) as Paid`, submitLabel: 'Mark as Paid',
+        fields: [
+          { key: 'paymentDate', label: 'Payment Date', type: 'date', defaultValue: new Date().toISOString().substring(0, 10) },
+          { key: 'paymentMode', label: 'Payment Mode', type: 'select', options: [{ value: 1, label: 'Cash' }, { value: 2, label: 'UPI' }, { value: 3, label: 'Bank Transfer' }, { value: 4, label: 'Cheque' }] },
+          { key: 'transactionReference', label: 'Transaction Reference', type: 'text', required: false },
+          { key: 'notes', label: 'Notes', type: 'textarea', required: false }
+        ]
+      }
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (!result) return;
+      this.maintenanceService.bulkRecordPayment(billIds, {
+        paymentDate: result.paymentDate, paymentMode: Number(result.paymentMode),
+        transactionReference: result.transactionReference || null, notes: result.notes || null
+      }).subscribe((results) => {
+        const recordedCount = results.filter((r) => r.recorded).length;
+        this.toast.success(
+          recordedCount === results.length
+            ? `${recordedCount} bill(s) marked paid.`
+            : `${recordedCount} of ${results.length} bill(s) marked paid — the rest were already paid or not found.`
+        );
+        this.selection.clear();
+        this.load();
+      });
     });
   }
 

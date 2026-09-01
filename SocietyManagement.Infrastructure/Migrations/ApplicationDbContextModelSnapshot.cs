@@ -689,6 +689,10 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("CustomCategoryName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
@@ -718,7 +722,7 @@ namespace SocietyManagement.Infrastructure.Migrations
 
                     b.HasIndex("FestivalId", "Category")
                         .IsUnique()
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[IsDeleted] = 0 AND [Category] <> 13");
 
                     b.ToTable("FestivalBudgetCategories", (string)null);
                 });
@@ -1983,6 +1987,9 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.Property<int>("SocietyId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("WhatsAppEnabled")
+                        .HasColumnType("bit");
+
                     b.Property<string>("WhatsAppMessageTemplate")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -2232,6 +2239,77 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.HasIndex("Destination", "Purpose");
 
                     b.ToTable("OtpVerifications", (string)null);
+                });
+
+            modelBuilder.Entity("SocietyManagement.Domain.Entities.ParkingFine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FineDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("IssuedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("ParkingSlotId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PhotoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Reason")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SocietyId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VehicleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IssuedByUserId");
+
+                    b.HasIndex("ParkingSlotId");
+
+                    b.HasIndex("VehicleId");
+
+                    b.HasIndex("SocietyId", "FineDate");
+
+                    b.ToTable("ParkingFines", (string)null);
                 });
 
             modelBuilder.Entity("SocietyManagement.Domain.Entities.ParkingSlot", b =>
@@ -2549,6 +2627,65 @@ namespace SocietyManagement.Infrastructure.Migrations
                         .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("RentalAgreements", (string)null);
+                });
+
+            modelBuilder.Entity("SocietyManagement.Domain.Entities.ResidentDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DocumentType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DocumentUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("FlatOccupancyId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UploadedByUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FlatOccupancyId");
+
+                    b.HasIndex("UploadedByUserId");
+
+                    b.ToTable("ResidentDocuments", (string)null);
                 });
 
             modelBuilder.Entity("SocietyManagement.Domain.Entities.Role", b =>
@@ -4155,6 +4292,40 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SocietyManagement.Domain.Entities.ParkingFine", b =>
+                {
+                    b.HasOne("SocietyManagement.Domain.Entities.User", "IssuedByUser")
+                        .WithMany()
+                        .HasForeignKey("IssuedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SocietyManagement.Domain.Entities.ParkingSlot", "ParkingSlot")
+                        .WithMany()
+                        .HasForeignKey("ParkingSlotId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SocietyManagement.Domain.Entities.Society", "Society")
+                        .WithMany()
+                        .HasForeignKey("SocietyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SocietyManagement.Domain.Entities.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("IssuedByUser");
+
+                    b.Navigation("ParkingSlot");
+
+                    b.Navigation("Society");
+
+                    b.Navigation("Vehicle");
+                });
+
             modelBuilder.Entity("SocietyManagement.Domain.Entities.ParkingSlot", b =>
                 {
                     b.HasOne("SocietyManagement.Domain.Entities.Flat", "AllocatedFlat")
@@ -4204,6 +4375,25 @@ namespace SocietyManagement.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("FlatOccupancy");
+                });
+
+            modelBuilder.Entity("SocietyManagement.Domain.Entities.ResidentDocument", b =>
+                {
+                    b.HasOne("SocietyManagement.Domain.Entities.FlatOccupancy", "FlatOccupancy")
+                        .WithMany()
+                        .HasForeignKey("FlatOccupancyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SocietyManagement.Domain.Entities.User", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FlatOccupancy");
+
+                    b.Navigation("UploadedByUser");
                 });
 
             modelBuilder.Entity("SocietyManagement.Domain.Entities.RolePermission", b =>

@@ -15,6 +15,7 @@ import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.se
 import { SocietyService } from '../../society-setup/services/society.service';
 import { EmergencyContactDto } from '../models/resident.model';
 import { ResidentService } from '../services/resident.service';
+import { MOBILE_PATTERN, MOBILE_PATTERN_ERROR } from '../../../shared/validators/mobile.validator';
 
 @Component({
   selector: 'app-emergency-contacts-list',
@@ -118,8 +119,8 @@ export class EmergencyContactsListComponent implements OnInit {
     return [
       { key: 'contactName', label: 'Contact Name', type: 'text' as const, defaultValue: contact?.contactName ?? '' },
       { key: 'relationship', label: 'Relationship', type: 'text' as const, defaultValue: contact?.relationship ?? '' },
-      { key: 'phone', label: 'Phone', type: 'text' as const, defaultValue: contact?.phone ?? '' },
-      { key: 'alternatePhone', label: 'Alternate Phone', type: 'text' as const, required: false, defaultValue: contact?.alternatePhone ?? '' }
+      { key: 'phone', label: 'Phone', type: 'text' as const, defaultValue: contact?.phone ?? '', pattern: MOBILE_PATTERN, patternError: MOBILE_PATTERN_ERROR, maxLength: 10 },
+      { key: 'alternatePhone', label: 'Alternate Phone', type: 'text' as const, required: false, defaultValue: contact?.alternatePhone ?? '', pattern: MOBILE_PATTERN, patternError: MOBILE_PATTERN_ERROR, maxLength: 10 }
     ];
   }
 

@@ -15,6 +15,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { FileUploadService } from '../../../core/services/file-upload.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Society } from '../../../core/models/society.model';
+import { optionalMobileValidator } from '../../../shared/validators/mobile.validator';
 import { SocietyService } from '../services/society.service';
 
 @Component({
@@ -48,7 +49,11 @@ import { SocietyService } from '../services/society.service';
         <mat-form-field appearance="outline"><mat-label>State</mat-label><input matInput formControlName="state" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Pincode</mat-label><input matInput formControlName="pincode" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Contact Email</mat-label><input matInput formControlName="contactEmail" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Contact Phone</mat-label><input matInput formControlName="contactPhone" /></mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Contact Phone</mat-label>
+          <input matInput formControlName="contactPhone" maxlength="10" />
+          @if (form.get('contactPhone')?.hasError('pattern')) { <mat-error>Enter a valid 10-digit mobile number.</mat-error> }
+        </mat-form-field>
         @if (data) {
           <mat-form-field appearance="outline" class="span-2">
             <mat-label>Society Code</mat-label>
@@ -154,7 +159,7 @@ export class SocietyFormDialogComponent {
     state: [this.data?.state ?? '', Validators.required],
     pincode: [this.data?.pincode ?? '', [Validators.required, Validators.pattern(/^\d{6}$/)]],
     contactEmail: [this.data?.contactEmail ?? ''],
-    contactPhone: [this.data?.contactPhone ?? ''],
+    contactPhone: [this.data?.contactPhone ?? '', optionalMobileValidator()],
     logoUrl: [this.data?.logoUrl ?? '']
   });
 

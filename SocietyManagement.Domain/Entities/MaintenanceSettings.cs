@@ -31,4 +31,10 @@ public class MaintenanceSettings : BaseAuditableEntity
 
     public string PdfFooterMessage { get; set; } =
         "Thank you for contributing towards the maintenance of our society.";
+
+    /// <summary>Super-Admin-only switch (see UpsertMaintenanceSettingsCommandHandler)
+    /// — gates both the automatic send on bill generation and the manual
+    /// "Resend WhatsApp" action. Defaults true so existing societies keep
+    /// today's always-on behavior until a Super Admin explicitly disables it.</summary>
+    public bool WhatsAppEnabled { get; set; } = true;
 }

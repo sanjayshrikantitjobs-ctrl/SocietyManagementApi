@@ -15,6 +15,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { parseDateOnly, toDateOnlyString } from '../../../shared/utils/date.util';
 import { PERSON_RELATIONSHIP_LABELS, PersonDto } from '../models/occupancy.model';
 import { OccupancyService } from '../services/occupancy.service';
+import { MOBILE_PATTERN, optionalMobileValidator } from '../../../shared/validators/mobile.validator';
 
 export interface AddOccupancyFamilyMemberDialogData {
   flatOccupancyId: number;
@@ -38,6 +39,7 @@ export interface AddOccupancyFamilyMemberDialogData {
         <mat-form-field appearance="outline" class="span-2">
           <mat-label>Mobile</mat-label>
           <input matInput formControlName="phone" (blur)="onPhoneBlur()" maxlength="10" />
+          @if (form.get('phone')?.hasError('pattern')) { <mat-error>Enter a valid 10-digit mobile number.</mat-error> }
         </mat-form-field>
 
         @if (searching()) {
@@ -54,7 +56,11 @@ export interface AddOccupancyFamilyMemberDialogData {
         <mat-form-field appearance="outline"><mat-label>First Name</mat-label><input matInput formControlName="firstName" [readonly]="!!foundPerson()" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Last Name</mat-label><input matInput formControlName="lastName" [readonly]="!!foundPerson()" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput formControlName="email" [readonly]="!!foundPerson()" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>WhatsApp (optional)</mat-label><input matInput formControlName="whatsAppNumber" [readonly]="!!foundPerson()" /></mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>WhatsApp (optional)</mat-label>
+          <input matInput formControlName="whatsAppNumber" [readonly]="!!foundPerson()" maxlength="10" />
+          @if (form.get('whatsAppNumber')?.hasError('pattern')) { <mat-error>Enter a valid 10-digit mobile number.</mat-error> }
+        </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Relationship</mat-label>
           <mat-select formControlName="relationship">
@@ -122,11 +128,11 @@ export class AddOccupancyFamilyMemberDialogComponent {
     .map(([value, label]) => ({ value: Number(value), label }));
 
   form = this.fb.nonNullable.group({
-    phone: ['', [Validators.pattern(/^\d{10}$/)]],
+    phone: ['', optionalMobileValidator()],
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
     email: [''],
-    whatsAppNumber: [''],
+    whatsAppNumber: ['', optionalMobileValidator()],
     relationship: [2, Validators.required],
     dateOfBirth: [null as Date | null],
     photoUrl: [''],
@@ -135,7 +141,7 @@ export class AddOccupancyFamilyMemberDialogComponent {
 
   onPhoneBlur(): void {
     const phone = this.form.value.phone;
-    if (!phone || !/^\d{10}$/.test(phone)) return;
+    if (!phone || !MOBILE_PATTERN.test(phone)) return;
 
     this.searching.set(true);
     this.occupancyService.searchPerson(this.data.societyId, phone).subscribe({

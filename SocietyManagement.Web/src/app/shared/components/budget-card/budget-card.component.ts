@@ -64,7 +64,7 @@ export class BudgetCardComponent {
   remove = output<void>();
   viewHistory = output<void>();
 
-  categoryLabel = computed(() => BUDGET_CATEGORY_LABELS[this.category().category]);
+  categoryLabel = computed(() => this.category().customCategoryName || BUDGET_CATEGORY_LABELS[this.category().category]);
   spendPercent = computed(() => {
     const c = this.category();
     return c.approvedAmount > 0 ? Math.round((c.actualAmount / c.approvedAmount) * 100) : 0;

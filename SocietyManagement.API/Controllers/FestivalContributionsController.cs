@@ -15,11 +15,11 @@ public class FestivalContributionsController : ApiControllerBase
     [HttpGet]
     [HasPermission(Permissions.Festivals.View)]
     public async Task<IActionResult> GetAll(
-        [FromQuery] int festivalId, [FromQuery] string? search, [FromQuery] ContributionPaymentMethod? paymentMethod,
+        [FromQuery] int festivalId, [FromQuery] int? flatId, [FromQuery] string? search, [FromQuery] ContributionPaymentMethod? paymentMethod,
         [FromQuery] string? sortBy, [FromQuery] bool sortDescending = false,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
-        var result = await Mediator.Send(new GetContributionsQuery(festivalId, search, paymentMethod, sortBy, sortDescending, pageNumber, pageSize));
+        var result = await Mediator.Send(new GetContributionsQuery(festivalId, flatId, search, paymentMethod, sortBy, sortDescending, pageNumber, pageSize));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
@@ -53,6 +53,15 @@ public class FestivalContributionsController : ApiControllerBase
     {
         var id = await Mediator.Send(command);
         return Created(string.Empty, ApiResponse<int>.SuccessResponse(id, "Contribution recorded."));
+    }
+
+    [HttpPut("{id:int}")]
+    [HasPermission(Permissions.Festivals.Contribute)]
+    public async Task<IActionResult> Update(int id, UpdateContributionCommand command)
+    {
+        if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
+        await Mediator.Send(command);
+        return Ok(ApiResponse.SuccessResponse("Contribution updated."));
     }
 
     [HttpPost("{id:int}/resend-whatsapp")]

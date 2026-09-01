@@ -6,6 +6,7 @@ using SocietyManagement.Domain.Entities;
 using SocietyManagement.Domain.Enums;
 using SocietyManagement.Shared.Constants;
 using SocietyManagement.Shared.Exceptions;
+using SocietyManagement.Shared.Extensions;
 using SocietyManagement.Shared.Wrappers;
 
 namespace SocietyManagement.Application.Features.Occupancy;
@@ -95,6 +96,10 @@ public class AddOwnerMemberCommandValidator : AbstractValidator<AddOwnerMemberCo
             .WithMessage("First name is required for a new person.");
         RuleFor(x => x.LastName).NotEmpty().When(x => x.PersonId == null)
             .WithMessage("Last name is required for a new person.");
+        RuleFor(x => x.Phone).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.Phone))
+            .WithMessage("A valid 10-digit mobile number is required.");
+        RuleFor(x => x.WhatsAppNumber).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.WhatsAppNumber))
+            .WithMessage("A valid 10-digit mobile number is required.");
     }
 }
 
@@ -116,6 +121,10 @@ public class AddTenantOccupancyCommandValidator : AbstractValidator<AddTenantOcc
             .WithMessage("First name is required for a new person.");
         RuleFor(x => x.LastName).NotEmpty().When(x => x.PersonId == null)
             .WithMessage("Last name is required for a new person.");
+        RuleFor(x => x.Phone).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.Phone))
+            .WithMessage("A valid 10-digit mobile number is required.");
+        RuleFor(x => x.WhatsAppNumber).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.WhatsAppNumber))
+            .WithMessage("A valid 10-digit mobile number is required.");
     }
 }
 
@@ -134,6 +143,10 @@ public class AddTenantFamilyMemberCommandValidator : AbstractValidator<AddTenant
             .WithMessage("First name is required for a new person.");
         RuleFor(x => x.LastName).NotEmpty().When(x => x.PersonId == null)
             .WithMessage("Last name is required for a new person.");
+        RuleFor(x => x.Phone).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.Phone))
+            .WithMessage("A valid 10-digit mobile number is required.");
+        RuleFor(x => x.WhatsAppNumber).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.WhatsAppNumber))
+            .WithMessage("A valid 10-digit mobile number is required.");
     }
 }
 
@@ -162,6 +175,10 @@ public class AddMyFamilyMemberCommandValidator : AbstractValidator<AddMyFamilyMe
             .WithMessage("First name is required for a new person.");
         RuleFor(x => x.LastName).NotEmpty().When(x => x.PersonId == null)
             .WithMessage("Last name is required for a new person.");
+        RuleFor(x => x.Phone).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.Phone))
+            .WithMessage("A valid 10-digit mobile number is required.");
+        RuleFor(x => x.WhatsAppNumber).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.WhatsAppNumber))
+            .WithMessage("A valid 10-digit mobile number is required.");
     }
 }
 

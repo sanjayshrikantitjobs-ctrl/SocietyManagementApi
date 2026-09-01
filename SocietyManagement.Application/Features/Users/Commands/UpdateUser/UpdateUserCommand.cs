@@ -51,6 +51,14 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Unit>
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.Id && !u.IsDeleted, cancellationToken)
             ?? throw new NotFoundException(nameof(User), request.Id);
 
+        // Uncovered by SocietyScopeFilter (bound parameter is "Id", not
+        // "SocietyId") — without this, a scoped Admin could edit any OTHER
+        // society's user by guessing an id. Super Admin is unrestricted.
+        if (_currentUserService.SocietyId.HasValue && _currentUserService.SocietyId != user.SocietyId)
+        {
+            throw new ForbiddenAccessException("You can only manage users in your own society.");
+        }
+
         var role = await _context.Roles.FirstOrDefaultAsync(r => r.Id == request.RoleId && !r.IsDeleted, cancellationToken)
             ?? throw new NotFoundException(nameof(Role), request.RoleId);
 

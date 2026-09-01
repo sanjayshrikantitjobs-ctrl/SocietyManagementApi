@@ -5,6 +5,7 @@ using SocietyManagement.Application.Common.Interfaces;
 using SocietyManagement.Domain.Entities;
 using SocietyManagement.Domain.Enums;
 using SocietyManagement.Shared.Exceptions;
+using SocietyManagement.Shared.Extensions;
 
 namespace SocietyManagement.Application.Features.Festivals;
 
@@ -36,6 +37,8 @@ public class CreateSponsorCommandValidator : AbstractValidator<CreateSponsorComm
     {
         RuleFor(x => x.FestivalId).GreaterThan(0);
         RuleFor(x => x.CompanyName).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Phone).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.Phone))
+            .WithMessage("A valid 10-digit mobile number is required.");
         RuleFor(x => x.Email).EmailAddress().When(x => !string.IsNullOrWhiteSpace(x.Email));
         RuleFor(x => x.PromisedAmount).GreaterThanOrEqualTo(0);
         RuleFor(x => x.ReceivedAmount).GreaterThanOrEqualTo(0);
@@ -53,6 +56,8 @@ public class UpdateSponsorCommandValidator : AbstractValidator<UpdateSponsorComm
     {
         RuleFor(x => x.Id).GreaterThan(0);
         RuleFor(x => x.CompanyName).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Phone).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.Phone))
+            .WithMessage("A valid 10-digit mobile number is required.");
         RuleFor(x => x.Email).EmailAddress().When(x => !string.IsNullOrWhiteSpace(x.Email));
         RuleFor(x => x.PromisedAmount).GreaterThanOrEqualTo(0);
         RuleFor(x => x.ReceivedAmount).GreaterThanOrEqualTo(0);

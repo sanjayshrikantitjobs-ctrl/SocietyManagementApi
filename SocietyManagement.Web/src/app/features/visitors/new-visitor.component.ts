@@ -13,6 +13,7 @@ import { SignalrService } from '../../core/services/signalr.service';
 import { ToastService } from '../../core/services/toast.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { AssetUrlPipe } from '../../shared/pipes/asset-url.pipe';
+import { mobileValidator } from '../../shared/validators/mobile.validator';
 import { SocietyService } from '../society-setup/services/society.service';
 import { VisitorVisitDto } from './models/visitor.model';
 import { VisitorService } from './services/visitor.service';
@@ -69,7 +70,11 @@ import { VisitorService } from './services/visitor.service';
           </div>
 
           <mat-form-field appearance="outline"><mat-label>Visitor Name</mat-label><input matInput formControlName="name" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Mobile Number</mat-label><input matInput formControlName="mobile" /></mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Mobile Number</mat-label>
+            <input matInput formControlName="mobile" maxlength="10" />
+            @if (form.get('mobile')?.hasError('pattern')) { <mat-error>Enter a valid 10-digit mobile number.</mat-error> }
+          </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Flat</mat-label>
@@ -144,7 +149,7 @@ export class NewVisitorComponent implements OnInit {
 
   form = this.fb.nonNullable.group({
     name: ['', Validators.required],
-    mobile: ['', Validators.required],
+    mobile: ['', mobileValidator()],
     flatId: [0, Validators.required],
     purposeId: [0, Validators.required],
     numberOfVisitors: [1, [Validators.required, Validators.min(1)]],

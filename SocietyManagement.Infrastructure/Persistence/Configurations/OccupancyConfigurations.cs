@@ -83,6 +83,28 @@ public class RentalAgreementConfiguration : IEntityTypeConfiguration<RentalAgree
     }
 }
 
+public class ResidentDocumentConfiguration : IEntityTypeConfiguration<ResidentDocument>
+{
+    public void Configure(EntityTypeBuilder<ResidentDocument> builder)
+    {
+        builder.ToTable("ResidentDocuments");
+        builder.HasQueryFilter(d => !d.IsDeleted);
+        builder.Property(d => d.DocumentUrl).HasMaxLength(500).IsRequired();
+        builder.Property(d => d.Notes).HasMaxLength(500);
+        // Not unique — unlimited documents per occupancy, including
+        // multiple "Other" uploads (unlike RentalAgreement's 1:1 relation).
+        builder.HasIndex(d => d.FlatOccupancyId);
+
+        // Restrict, not SetNull — Users are soft-deleted, never physically
+        // removed, so Restrict never actually blocks a real delete in
+        // practice (same reasoning as VehicleScanLogConfiguration's user FK).
+        builder.HasOne(d => d.UploadedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.UploadedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 public class OccupancySettingsConfiguration : IEntityTypeConfiguration<OccupancySettings>
 {
     public void Configure(EntityTypeBuilder<OccupancySettings> builder)

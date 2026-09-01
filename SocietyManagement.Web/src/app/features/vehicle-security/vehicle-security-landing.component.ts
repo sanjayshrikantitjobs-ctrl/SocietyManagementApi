@@ -38,6 +38,13 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
             <p class="muted">Review past scans and searches.</p>
           </a>
         }
+        @if (auth.hasPermission('parking_fines.view')) {
+          <a routerLink="/vehicle-security/parking-fines" class="app-card action-card">
+            <mat-icon>local_parking</mat-icon>
+            <h3>Parking Fines</h3>
+            <p class="muted">Record and review parking violations.</p>
+          </a>
+        }
       </div>
     </div>
   `,

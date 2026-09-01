@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { FLAT_STATUS_LABELS, FLAT_TYPE_LABELS, Flat } from '../../../core/models/society.model';
+import { optionalMobileValidator } from '../../../shared/validators/mobile.validator';
 
 export interface FlatFormDialogData {
   flat: Flat | null;
@@ -43,7 +44,11 @@ export interface FlatFormDialogData {
 
         <h4 class="section-heading">Owner Contact <span class="muted">(used for maintenance bills &amp; WhatsApp delivery)</span></h4>
         <mat-form-field appearance="outline"><mat-label>Owner Name</mat-label><input matInput formControlName="ownerName" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Owner Phone</mat-label><input matInput formControlName="ownerPhone" /></mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Owner Phone</mat-label>
+          <input matInput formControlName="ownerPhone" maxlength="10" />
+          @if (form.get('ownerPhone')?.hasError('pattern')) { <mat-error>Enter a valid 10-digit mobile number.</mat-error> }
+        </mat-form-field>
         <mat-form-field appearance="outline" class="span-2"><mat-label>Owner Email</mat-label><input matInput formControlName="ownerEmail" /></mat-form-field>
       </mat-dialog-content>
       <mat-dialog-actions align="end">
@@ -73,7 +78,7 @@ export class FlatFormDialogComponent {
     areaSqFt: [this.data.flat?.areaSqFt ?? null],
     status: [this.data.flat?.status ?? 1],
     ownerName: [this.data.flat?.ownerName ?? ''],
-    ownerPhone: [this.data.flat?.ownerPhone ?? ''],
+    ownerPhone: [this.data.flat?.ownerPhone ?? '', optionalMobileValidator()],
     ownerEmail: [this.data.flat?.ownerEmail ?? '', Validators.email]
   });
 

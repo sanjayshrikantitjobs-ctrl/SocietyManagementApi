@@ -5,6 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Society } from '../../../core/models/society.model';
 import { SocietyService } from '../../society-setup/services/society.service';
@@ -13,7 +15,10 @@ import { MaintenanceService } from '../services/maintenance.service';
 @Component({
   selector: 'app-maintenance-settings',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatProgressSpinnerModule],
+  imports: [
+    CommonModule, ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule,
+    MatProgressSpinnerModule, MatSlideToggleModule
+  ],
   template: `
     <div class="tab-content">
       @if (loading()) {
@@ -28,6 +33,13 @@ import { MaintenanceService } from '../services/maintenance.service';
             <mat-form-field appearance="outline"><mat-label>Late Fee Amount</mat-label><input matInput type="number" formControlName="lateFeeAmount" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Invoice Number Prefix</mat-label><input matInput formControlName="invoiceNumberPrefix" /></mat-form-field>
           </div>
+
+          @if (auth.isSuperAdmin()) {
+            <h3>WhatsApp Sending</h3>
+            <mat-slide-toggle formControlName="whatsAppEnabled">
+              Send WhatsApp messages for maintenance bills
+            </mat-slide-toggle>
+          }
 
           <h3>WhatsApp Message Template</h3>
           <p class="hint">Placeholders: {{ '{OwnerName}' }} {{ '{Month}' }} {{ '{Amount}' }} {{ '{DueDate}' }}</p>
@@ -63,6 +75,7 @@ export class MaintenanceSettingsComponent implements OnInit {
   private readonly societyService = inject(SocietyService);
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
+  readonly auth = inject(AuthService);
 
   readonly loading = signal(true);
   readonly saving = signal(false);
@@ -76,7 +89,8 @@ export class MaintenanceSettingsComponent implements OnInit {
     lateFeeAmount: [0, [Validators.required, Validators.min(0)]],
     invoiceNumberPrefix: ['INV', Validators.required],
     whatsAppMessageTemplate: ['', Validators.required],
-    pdfFooterMessage: ['', Validators.required]
+    pdfFooterMessage: ['', Validators.required],
+    whatsAppEnabled: [true]
   });
 
   ngOnInit(): void {

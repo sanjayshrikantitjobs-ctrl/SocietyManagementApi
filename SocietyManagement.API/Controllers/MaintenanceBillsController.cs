@@ -54,6 +54,15 @@ public class MaintenanceBillsController : ApiControllerBase
         return Ok(ApiResponse<int>.SuccessResponse(id, "Payment recorded."));
     }
 
+    [HttpPost("bulk-payment")]
+    [HasPermission(Permissions.Maintenance.Manage)]
+    public async Task<IActionResult> BulkRecordPayment(BulkRecordPaymentCommand command)
+    {
+        var results = await Mediator.Send(command);
+        var recordedCount = results.Count(r => r.Recorded);
+        return Ok(ApiResponse<object>.SuccessResponse(results, $"{recordedCount} of {results.Count} bill(s) marked paid."));
+    }
+
     [HttpPost("bills/{id:int}/resend-whatsapp")]
     [HasPermission(Permissions.Maintenance.Manage)]
     public async Task<IActionResult> ResendWhatsApp(int id)

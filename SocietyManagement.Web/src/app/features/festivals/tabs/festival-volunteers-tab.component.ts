@@ -11,6 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.service';
 import { FestivalVolunteerDto } from '../models/festival.model';
 import { FestivalService } from '../services/festival.service';
+import { MOBILE_PATTERN, MOBILE_PATTERN_ERROR } from '../../../shared/validators/mobile.validator';
 
 @Component({
   selector: 'app-festival-volunteers-tab',
@@ -96,7 +97,7 @@ export class FestivalVolunteersTabComponent implements OnInit {
   private fields(volunteer?: FestivalVolunteerDto) {
     return [
       { key: 'name', label: 'Name', type: 'text' as const, defaultValue: volunteer?.name ?? '' },
-      { key: 'phone', label: 'Phone', type: 'text' as const, required: false, defaultValue: volunteer?.phone ?? '' },
+      { key: 'phone', label: 'Phone', type: 'text' as const, required: false, defaultValue: volunteer?.phone ?? '', pattern: MOBILE_PATTERN, patternError: MOBILE_PATTERN_ERROR, maxLength: 10 },
       { key: 'email', label: 'Email', type: 'text' as const, required: false, defaultValue: volunteer?.email ?? '' },
       { key: 'notes', label: 'Notes', type: 'textarea' as const, required: false, defaultValue: volunteer?.notes ?? '' }
     ];

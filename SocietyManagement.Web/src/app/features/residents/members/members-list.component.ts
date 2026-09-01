@@ -14,6 +14,7 @@ import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.se
 import { RoleService } from '../../roles/role.service';
 import { SocietyService } from '../../society-setup/services/society.service';
 import { GENDER_LABELS, MemberDto } from '../models/resident.model';
+import { MOBILE_PATTERN, MOBILE_PATTERN_ERROR } from '../../../shared/validators/mobile.validator';
 import { ImportResidentsDialogComponent } from '../import/import-residents-dialog.component';
 import { QuickAddFlatDialogComponent } from '../quick-add-flat/quick-add-flat-dialog.component';
 import { ResidentService } from '../services/resident.service';
@@ -171,7 +172,7 @@ export class MembersListComponent implements OnInit {
     return [
       { key: 'firstName', label: 'First Name', type: 'text' as const, defaultValue: member?.firstName ?? '' },
       { key: 'lastName', label: 'Last Name', type: 'text' as const, defaultValue: member?.lastName ?? '' },
-      { key: 'phone', label: 'Phone', type: 'text' as const, defaultValue: member?.phone ?? '' },
+      { key: 'phone', label: 'Phone', type: 'text' as const, defaultValue: member?.phone ?? '', pattern: MOBILE_PATTERN, patternError: MOBILE_PATTERN_ERROR, maxLength: 10 },
       { key: 'email', label: 'Email', type: 'text' as const, required: false, defaultValue: member?.email ?? '' },
       {
         key: 'gender', label: 'Gender', type: 'select' as const, required: false,

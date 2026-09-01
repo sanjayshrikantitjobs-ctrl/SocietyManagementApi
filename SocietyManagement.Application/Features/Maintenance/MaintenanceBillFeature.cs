@@ -83,11 +83,31 @@ public class RecordPaymentCommandValidator : AbstractValidator<RecordPaymentComm
     }
 }
 
+/// <summary>Pays each selected bill's own full outstanding balance —
+/// mode/date/notes are shared across the batch, but Amount is never a
+/// client-supplied shared value (balances differ per flat). Never throws for
+/// one bad id; skips it with a reason instead, so one already-paid or
+/// deleted bill in a large selection doesn't abort the whole batch.</summary>
+public record BulkRecordPaymentResultDto(int MaintenanceBillId, string InvoiceNumber, bool Recorded, string? SkipReason);
+
+public record BulkRecordPaymentCommand(
+    List<int> MaintenanceBillIds, DateTime PaymentDate, PaymentMode PaymentMode,
+    string? TransactionReference, string? Notes) : IRequest<List<BulkRecordPaymentResultDto>>;
+
+public class BulkRecordPaymentCommandValidator : AbstractValidator<BulkRecordPaymentCommand>
+{
+    public BulkRecordPaymentCommandValidator()
+    {
+        RuleFor(x => x.MaintenanceBillIds).NotEmpty();
+    }
+}
+
 public record ResendBillWhatsAppCommand(int MaintenanceBillId) : IRequest<Unit>;
 
 public class MaintenanceBillCommandHandlers :
     IRequestHandler<GenerateMonthlyBillsCommand, int>,
     IRequestHandler<RecordPaymentCommand, int>,
+    IRequestHandler<BulkRecordPaymentCommand, List<BulkRecordPaymentResultDto>>,
     IRequestHandler<ResendBillWhatsAppCommand, Unit>
 {
     private readonly IApplicationDbContext _context;
@@ -240,7 +260,13 @@ public class MaintenanceBillCommandHandlers :
             bill.PdfUrl = await _fileStorage.SaveAsync(pdfBytes, $"{invoiceNumber}.pdf", "maintenance-bills", ct);
             await _context.SaveChangesAsync(ct);
 
-            if (!string.IsNullOrWhiteSpace(ownerPhone))
+            if (!settings.WhatsAppEnabled)
+            {
+                _logger.LogInformation(
+                    "WhatsApp sending is disabled for society {SocietyId} — bill {InvoiceNumber} generated but not sent.",
+                    request.SocietyId, invoiceNumber);
+            }
+            else if (!string.IsNullOrWhiteSpace(ownerPhone))
             {
                 var message = settings.WhatsAppMessageTemplate
                     .Replace("{OwnerName}", ownerName ?? "Resident")
@@ -291,6 +317,48 @@ public class MaintenanceBillCommandHandlers :
         return payment.Id;
     }
 
+    public async Task<List<BulkRecordPaymentResultDto>> Handle(BulkRecordPaymentCommand request, CancellationToken ct)
+    {
+        var bills = await _context.MaintenanceBills
+            .Where(b => request.MaintenanceBillIds.Contains(b.Id) && !b.IsDeleted)
+            .ToListAsync(ct);
+        var billsById = bills.ToDictionary(b => b.Id);
+
+        var results = new List<BulkRecordPaymentResultDto>();
+        foreach (var id in request.MaintenanceBillIds)
+        {
+            if (!billsById.TryGetValue(id, out var bill))
+            {
+                results.Add(new BulkRecordPaymentResultDto(id, "", false, "Bill not found."));
+                continue;
+            }
+            if (bill.Status == BillStatus.Paid)
+            {
+                results.Add(new BulkRecordPaymentResultDto(id, bill.InvoiceNumber, false, "Already fully paid."));
+                continue;
+            }
+
+            var amount = bill.TotalAmount - bill.AmountPaid;
+            var payment = new MaintenancePayment
+            {
+                MaintenanceBillId = bill.Id, Amount = amount, PaymentDate = request.PaymentDate,
+                PaymentMode = request.PaymentMode, TransactionReference = request.TransactionReference,
+                ReceivedByUserId = _currentUser.UserId, Notes = request.Notes
+            };
+            await _context.MaintenancePayments.AddAsync(payment, ct);
+
+            bill.AmountPaid += amount;
+            bill.Status = BillStatus.Paid;
+            results.Add(new BulkRecordPaymentResultDto(id, bill.InvoiceNumber, true, null));
+        }
+
+        await _context.SaveChangesAsync(ct);
+        var recordedIds = results.Where(r => r.Recorded).Select(r => r.MaintenanceBillId.ToString());
+        await _auditService.LogAsync(AuditAction.Payment, "Maintenance", nameof(MaintenanceBill), string.Join(",", recordedIds), ct: ct);
+
+        return results;
+    }
+
     public async Task<Unit> Handle(ResendBillWhatsAppCommand request, CancellationToken ct)
     {
         var bill = await _context.MaintenanceBills.Include(b => b.Flat)
@@ -304,6 +372,12 @@ public class MaintenanceBillCommandHandlers :
 
         var society = await _context.Societies.FirstAsync(s => s.Id == bill.SocietyId, ct);
         var settings = await _context.MaintenanceSettings.FirstAsync(s => s.SocietyId == society.Id && !s.IsDeleted, ct);
+
+        if (!settings.WhatsAppEnabled)
+        {
+            throw new ConflictAppException("WhatsApp sending is currently disabled for this society.");
+        }
+
         var pdfBytes = _pdfService.GenerateBillPdf(BuildPdfData(society, settings, bill.Flat.FlatNumber, bill));
 
         var message = settings.WhatsAppMessageTemplate

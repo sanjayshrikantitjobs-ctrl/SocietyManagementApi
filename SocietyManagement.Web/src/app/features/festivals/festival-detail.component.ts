@@ -15,8 +15,7 @@ import { ConfirmDialogService } from '../../shared/services/confirm-dialog.servi
 import { AssetUrlPipe } from '../../shared/pipes/asset-url.pipe';
 import { FestivalBudgetTabComponent } from './tabs/festival-budget-tab.component';
 import { FestivalChildFestivalsTabComponent } from './tabs/festival-child-festivals-tab.component';
-import { FestivalContributionLedgerTabComponent } from './tabs/festival-contribution-ledger-tab.component';
-import { FestivalContributionTargetsTabComponent } from './tabs/festival-contribution-targets-tab.component';
+import { FestivalContributionTabComponent } from './tabs/festival-contribution-tab.component';
 import { FestivalDashboardTabComponent } from './tabs/festival-dashboard-tab.component';
 import { FestivalExpensesTabComponent } from './tabs/festival-expenses-tab.component';
 import { FestivalSponsorsTabComponent } from './tabs/festival-sponsors-tab.component';
@@ -34,8 +33,8 @@ import { FestivalService } from './services/festival.service';
   standalone: true,
   imports: [
     CommonModule, MatButtonModule, MatIconModule, MatMenuModule, MatProgressSpinnerModule, MatTabsModule, AssetUrlPipe,
-    PageHeaderComponent, FestivalDashboardTabComponent, FestivalBudgetTabComponent, FestivalContributionTargetsTabComponent,
-    FestivalContributionLedgerTabComponent, FestivalSponsorsTabComponent, FestivalExpensesTabComponent,
+    PageHeaderComponent, FestivalDashboardTabComponent, FestivalBudgetTabComponent, FestivalContributionTabComponent,
+    FestivalSponsorsTabComponent, FestivalExpensesTabComponent,
     FestivalVendorsTabComponent, FestivalChildFestivalsTabComponent, FestivalVolunteersTabComponent, FestivalTasksTabComponent
   ],
   template: `
@@ -78,12 +77,11 @@ import { FestivalService } from './services/festival.service';
 
         <mat-tab-group animationDuration="150ms" preserveContent>
           @if (f.kind === 2) {
-            <mat-tab label="Dashboard"><app-festival-dashboard-tab [festivalId]="f.id" /></mat-tab>
+            <mat-tab label="Dashboard"><app-festival-dashboard-tab [festivalId]="f.id" [kind]="f.kind" /></mat-tab>
             <mat-tab label="Child Festivals & Events"><app-festival-child-festivals-tab [festivalId]="f.id" [poolName]="f.name" [societyId]="f.societyId" [canManage]="canManage()" /></mat-tab>
-            <mat-tab label="Contribution Targets"><app-festival-contribution-targets-tab [festivalId]="f.id" /></mat-tab>
-            <mat-tab label="Contribution Ledger"><app-festival-contribution-ledger-tab [festivalId]="f.id" /></mat-tab>
+            <mat-tab label="Contribution"><app-festival-contribution-tab [festivalId]="f.id" [canManage]="canManage()" [canContribute]="canContribute()" /></mat-tab>
           } @else if (f.kind === 3) {
-            <mat-tab label="Dashboard"><app-festival-dashboard-tab [festivalId]="f.id" /></mat-tab>
+            <mat-tab label="Dashboard"><app-festival-dashboard-tab [festivalId]="f.id" [kind]="f.kind" /></mat-tab>
             <mat-tab label="Budget"><app-festival-budget-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
             <mat-tab label="Sponsors"><app-festival-sponsors-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
             <mat-tab label="Expenses"><app-festival-expenses-tab [festivalId]="f.id" [societyId]="f.societyId" [canManage]="canManage()" [canApprove]="canApprove()" /></mat-tab>
@@ -91,10 +89,9 @@ import { FestivalService } from './services/festival.service';
             <mat-tab label="Volunteers"><app-festival-volunteers-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
             <mat-tab label="Tasks"><app-festival-tasks-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
           } @else {
-            <mat-tab label="Dashboard"><app-festival-dashboard-tab [festivalId]="f.id" /></mat-tab>
+            <mat-tab label="Dashboard"><app-festival-dashboard-tab [festivalId]="f.id" [kind]="f.kind" /></mat-tab>
             <mat-tab label="Budget"><app-festival-budget-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
-            <mat-tab label="Contribution Targets"><app-festival-contribution-targets-tab [festivalId]="f.id" /></mat-tab>
-            <mat-tab label="Contribution Ledger"><app-festival-contribution-ledger-tab [festivalId]="f.id" /></mat-tab>
+            <mat-tab label="Contribution"><app-festival-contribution-tab [festivalId]="f.id" [canManage]="canManage()" [canContribute]="canContribute()" /></mat-tab>
             <mat-tab label="Sponsors"><app-festival-sponsors-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
             <mat-tab label="Expenses"><app-festival-expenses-tab [festivalId]="f.id" [societyId]="f.societyId" [canManage]="canManage()" [canApprove]="canApprove()" /></mat-tab>
             <mat-tab label="Vendors"><app-festival-vendors-tab [societyId]="f.societyId" [canManage]="canManage()" /></mat-tab>
@@ -107,7 +104,11 @@ import { FestivalService } from './services/festival.service';
   `,
   styles: [`
     .loading { display: flex; justify-content: center; padding: 60px; }
-    .hero { height: 200px; border-radius: 12px; background-size: cover; background-position: center; margin-bottom: 16px; }
+    /* Was background-size: cover at 200px, which crops uploaded banners —
+       contain shows the full image (letterboxed against the surface color
+       rather than cut off), at a taller standard size to give it more room. */
+    .hero { height: 320px; border-radius: 12px; background-color: var(--app-surface-alt);
+      background-size: contain; background-repeat: no-repeat; background-position: center; margin-bottom: 16px; }
     .status-badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 700; margin-right: 8px; }
     .status-badge.status-1 { background: #fef3c7; color: #b45309; }
     .status-badge.status-2 { background: #dcfce7; color: #15803d; }
@@ -143,6 +144,10 @@ export class FestivalDetailComponent {
 
   canApprove(): boolean {
     return this.auth.hasPermission('festivals.expense.approve');
+  }
+
+  canContribute(): boolean {
+    return this.auth.hasPermission('festivals.contribute');
   }
 
   private currentId = 0;

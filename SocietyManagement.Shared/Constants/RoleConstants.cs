@@ -186,4 +186,14 @@ public static class Permissions
         public const string ViewOwnerDetails = "vehicles.view_owner_details";
         public const string Register = "vehicles.register";
     }
+
+    /// <summary>Own group rather than folded into Vehicles.* — Watchman gets
+    /// View/Create here but deliberately never Delete (only Admin/SuperAdmin
+    /// can remove a fine).</summary>
+    public static class ParkingFines
+    {
+        public const string View = "parking_fines.view";
+        public const string Create = "parking_fines.create";
+        public const string Delete = "parking_fines.delete";
+    }
 }

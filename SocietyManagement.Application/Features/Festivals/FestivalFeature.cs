@@ -248,7 +248,10 @@ public class FestivalQueryHandlers :
 
     private static readonly ExpenseApprovalStatus[] SpentStatuses = { ExpenseApprovalStatus.Approved, ExpenseApprovalStatus.Paid };
 
-    private static IQueryable<FestivalDto> Project(IQueryable<Festival> query) =>
+    // No longer static — the Pool sponsor-aggregation branch below needs
+    // _context to correlate against Child festivals via ContributionPoolFestivalId
+    // (Festival has no inverse ChildFestivals navigation property to walk instead).
+    private IQueryable<FestivalDto> Project(IQueryable<Festival> query) =>
         query.Select(f => new FestivalDto
         {
             Id = f.Id,
@@ -271,7 +274,11 @@ public class FestivalQueryHandlers :
             TotalBudget = f.BudgetCategories.Sum(c => (decimal?)c.ApprovedAmount) ?? 0,
             Collected = f.Contributions.Sum(c => (decimal?)c.Amount) ?? 0,
             Spent = f.Expenses.Where(e => SpentStatuses.Contains(e.ApprovalStatus)).Sum(e => (decimal?)e.Amount) ?? 0,
-            SponsorCount = f.Sponsors.Count,
+            // A Pool's own sponsors are additive with its Children's — see
+            // FestivalDashboardFeature.cs's matching aggregation for the KPI.
+            SponsorCount = f.Kind == FestivalKind.Pool
+                ? f.Sponsors.Count + _context.Festivals.Where(cf => cf.ContributionPoolFestivalId == f.Id).SelectMany(cf => cf.Sponsors).Count()
+                : f.Sponsors.Count,
             PendingExpenseCount = f.Expenses.Count(e => e.ApprovalStatus == ExpenseApprovalStatus.Pending)
         });
 

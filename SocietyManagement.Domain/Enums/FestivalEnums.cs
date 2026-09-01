@@ -37,7 +37,9 @@ public enum FestivalBudgetCategoryType
     Cleaning = 9,
     Generator = 10,
     Photography = 11,
-    Miscellaneous = 12
+    Miscellaneous = 12,
+    /// <summary>A festival-typed-in category — see FestivalBudgetCategory.CustomCategoryName.</summary>
+    Custom = 13
 }
 
 public enum ContributionPaymentMethod

@@ -14,6 +14,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { DataTableComponent } from '../../shared/components/data-table/data-table.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
+import { SetUserPasswordDialogComponent } from './set-user-password-dialog.component';
 import { UserFormDialogComponent } from './user-form-dialog.component';
 import { UserService } from './user.service';
 
@@ -121,6 +122,13 @@ export class UsersListComponent implements OnInit {
     }).subscribe((confirmed) => {
       if (!confirmed) return;
       this.userService.resetPassword(user.id).subscribe(() => this.toast.success('Temporary password emailed.'));
+    });
+  }
+
+  setPassword(user: UserListItem): void {
+    this.dialog.open(SetUserPasswordDialogComponent, { width: '420px', data: user }).afterClosed().subscribe((newPassword) => {
+      if (!newPassword) return;
+      this.userService.setPassword(user.id, newPassword).subscribe(() => this.toast.success('Password updated.'));
     });
   }
 

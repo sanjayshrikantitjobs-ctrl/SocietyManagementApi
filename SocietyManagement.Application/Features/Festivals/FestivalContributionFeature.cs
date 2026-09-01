@@ -7,6 +7,7 @@ using SocietyManagement.Domain.Entities;
 using SocietyManagement.Domain.Enums;
 using SocietyManagement.Shared.Constants;
 using SocietyManagement.Shared.Exceptions;
+using SocietyManagement.Shared.Extensions;
 using SocietyManagement.Shared.Wrappers;
 
 namespace SocietyManagement.Application.Features.Festivals;
@@ -56,7 +57,27 @@ public class CreateContributionCommandValidator : AbstractValidator<CreateContri
         RuleFor(x => x.MemberName).NotEmpty().MaximumLength(150);
         RuleFor(x => x.Amount).GreaterThan(0);
         RuleFor(x => x.TransactionId).MaximumLength(100);
-        RuleFor(x => x.WhatsAppNumber).MaximumLength(15);
+        RuleFor(x => x.WhatsAppNumber).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.WhatsAppNumber))
+            .WithMessage("A valid 10-digit mobile number is required.");
+    }
+}
+
+/// <summary>Editing an already-recorded contribution — FestivalId/FlatId
+/// never change (those define which record this is), only the payment
+/// details themselves. No re-send of the WhatsApp receipt on edit — that
+/// stays an explicit, separate action via ResendContributionReceiptCommand.</summary>
+public record UpdateContributionCommand(
+    int Id, string MemberName, decimal Amount, ContributionPaymentMethod PaymentMethod,
+    DateTime PaymentDate, string? TransactionId, bool IsAnonymous) : IRequest<Unit>;
+
+public class UpdateContributionCommandValidator : AbstractValidator<UpdateContributionCommand>
+{
+    public UpdateContributionCommandValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.MemberName).NotEmpty().MaximumLength(150);
+        RuleFor(x => x.Amount).GreaterThan(0);
+        RuleFor(x => x.TransactionId).MaximumLength(100);
     }
 }
 
@@ -67,12 +88,14 @@ public class ResendContributionReceiptCommandValidator : AbstractValidator<Resen
     public ResendContributionReceiptCommandValidator()
     {
         RuleFor(x => x.ContributionId).GreaterThan(0);
-        RuleFor(x => x.WhatsAppNumber).MaximumLength(15);
+        RuleFor(x => x.WhatsAppNumber).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.WhatsAppNumber))
+            .WithMessage("A valid 10-digit mobile number is required.");
     }
 }
 
 public class ContributionCommandHandlers :
     IRequestHandler<CreateContributionCommand, int>,
+    IRequestHandler<UpdateContributionCommand, Unit>,
     IRequestHandler<ResendContributionReceiptCommand, Unit>
 {
     private readonly IApplicationDbContext _context;
@@ -138,6 +161,24 @@ public class ContributionCommandHandlers :
         }
 
         return contribution.Id;
+    }
+
+    public async Task<Unit> Handle(UpdateContributionCommand request, CancellationToken ct)
+    {
+        var contribution = await _context.FestivalContributions
+            .FirstOrDefaultAsync(c => c.Id == request.Id && !c.IsDeleted, ct)
+            ?? throw new NotFoundException(nameof(FestivalContribution), request.Id);
+
+        contribution.MemberName = request.IsAnonymous ? "Anonymous Donor" : request.MemberName;
+        contribution.Amount = request.Amount;
+        contribution.PaymentMethod = request.PaymentMethod;
+        contribution.PaymentDate = request.PaymentDate;
+        contribution.TransactionId = request.TransactionId;
+        contribution.IsAnonymous = request.IsAnonymous;
+
+        await _context.SaveChangesAsync(ct);
+        await _auditService.LogAsync(AuditAction.Update, "Festivals", nameof(FestivalContribution), contribution.Id.ToString(), ct: ct);
+        return Unit.Value;
     }
 
     public async Task<Unit> Handle(ResendContributionReceiptCommand request, CancellationToken ct)
@@ -238,8 +279,11 @@ internal static class ContributionReceiptHelper
 }
 
 // ---- Queries -------------------------------------------------------------------
+/// <summary>FlatId powers the merged Contribution page's per-flat detail
+/// view (one code path for both "all contributions" and "this flat's
+/// history") — null means unfiltered, same as every other optional filter here.</summary>
 public record GetContributionsQuery(
-    int FestivalId, string? Search, ContributionPaymentMethod? PaymentMethod,
+    int FestivalId, int? FlatId, string? Search, ContributionPaymentMethod? PaymentMethod,
     string? SortBy = null, bool SortDescending = false,
     int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<FestivalContributionDto>>;
 
@@ -267,6 +311,8 @@ public class ContributionQueryHandlers :
     public async Task<PaginatedResult<FestivalContributionDto>> Handle(GetContributionsQuery request, CancellationToken ct)
     {
         var query = _context.FestivalContributions.Where(c => c.FestivalId == request.FestivalId);
+
+        if (request.FlatId.HasValue) query = query.Where(c => c.FlatId == request.FlatId);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {

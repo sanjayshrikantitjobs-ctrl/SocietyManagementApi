@@ -53,6 +53,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<FlatResidency> FlatResidencies => Set<FlatResidency>();
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<VehicleScanLog> VehicleScanLogs => Set<VehicleScanLog>();
+    public DbSet<ParkingFine> ParkingFines => Set<ParkingFine>();
     public DbSet<EmergencyContact> EmergencyContacts => Set<EmergencyContact>();
     public DbSet<FlatResaleListing> FlatResaleListings => Set<FlatResaleListing>();
 
@@ -69,6 +70,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<FlatOccupancy> FlatOccupancies => Set<FlatOccupancy>();
     public DbSet<OccupancyMember> OccupancyMembers => Set<OccupancyMember>();
     public DbSet<RentalAgreement> RentalAgreements => Set<RentalAgreement>();
+    public DbSet<ResidentDocument> ResidentDocuments => Set<ResidentDocument>();
     public DbSet<OccupancySettings> OccupancySettings => Set<OccupancySettings>();
 
     protected override void OnModelCreating(ModelBuilder builder)

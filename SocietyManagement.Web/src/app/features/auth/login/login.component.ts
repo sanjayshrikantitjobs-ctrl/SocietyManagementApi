@@ -52,7 +52,15 @@ export class LoginComponent {
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: (res) => {
-          this.router.navigate([res.user.mustChangePassword ? '/profile' : '/dashboard']);
+          if (res.user.mustChangePassword) {
+            this.router.navigate(['/profile']);
+            return;
+          }
+          // Watchman skips the generic dashboard entirely — /visitors is
+          // their actual job (gate/approval duty), not a Member-shaped
+          // maintenance/bills view. See dashboard.routes.ts for the
+          // matching bounce if they land on /dashboard some other way.
+          this.router.navigate([this.auth.isWatchman() ? '/visitors' : '/dashboard']);
         },
         error: (err) => {
           this.errorMessage.set(err?.error?.message ?? 'Invalid credentials. Please try again.');

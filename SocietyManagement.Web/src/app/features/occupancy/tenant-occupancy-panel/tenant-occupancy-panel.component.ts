@@ -12,15 +12,17 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AddOccupancyFamilyMemberDialogComponent } from '../add-occupancy-family-member-dialog/add-occupancy-family-member-dialog.component';
 import { AddTenantDialogComponent } from '../add-tenant-dialog/add-tenant-dialog.component';
 import { RentalAgreementCardComponent } from '../rental-agreement-card/rental-agreement-card.component';
+import { ResidentDocumentsCardComponent } from '../resident-documents-card/resident-documents-card.component';
 import { FlatOccupancyDto, PERSON_RELATIONSHIP_LABELS, RESIDENT_STATUS_LABELS } from '../models/occupancy.model';
 import { OccupancyService } from '../services/occupancy.service';
+import { MOBILE_PATTERN, MOBILE_PATTERN_ERROR } from '../../../shared/validators/mobile.validator';
 
 @Component({
   selector: 'app-tenant-occupancy-panel',
   standalone: true,
   imports: [
     CommonModule, MatButtonModule, MatIconModule, MatTableModule, MatTooltipModule,
-    AssetUrlPipe, RentalAgreementCardComponent
+    AssetUrlPipe, RentalAgreementCardComponent, ResidentDocumentsCardComponent
   ],
   template: `
     <div class="panel">
@@ -40,6 +42,7 @@ import { OccupancyService } from '../services/occupancy.service';
         <p class="empty">This flat currently has no tenant on file.</p>
       } @else {
         <app-rental-agreement-card [flatOccupancyId]="occupancy.id" [agreement]="occupancy.rentalAgreement ?? null" (changed)="changed.emit()" />
+        <app-resident-documents-card [flatOccupancyId]="occupancy.id" />
 
         <h4 class="section-title">Family Members</h4>
         <table mat-table [dataSource]="occupancy.members" class="members-table">
@@ -163,9 +166,9 @@ export class TenantOccupancyPanelComponent {
           fields: [
             { key: 'firstName', label: 'First Name', type: 'text' as const, defaultValue: person.firstName },
             { key: 'lastName', label: 'Last Name', type: 'text' as const, defaultValue: person.lastName },
-            { key: 'phone', label: 'Phone', type: 'text' as const, defaultValue: person.phone },
+            { key: 'phone', label: 'Phone', type: 'text' as const, defaultValue: person.phone, pattern: MOBILE_PATTERN, patternError: MOBILE_PATTERN_ERROR, maxLength: 10 },
             { key: 'email', label: 'Email', type: 'text' as const, required: false, defaultValue: person.email ?? '' },
-            { key: 'whatsAppNumber', label: 'WhatsApp Number', type: 'text' as const, required: false, defaultValue: person.whatsAppNumber ?? '' }
+            { key: 'whatsAppNumber', label: 'WhatsApp Number', type: 'text' as const, required: false, defaultValue: person.whatsAppNumber ?? '', pattern: MOBILE_PATTERN, patternError: MOBILE_PATTERN_ERROR, maxLength: 10 }
           ]
         }
       });

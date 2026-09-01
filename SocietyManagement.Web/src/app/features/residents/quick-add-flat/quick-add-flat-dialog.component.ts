@@ -15,6 +15,7 @@ import { Building, FLAT_TYPE_LABELS, Floor, Wing } from '../../../core/models/so
 import { ToastService } from '../../../core/services/toast.service';
 import { SocietyService } from '../../society-setup/services/society.service';
 import { toDateOnlyString } from '../../../shared/utils/date.util';
+import { mobileValidator, optionalMobileValidator } from '../../../shared/validators/mobile.validator';
 import { GENDER_LABELS } from '../models/resident.model';
 import { ResidentService } from '../services/resident.service';
 
@@ -125,7 +126,11 @@ import { ResidentService } from '../services/resident.service';
             </div>
             <mat-form-field appearance="outline"><mat-label>First Name</mat-label><input matInput formControlName="firstName" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Last Name</mat-label><input matInput formControlName="lastName" /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Phone</mat-label><input matInput formControlName="phone" /></mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Phone</mat-label>
+              <input matInput formControlName="phone" maxlength="10" />
+              @if (residentForm.get('phone')?.hasError('pattern')) { <mat-error>Enter a valid 10-digit mobile number.</mat-error> }
+            </mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Email (optional)</mat-label><input matInput formControlName="email" /></mat-form-field>
             <mat-form-field appearance="outline">
               <mat-label>Gender (optional)</mat-label>
@@ -154,7 +159,11 @@ import { ResidentService } from '../services/resident.service';
                   <mat-form-field appearance="outline"><mat-label>First Name</mat-label><input matInput formControlName="firstName" /></mat-form-field>
                   <mat-form-field appearance="outline"><mat-label>Last Name</mat-label><input matInput formControlName="lastName" /></mat-form-field>
                   <mat-form-field appearance="outline"><mat-label>Age</mat-label><input matInput type="number" formControlName="age" /></mat-form-field>
-                  <mat-form-field appearance="outline"><mat-label>Phone (defaults to primary)</mat-label><input matInput formControlName="phone" /></mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Phone (defaults to primary)</mat-label>
+                    <input matInput formControlName="phone" maxlength="10" />
+                    @if (row.get('phone')?.hasError('pattern')) { <mat-error>Enter a valid 10-digit mobile number.</mat-error> }
+                  </mat-form-field>
                   <button mat-icon-button type="button" (click)="removeFamilyMember(i)"><mat-icon>close</mat-icon></button>
                 </div>
               }
@@ -224,7 +233,7 @@ export class QuickAddFlatDialogComponent {
     residencyType: [1, Validators.required],
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
-    phone: ['', Validators.required],
+    phone: ['', mobileValidator()],
     email: [''],
     gender: [null as number | null],
     dateOfBirth: [null as Date | null]
@@ -248,7 +257,7 @@ export class QuickAddFlatDialogComponent {
 
   private newFamilyRow() {
     return this.fb.group({
-      firstName: [''], lastName: [''], age: [null as number | null], phone: ['']
+      firstName: [''], lastName: [''], age: [null as number | null], phone: ['', optionalMobileValidator()]
     });
   }
 

@@ -10,6 +10,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 import { PromptDialogComponent } from '../../../shared/components/prompt-dialog/prompt-dialog.component';
 import { ToastService } from '../../../core/services/toast.service';
 import { OccupancyMember, PERSON_RELATIONSHIP_LABELS } from '../../../core/models/occupancy-member.model';
+import { MOBILE_PATTERN, MOBILE_PATTERN_ERROR } from '../../../shared/validators/mobile.validator';
 import { MyFamilyService } from './my-family.service';
 
 /** Resident self-service: view who currently resides at your flat and add
@@ -89,7 +90,7 @@ export class MyFamilyComponent implements OnInit {
         fields: [
           { key: 'firstName', label: 'First Name', type: 'text' as const },
           { key: 'lastName', label: 'Last Name', type: 'text' as const },
-          { key: 'phone', label: 'Phone', type: 'text' as const, required: false },
+          { key: 'phone', label: 'Phone', type: 'text' as const, required: false, pattern: MOBILE_PATTERN, patternError: MOBILE_PATTERN_ERROR, maxLength: 10 },
           { key: 'email', label: 'Email', type: 'text' as const, required: false },
           {
             key: 'relationship', label: 'Relationship', type: 'select' as const,

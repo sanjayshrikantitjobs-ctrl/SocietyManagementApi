@@ -13,6 +13,7 @@ import { ConfirmDialogService } from '../../shared/services/confirm-dialog.servi
 import { AuthService } from '../../core/services/auth.service';
 import { CurrentSocietyService } from '../../core/services/current-society.service';
 import { CommitteeMember } from '../../core/models/committee.model';
+import { MOBILE_PATTERN, MOBILE_PATTERN_ERROR } from '../../shared/validators/mobile.validator';
 import { CommitteeService } from './committee.service';
 
 /** Chairman/Secretary/Treasurer directory — visible to every logged-in
@@ -117,7 +118,7 @@ export class CommitteeListComponent {
       { key: 'name', label: 'Name', type: 'text' as const, defaultValue: member?.name ?? '' },
       { key: 'designation', label: 'Designation', type: 'text' as const, defaultValue: member?.designation ?? '' },
       { key: 'flatNumber', label: 'Flat Number', type: 'text' as const, required: false, defaultValue: member?.flatNumber ?? '' },
-      { key: 'phone', label: 'Phone', type: 'text' as const, required: false, defaultValue: member?.phone ?? '' },
+      { key: 'phone', label: 'Phone', type: 'text' as const, required: false, defaultValue: member?.phone ?? '', pattern: MOBILE_PATTERN, patternError: MOBILE_PATTERN_ERROR, maxLength: 10 },
       { key: 'email', label: 'Email', type: 'text' as const, required: false, defaultValue: member?.email ?? '' }
     ];
   }

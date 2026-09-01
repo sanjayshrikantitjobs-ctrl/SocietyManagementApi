@@ -5,6 +5,7 @@ using SocietyManagement.Application.Common.Interfaces;
 using SocietyManagement.Domain.Entities;
 using SocietyManagement.Domain.Enums;
 using SocietyManagement.Shared.Exceptions;
+using SocietyManagement.Shared.Extensions;
 
 namespace SocietyManagement.Application.Features.Residents;
 
@@ -30,7 +31,9 @@ public class CreateEmergencyContactCommandValidator : AbstractValidator<CreateEm
         RuleFor(x => x.FlatId).GreaterThan(0);
         RuleFor(x => x.ContactName).NotEmpty().MaximumLength(150);
         RuleFor(x => x.Relationship).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.Phone).NotEmpty().MaximumLength(20);
+        RuleFor(x => x.Phone).NotEmpty().Must(p => p.IsValidIndianMobile()).WithMessage("A valid 10-digit mobile number is required.");
+        RuleFor(x => x.AlternatePhone).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.AlternatePhone))
+            .WithMessage("A valid 10-digit mobile number is required.");
     }
 }
 
@@ -44,7 +47,9 @@ public class UpdateEmergencyContactCommandValidator : AbstractValidator<UpdateEm
         RuleFor(x => x.Id).GreaterThan(0);
         RuleFor(x => x.ContactName).NotEmpty().MaximumLength(150);
         RuleFor(x => x.Relationship).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.Phone).NotEmpty().MaximumLength(20);
+        RuleFor(x => x.Phone).NotEmpty().Must(p => p.IsValidIndianMobile()).WithMessage("A valid 10-digit mobile number is required.");
+        RuleFor(x => x.AlternatePhone).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.AlternatePhone))
+            .WithMessage("A valid 10-digit mobile number is required.");
     }
 }
 

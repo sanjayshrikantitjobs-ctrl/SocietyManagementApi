@@ -9,8 +9,9 @@ import { PromptDialogComponent } from '../../../shared/components/prompt-dialog/
 import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { SponsorCardComponent } from '../../../shared/components/sponsor-card/sponsor-card.component';
 import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.service';
-import { FestivalSponsorDto, SPONSORSHIP_TYPE_LABELS } from '../models/festival.model';
+import { FestivalSponsorDto } from '../models/festival.model';
 import { FestivalService } from '../services/festival.service';
+import { MOBILE_PATTERN, MOBILE_PATTERN_ERROR } from '../../../shared/validators/mobile.validator';
 
 @Component({
   selector: 'app-festival-sponsors-tab',
@@ -58,8 +59,6 @@ export class FestivalSponsorsTabComponent implements OnInit {
   readonly loading = signal(true);
   readonly sponsors = signal<FestivalSponsorDto[]>([]);
 
-  private readonly typeOptions = Object.entries(SPONSORSHIP_TYPE_LABELS).map(([value, label]) => ({ value: Number(value), label }));
-
   ngOnInit(): void {
     this.load();
   }
@@ -72,13 +71,17 @@ export class FestivalSponsorsTabComponent implements OnInit {
     });
   }
 
+  // Sponsorship Type is no longer collected via the form (removed per
+  // request) — the backend command still requires a value, so every
+  // create/update sends this fixed default rather than surfacing the field.
+  private static readonly DEFAULT_SPONSORSHIP_TYPE = 1;
+
   private fields(sponsor?: FestivalSponsorDto) {
     return [
       { key: 'companyName', label: 'Company / Sponsor Name', type: 'text' as const, defaultValue: sponsor?.companyName ?? '' },
       { key: 'contactPerson', label: 'Contact Person', type: 'text' as const, required: false, defaultValue: sponsor?.contactPerson ?? '' },
-      { key: 'phone', label: 'Phone', type: 'text' as const, required: false, defaultValue: sponsor?.phone ?? '' },
+      { key: 'phone', label: 'Phone', type: 'text' as const, required: false, defaultValue: sponsor?.phone ?? '', pattern: MOBILE_PATTERN, patternError: MOBILE_PATTERN_ERROR, maxLength: 10 },
       { key: 'email', label: 'Email', type: 'text' as const, required: false, defaultValue: sponsor?.email ?? '' },
-      { key: 'sponsorshipType', label: 'Sponsorship Type', type: 'select' as const, options: this.typeOptions, defaultValue: sponsor?.sponsorshipType ?? 1 },
       { key: 'promisedAmount', label: 'Promised Amount', type: 'number' as const, defaultValue: sponsor?.promisedAmount ?? 0 },
       { key: 'receivedAmount', label: 'Received Amount', type: 'number' as const, defaultValue: sponsor?.receivedAmount ?? 0 },
       { key: 'logoUrl', label: 'Logo URL', type: 'text' as const, required: false, defaultValue: sponsor?.logoUrl ?? '' },
@@ -94,7 +97,8 @@ export class FestivalSponsorsTabComponent implements OnInit {
       if (!result) return;
       this.festivalService.createSponsor({
         festivalId: this.festivalId(), ...result,
-        sponsorshipType: Number(result.sponsorshipType), promisedAmount: Number(result.promisedAmount), receivedAmount: Number(result.receivedAmount)
+        sponsorshipType: FestivalSponsorsTabComponent.DEFAULT_SPONSORSHIP_TYPE,
+        promisedAmount: Number(result.promisedAmount), receivedAmount: Number(result.receivedAmount)
       }).subscribe(() => {
         this.toast.success('Sponsor added.');
         this.load();
@@ -110,7 +114,7 @@ export class FestivalSponsorsTabComponent implements OnInit {
       if (!result) return;
       this.festivalService.updateSponsor(sponsor.id, {
         ...result,
-        sponsorshipType: Number(result.sponsorshipType), promisedAmount: Number(result.promisedAmount), receivedAmount: Number(result.receivedAmount)
+        sponsorshipType: sponsor.sponsorshipType, promisedAmount: Number(result.promisedAmount), receivedAmount: Number(result.receivedAmount)
       }).subscribe(() => {
         this.toast.success('Sponsor updated.');
         this.load();

@@ -23,5 +23,11 @@ export const VEHICLE_SECURITY_ROUTES: Routes = [
     canActivate: [permissionGuard],
     data: { permission: 'vehicles.scan' },
     loadComponent: () => import('./vehicle-scan-history.component').then((m) => m.VehicleScanHistoryComponent)
+  },
+  {
+    path: 'parking-fines',
+    canActivate: [permissionGuard],
+    data: { permission: 'parking_fines.view' },
+    loadComponent: () => import('./parking-fines/parking-fines-list.component').then((m) => m.ParkingFinesListComponent)
   }
 ];

@@ -9,6 +9,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.service';
 import { EmergencyContactDto } from '../../residents/models/resident.model';
 import { ResidentService } from '../../residents/services/resident.service';
+import { MOBILE_PATTERN, MOBILE_PATTERN_ERROR } from '../../../shared/validators/mobile.validator';
 
 /** Thin wrapper around ResidentService's existing, already flat-scoped
  * emergency-contacts endpoints — no backend change needed, this data was
@@ -90,8 +91,8 @@ export class FlatEmergencyContactsCardComponent implements OnChanges {
     return [
       { key: 'contactName', label: 'Contact Name', type: 'text' as const, defaultValue: contact?.contactName ?? '' },
       { key: 'relationship', label: 'Relationship', type: 'text' as const, defaultValue: contact?.relationship ?? '' },
-      { key: 'phone', label: 'Phone', type: 'text' as const, defaultValue: contact?.phone ?? '' },
-      { key: 'alternatePhone', label: 'Alternate Phone', type: 'text' as const, required: false, defaultValue: contact?.alternatePhone ?? '' }
+      { key: 'phone', label: 'Phone', type: 'text' as const, defaultValue: contact?.phone ?? '', pattern: MOBILE_PATTERN, patternError: MOBILE_PATTERN_ERROR, maxLength: 10 },
+      { key: 'alternatePhone', label: 'Alternate Phone', type: 'text' as const, required: false, defaultValue: contact?.alternatePhone ?? '', pattern: MOBILE_PATTERN, patternError: MOBILE_PATTERN_ERROR, maxLength: 10 }
     ];
   }
 

@@ -5,6 +5,7 @@ using SocietyManagement.Application.Common.Interfaces;
 using SocietyManagement.Domain.Entities;
 using SocietyManagement.Domain.Enums;
 using SocietyManagement.Shared.Exceptions;
+using SocietyManagement.Shared.Extensions;
 
 namespace SocietyManagement.Application.Features.Festivals;
 
@@ -27,6 +28,8 @@ public class CreateVolunteerCommandValidator : AbstractValidator<CreateVolunteer
     {
         RuleFor(x => x.FestivalId).GreaterThan(0);
         RuleFor(x => x.Name).NotEmpty().MaximumLength(150);
+        RuleFor(x => x.Phone).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.Phone))
+            .WithMessage("A valid 10-digit mobile number is required.");
         RuleFor(x => x.Email).EmailAddress().When(x => !string.IsNullOrWhiteSpace(x.Email));
     }
 }
@@ -39,6 +42,8 @@ public class UpdateVolunteerCommandValidator : AbstractValidator<UpdateVolunteer
     {
         RuleFor(x => x.Id).GreaterThan(0);
         RuleFor(x => x.Name).NotEmpty().MaximumLength(150);
+        RuleFor(x => x.Phone).Must(p => p!.IsValidIndianMobile()).When(x => !string.IsNullOrWhiteSpace(x.Phone))
+            .WithMessage("A valid 10-digit mobile number is required.");
         RuleFor(x => x.Email).EmailAddress().When(x => !string.IsNullOrWhiteSpace(x.Email));
     }
 }

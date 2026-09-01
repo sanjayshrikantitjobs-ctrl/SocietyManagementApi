@@ -4,7 +4,7 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../../../core/models/api-response.model';
 import {
-  FineRecordDto, MaintenanceBillDetailDto, MaintenanceBillDto, MaintenanceCategoryDto,
+  BulkRecordPaymentResultDto, FineRecordDto, MaintenanceBillDetailDto, MaintenanceBillDto, MaintenanceCategoryDto,
   MaintenanceDashboardDto, MaintenanceSettingsDto, SpecialChargeDto, WaterTankerCollectionDto,
   WaterTankerMonthSummaryDto
 } from '../models/maintenance.model';
@@ -106,6 +106,15 @@ export class MaintenanceService {
   }
   recordPayment(payload: Record<string, unknown>): Observable<number> {
     return this.http.post<ApiResponse<number>>(`${this.baseUrl}/maintenance/payment`, payload).pipe(map((r) => r.data!));
+  }
+  /** Pays each bill's own full outstanding balance — mode/date/notes are
+   * shared across the batch, amount is never client-supplied (see
+   * BulkRecordPaymentCommand's doc comment on the backend). */
+  bulkRecordPayment(maintenanceBillIds: number[], payload: {
+    paymentDate: string; paymentMode: number; transactionReference?: string | null; notes?: string | null;
+  }): Observable<BulkRecordPaymentResultDto[]> {
+    return this.http.post<ApiResponse<BulkRecordPaymentResultDto[]>>(`${this.baseUrl}/maintenance/bulk-payment`, { maintenanceBillIds, ...payload })
+      .pipe(map((r) => r.data!));
   }
   resendWhatsApp(id: number): Observable<void> {
     return this.http.post<ApiResponse<void>>(`${this.baseUrl}/maintenance/bills/${id}/resend-whatsapp`, {}).pipe(map(() => void 0));

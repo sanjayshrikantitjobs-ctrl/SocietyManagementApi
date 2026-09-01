@@ -29,6 +29,14 @@ public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, Unit>
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.Id && !u.IsDeleted, cancellationToken)
             ?? throw new NotFoundException(nameof(User), request.Id);
 
+        // Uncovered by SocietyScopeFilter (bound parameter is "Id", not
+        // "SocietyId") — without this, a scoped Admin could delete any
+        // OTHER society's user by guessing an id. Super Admin is unrestricted.
+        if (_currentUser.SocietyId.HasValue && _currentUser.SocietyId != user.SocietyId)
+        {
+            throw new ForbiddenAccessException("You can only manage users in your own society.");
+        }
+
         if (user.Id == _currentUser.UserId)
         {
             throw new BadRequestAppException("You cannot delete your own account.");

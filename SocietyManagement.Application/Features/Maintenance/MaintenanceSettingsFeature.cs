@@ -20,14 +20,18 @@ public class MaintenanceSettingsDto
     public int NextInvoiceNumber { get; set; }
     public string WhatsAppMessageTemplate { get; set; } = default!;
     public string PdfFooterMessage { get; set; } = default!;
+    public bool WhatsAppEnabled { get; set; }
 }
 
 // ---- Commands ----------------------------------------------------------------
 /// <summary>Single upsert — there's exactly one settings row per society, so
-/// there's no separate create/update distinction from the caller's perspective.</summary>
+/// there's no separate create/update distinction from the caller's perspective.
+/// WhatsAppEnabled is the one field on this form that's Super-Admin-only — see
+/// the handler's own check — everything else stays under Maintenance.Manage,
+/// same as before.</summary>
 public record UpsertMaintenanceSettingsCommand(
     int SocietyId, int BillGenerationDay, int DueDay, int GracePeriodDays, decimal LateFeeAmount,
-    string InvoiceNumberPrefix, string WhatsAppMessageTemplate, string PdfFooterMessage) : IRequest<Unit>;
+    string InvoiceNumberPrefix, string WhatsAppMessageTemplate, string PdfFooterMessage, bool WhatsAppEnabled) : IRequest<Unit>;
 
 public class UpsertMaintenanceSettingsCommandValidator : AbstractValidator<UpsertMaintenanceSettingsCommand>
 {
@@ -48,11 +52,14 @@ public class MaintenanceSettingsCommandHandlers : IRequestHandler<UpsertMaintena
 {
     private readonly IApplicationDbContext _context;
     private readonly IAuditService _auditService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public MaintenanceSettingsCommandHandlers(IApplicationDbContext context, IAuditService auditService)
+    public MaintenanceSettingsCommandHandlers(
+        IApplicationDbContext context, IAuditService auditService, ICurrentUserService currentUserService)
     {
         _context = context;
         _auditService = auditService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Unit> Handle(UpsertMaintenanceSettingsCommand request, CancellationToken ct)
@@ -71,6 +78,17 @@ public class MaintenanceSettingsCommandHandlers : IRequestHandler<UpsertMaintena
             await _context.MaintenanceSettings.AddAsync(settings, ct);
         }
 
+        // Only THIS field is Super-Admin-only — everything else on the form
+        // stays under Maintenance.Manage (regular Admins). Only reject when a
+        // non-Super-Admin actually tries to CHANGE it, so a regular Admin's
+        // unrelated saves of the same form don't break just because the
+        // field round-trips unchanged from what they were shown.
+        var callerIsSuperAdmin = _currentUserService.SocietyId is null;
+        if (!callerIsSuperAdmin && request.WhatsAppEnabled != settings.WhatsAppEnabled)
+        {
+            throw new ForbiddenAccessException("Only a Super Admin can change WhatsApp sending configuration.");
+        }
+
         settings.BillGenerationDay = request.BillGenerationDay;
         settings.DueDay = request.DueDay;
         settings.GracePeriodDays = request.GracePeriodDays;
@@ -78,6 +96,7 @@ public class MaintenanceSettingsCommandHandlers : IRequestHandler<UpsertMaintena
         settings.InvoiceNumberPrefix = request.InvoiceNumberPrefix;
         settings.WhatsAppMessageTemplate = request.WhatsAppMessageTemplate;
         settings.PdfFooterMessage = request.PdfFooterMessage;
+        settings.WhatsAppEnabled = request.WhatsAppEnabled;
 
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditAction.Update, "Maintenance", nameof(MaintenanceSettings), settings.Id.ToString(), ct: ct);
@@ -118,7 +137,8 @@ public class MaintenanceSettingsQueryHandlers : IRequestHandler<GetMaintenanceSe
             Id = settings.Id, SocietyId = settings.SocietyId, BillGenerationDay = settings.BillGenerationDay,
             DueDay = settings.DueDay, GracePeriodDays = settings.GracePeriodDays, LateFeeAmount = settings.LateFeeAmount,
             InvoiceNumberPrefix = settings.InvoiceNumberPrefix, NextInvoiceNumber = settings.NextInvoiceNumber,
-            WhatsAppMessageTemplate = settings.WhatsAppMessageTemplate, PdfFooterMessage = settings.PdfFooterMessage
+            WhatsAppMessageTemplate = settings.WhatsAppMessageTemplate, PdfFooterMessage = settings.PdfFooterMessage,
+            WhatsAppEnabled = settings.WhatsAppEnabled
         };
     }
 }

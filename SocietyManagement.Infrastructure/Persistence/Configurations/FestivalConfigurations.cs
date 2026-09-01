@@ -44,7 +44,10 @@ public class FestivalBudgetCategoryConfiguration : IEntityTypeConfiguration<Fest
         builder.Property(c => c.EstimatedAmount).HasColumnType("decimal(12,2)");
         builder.Property(c => c.ApprovedAmount).HasColumnType("decimal(12,2)");
         builder.Property(c => c.Notes).HasMaxLength(500);
-        builder.HasIndex(c => new { c.FestivalId, c.Category }).IsUnique().HasFilter("[IsDeleted] = 0");
+        builder.Property(c => c.CustomCategoryName).HasMaxLength(100);
+        // Excludes Custom (13) — multiple typed-in categories can coexist per
+        // festival; only the 12 predefined categories are limited to one each.
+        builder.HasIndex(c => new { c.FestivalId, c.Category }).IsUnique().HasFilter("[IsDeleted] = 0 AND [Category] <> 13");
 
         builder.HasOne(c => c.Festival)
             .WithMany(f => f.BudgetCategories)

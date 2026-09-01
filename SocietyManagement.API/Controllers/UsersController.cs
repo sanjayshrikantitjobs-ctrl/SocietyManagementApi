@@ -5,6 +5,7 @@ using SocietyManagement.Application.Features.Users.Commands.CreateUser;
 using SocietyManagement.Application.Features.Users.Commands.DeleteUser;
 using SocietyManagement.Application.Features.Users.Commands.LockUser;
 using SocietyManagement.Application.Features.Users.Commands.ResetUserPassword;
+using SocietyManagement.Application.Features.Users.Commands.SetUserPassword;
 using SocietyManagement.Application.Features.Users.Commands.UpdateUser;
 using SocietyManagement.Application.Features.Users.Queries.GetUserById;
 using SocietyManagement.Application.Features.Users.Queries.GetUsers;
@@ -76,5 +77,16 @@ public class UsersController : ApiControllerBase
     {
         await Mediator.Send(new ResetUserPasswordCommand(id));
         return Ok(ApiResponse.SuccessResponse("Temporary password emailed to the user."));
+    }
+
+    /// <summary>Admin-typed counterpart to ResetPassword above — see
+    /// SetUserPasswordCommand's doc comment for when this is preferred.</summary>
+    [HttpPost("{id:int}/set-password")]
+    [HasPermission(Permissions.Users.Update)]
+    public async Task<IActionResult> SetPassword(int id, SetUserPasswordCommand command)
+    {
+        if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
+        await Mediator.Send(command);
+        return Ok(ApiResponse.SuccessResponse("Password updated."));
     }
 }

@@ -10,6 +10,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { RoleListItem, UserListItem } from '../../core/models/user.model';
 import { Society } from '../../core/models/society.model';
 import { AuthService } from '../../core/services/auth.service';
+import { MOBILE_PATTERN } from '../../shared/validators/mobile.validator';
 import { RoleService } from '../roles/role.service';
 import { SocietyService } from '../society-setup/services/society.service';
 
@@ -39,7 +40,11 @@ import { SocietyService } from '../society-setup/services/society.service';
             }
           </mat-form-field>
         }
-        <mat-form-field appearance="outline" [class.span-2]="!!data"><mat-label>Mobile Number</mat-label><input matInput formControlName="mobileNumber" /></mat-form-field>
+        <mat-form-field appearance="outline" [class.span-2]="!!data">
+          <mat-label>Mobile Number</mat-label>
+          <input matInput formControlName="mobileNumber" maxlength="10" />
+          @if (form.get('mobileNumber')?.hasError('pattern')) { <mat-error>Enter a valid 10-digit mobile number.</mat-error> }
+        </mat-form-field>
         <mat-form-field appearance="outline" class="span-2">
           <mat-label>Role</mat-label>
           <mat-select formControlName="roleId">
@@ -90,7 +95,7 @@ export class UserFormDialogComponent implements OnInit {
     lastName: [this.data?.lastName ?? '', Validators.required],
     email: ['', this.data ? [] : [Validators.required, Validators.email]],
     password: ['', this.data ? [] : [UserFormDialogComponent.passwordStrength]],
-    mobileNumber: [this.data?.mobileNumber ?? '', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],
+    mobileNumber: [this.data?.mobileNumber ?? '', [Validators.required, Validators.pattern(MOBILE_PATTERN)]],
     roleId: [this.data?.roleId ?? null, Validators.required],
     societyId: [this.data?.societyId ?? null],
     isActive: [this.data?.isActive ?? true]

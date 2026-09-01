@@ -6,7 +6,8 @@ import { ApiResponse, PaginatedResult } from '../../../core/models/api-response.
 import {
   BulkLoginResultDto, FlatOccupancyDto, FlatOccupancyOverviewDto, FlatOwnershipGridDto, FlatTenancyGridDto,
   OccupancyMemberDto, OccupancySettingsDto, OccupancyType, PersonDetailDto, PersonDto, PersonLoginDto,
-  PersonRelationship, RecentOccupancyChangeDto, ResidentStatus, ResidentsOverviewSummaryDto
+  PersonRelationship, RecentOccupancyChangeDto, ResidentDocumentDto, ResidentDocumentType, ResidentStatus,
+  ResidentsOverviewSummaryDto
 } from '../models/occupancy.model';
 
 function toHttpParams(params: Record<string, unknown>): HttpParams {
@@ -110,6 +111,20 @@ export class OccupancyService {
   }
   updateRentalAgreement(id: number, payload: Record<string, unknown>): Observable<void> {
     return this.http.put<ApiResponse<void>>(`${this.baseUrl}/rental-agreements/${id}`, { id, ...payload }).pipe(map(() => void 0));
+  }
+
+  // ---- Resident Documents ------------------------------------------------------
+  getResidentDocuments(flatOccupancyId: number): Observable<ResidentDocumentDto[]> {
+    return this.http.get<ApiResponse<ResidentDocumentDto[]>>(`${this.baseUrl}/resident-documents`, { params: { flatOccupancyId } })
+      .pipe(map((r) => r.data!));
+  }
+  uploadResidentDocument(payload: {
+    flatOccupancyId: number; documentType: ResidentDocumentType; documentUrl: string; notes?: string | null;
+  }): Observable<number> {
+    return this.http.post<ApiResponse<number>>(`${this.baseUrl}/resident-documents`, payload).pipe(map((r) => r.data!));
+  }
+  deleteResidentDocument(id: number): Observable<void> {
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/resident-documents/${id}`).pipe(map(() => void 0));
   }
 
   // ---- Settings --------------------------------------------------------------

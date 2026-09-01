@@ -5,8 +5,11 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDialog } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { PageEvent } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
@@ -23,19 +26,31 @@ import { MaintenanceService } from '../services/maintenance.service';
   selector: 'app-maintenance-bills-list',
   standalone: true,
   imports: [
-    CommonModule, MatButtonModule, MatCheckboxModule, MatChipsModule, MatIconModule, MatMenuModule, MatSelectModule,
-    MatTableModule, DataTableComponent
+    CommonModule, MatButtonModule, MatCheckboxModule, MatChipsModule, MatDatepickerModule, MatFormFieldModule,
+    MatIconModule, MatInputModule, MatMenuModule, MatSelectModule, MatTableModule, DataTableComponent
   ],
   template: `
     <div class="tab-content">
       <div class="toolbar">
-        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="status-select">
-          <mat-label>Status</mat-label>
-          <mat-select [value]="statusFilter()" (selectionChange)="onStatusFilterChange($event.value)">
-            <mat-option [value]="null">All</mat-option>
-            @for (s of statusOptions; track s.value) { <mat-option [value]="s.value">{{ s.label }}</mat-option> }
-          </mat-select>
-        </mat-form-field>
+        <div class="filters">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="month-field">
+            <mat-label>Month</mat-label>
+            <input matInput [matDatepicker]="picker" [value]="monthFilterDate()" readonly (click)="picker.open()" />
+            @if (monthFilterDate()) {
+              <button mat-icon-button matSuffix (click)="$event.stopPropagation(); clearMonthFilter()"><mat-icon>close</mat-icon></button>
+            } @else {
+              <mat-datepicker-toggle matIconSuffix [for]="picker" />
+            }
+            <mat-datepicker #picker startView="year" (monthSelected)="onMonthSelected($event, picker)" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="status-select">
+            <mat-label>Status</mat-label>
+            <mat-select [value]="statusFilter()" (selectionChange)="onStatusFilterChange($event.value)">
+              <mat-option [value]="null">All</mat-option>
+              @for (s of statusOptions; track s.value) { <mat-option [value]="s.value">{{ s.label }}</mat-option> }
+            </mat-select>
+          </mat-form-field>
+        </div>
         <button mat-flat-button color="primary" (click)="generateNow()"><mat-icon>bolt</mat-icon> Generate Bills</button>
       </div>
 
@@ -110,9 +125,11 @@ import { MaintenanceService } from '../services/maintenance.service';
   `,
   styles: [`
     .tab-content { padding: 20px 0; }
-    .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+    .filters { display: flex; align-items: center; gap: 12px; }
     .bulk-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 10px 14px; background: var(--app-primary-light); border-radius: 8px; }
     .bulk-toolbar span { font-size: 13px; font-weight: 600; color: var(--app-primary); }
+    .month-field { width: 160px; }
     .status-select { width: 200px; }
     .muted { color: var(--app-text-muted); font-size: 12px; }
     .badge { padding: 2px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; }
@@ -135,6 +152,7 @@ export class MaintenanceBillsListComponent implements OnInit {
   readonly pageIndex = signal(0);
   readonly pageSize = signal(10);
   readonly statusFilter = signal<BillStatus | null>(null);
+  readonly monthFilterDate = signal<Date | null>(null);
   readonly displayedColumns = ['select', 'flat', 'invoice', 'total', 'balance', 'dueDate', 'status', 'actions'];
   readonly statusLabels: Record<number, string> = BILL_STATUS_LABELS;
   readonly statusOptions = Object.entries(BILL_STATUS_LABELS).map(([value, label]) => ({ value: Number(value), label }));
@@ -150,11 +168,17 @@ export class MaintenanceBillsListComponent implements OnInit {
     });
   }
 
+  private monthFilterAsString(): string | undefined {
+    const date = this.monthFilterDate();
+    if (!date) return undefined;
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
+  }
+
   load(): void {
     this.loading.set(true);
     this.selection.clear();
     this.maintenanceService.getBills({
-      societyId: this.societyId, status: this.statusFilter() ?? undefined,
+      societyId: this.societyId, status: this.statusFilter() ?? undefined, billMonth: this.monthFilterAsString(),
       pageNumber: this.pageIndex() + 1, pageSize: this.pageSize()
     }).subscribe((result) => {
       this.bills.set(result.items);
@@ -224,6 +248,19 @@ export class MaintenanceBillsListComponent implements OnInit {
 
   onStatusFilterChange(status: BillStatus | null): void {
     this.statusFilter.set(status);
+    this.pageIndex.set(0);
+    this.load();
+  }
+
+  onMonthSelected(date: Date, picker: { close: () => void }): void {
+    this.monthFilterDate.set(date);
+    picker.close();
+    this.pageIndex.set(0);
+    this.load();
+  }
+
+  clearMonthFilter(): void {
+    this.monthFilterDate.set(null);
     this.pageIndex.set(0);
     this.load();
   }

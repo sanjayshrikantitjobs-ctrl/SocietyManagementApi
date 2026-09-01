@@ -40,6 +40,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<FestivalExpense> FestivalExpenses => Set<FestivalExpense>();
     public DbSet<FestivalFlatTarget> FestivalFlatTargets => Set<FestivalFlatTarget>();
     public DbSet<WaterTankerCollection> WaterTankerCollections => Set<WaterTankerCollection>();
+    public DbSet<WaterTankerLog> WaterTankerLogs => Set<WaterTankerLog>();
 
     public DbSet<MaintenanceCategory> MaintenanceCategories => Set<MaintenanceCategory>();
     public DbSet<MaintenanceSettings> MaintenanceSettings => Set<MaintenanceSettings>();

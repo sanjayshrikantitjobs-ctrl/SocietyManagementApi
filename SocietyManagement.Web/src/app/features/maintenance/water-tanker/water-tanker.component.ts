@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -15,25 +14,26 @@ import { ToastService } from '../../../core/services/toast.service';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { PromptDialogComponent } from '../../../shared/components/prompt-dialog/prompt-dialog.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
+import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.service';
 import { SocietyService } from '../../society-setup/services/society.service';
-import { WaterTankerCollectionDto, WaterTankerMonthSummaryDto } from '../models/maintenance.model';
+import { WaterTankerLogDto, WaterTankerLogMonthSummaryDto } from '../models/maintenance.model';
 import { MaintenanceService } from '../services/maintenance.service';
 
-/** Tracks the per-flat monthly water tanker contribution (a flat rate every
- * flat owes when the borewell/municipal supply runs short) — admin
- * generates one charge row per flat for a month, then marks each paid as
- * cash/UPI comes in, viewable month by month. */
+/** Operational log of tanker deliveries (provider, vehicle, count, cost) —
+ * not billed to flats. Replaces the old per-flat water tanker collection
+ * feature going forward (that data/Finance history is left untouched, just
+ * no longer reachable from this screen — see [[water-tanker-billing-removed]]). */
 @Component({
   selector: 'app-water-tanker',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, MatButtonModule, MatChipsModule, MatDatepickerModule, MatFormFieldModule,
+    CommonModule, FormsModule, MatButtonModule, MatDatepickerModule, MatFormFieldModule,
     MatIconModule, MatInputModule, MatTableModule, MatTooltipModule, DataTableComponent, StatCardComponent
   ],
   template: `
     <div class="tab-content">
       <div class="toolbar">
-        <h3>Water Tanker Collection</h3>
+        <h3>Water Tanker Log</h3>
         <div class="month-controls">
           <mat-form-field appearance="outline" subscriptSizing="dynamic" class="month-field">
             <mat-label>Month</mat-label>
@@ -41,53 +41,57 @@ import { MaintenanceService } from '../services/maintenance.service';
             <mat-datepicker-toggle matIconSuffix [for]="picker" />
             <mat-datepicker #picker startView="year" (monthSelected)="onMonthSelected($event, picker)" />
           </mat-form-field>
-          <button mat-stroked-button (click)="generateCharges()" [disabled]="societyId === 0">
-            <mat-icon>add_circle_outline</mat-icon> Generate Charges for This Month
+          <button mat-flat-button color="primary" (click)="addEntry()" [disabled]="societyId === 0">
+            <mat-icon>add</mat-icon> Log Tanker Entry
           </button>
         </div>
       </div>
 
       <div class="stats-grid">
-        <app-stat-card label="Flats Charged" [value]="summary()?.totalFlats ?? 0" icon="apartment" />
-        <app-stat-card label="Collected" [value]="'₹' + (summary()?.totalCollected ?? 0 | number)" icon="paid" iconColor="#16a34a" iconBg="#ecfdf5" />
-        <app-stat-card label="Pending" [value]="'₹' + (summary()?.totalPending ?? 0 | number)" icon="hourglass_empty" iconColor="#dc2626" iconBg="#fef2f2" />
-        <app-stat-card label="Flats Paid" [value]="(summary()?.flatsPaidCount ?? 0) + ' / ' + (summary()?.totalFlats ?? 0)" icon="task_alt" iconColor="#2563eb" iconBg="#eff6ff" />
+        <app-stat-card label="Deliveries This Month" [value]="summary()?.totalDeliveries ?? 0" icon="local_shipping" />
+        <app-stat-card label="Tankers Used" [value]="summary()?.totalTankers ?? 0" icon="water_drop" iconColor="#2563eb" iconBg="#eff6ff" />
+        <app-stat-card label="Amount Paid" [value]="'₹' + (summary()?.totalAmount ?? 0 | number)" icon="paid" iconColor="#16a34a" iconBg="#ecfdf5" />
       </div>
 
       <app-data-table
         [loading]="loading()" [totalCount]="totalCount()" [pageSize]="pageSize()" [pageIndex]="pageIndex()"
-        searchPlaceholder="Search flat number..." emptyTitle="No charges generated yet"
-        emptyMessage="Click 'Generate Charges for This Month' to create a ₹1000 charge for every flat."
+        searchPlaceholder="Search provider or vehicle number..." emptyTitle="No tanker entries this month"
+        emptyMessage="Click 'Log Tanker Entry' to record a water tanker delivery."
         (page)="onPage($event)" (search)="onSearch($event)">
-        <table mat-table [dataSource]="collections()" table>
-          <ng-container matColumnDef="flat">
-            <th mat-header-cell *matHeaderCellDef>Flat</th>
-            <td mat-cell *matCellDef="let c"><strong>{{ c.flatNumber }}</strong></td>
+        <table mat-table [dataSource]="logs()" table>
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>Date</th>
+            <td mat-cell *matCellDef="let l">{{ l.date | date: 'mediumDate' }}</td>
           </ng-container>
-          <ng-container matColumnDef="amount">
-            <th mat-header-cell *matHeaderCellDef>Amount</th>
-            <td mat-cell *matCellDef="let c">₹{{ c.amount | number }}</td>
+          <ng-container matColumnDef="provider">
+            <th mat-header-cell *matHeaderCellDef>Provider</th>
+            <td mat-cell *matCellDef="let l">{{ l.providerName }}</td>
           </ng-container>
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let c">
-              <mat-chip-set><mat-chip [class]="c.isPaid ? 'status-paid' : 'status-pending'">{{ c.isPaid ? 'Paid' : 'Pending' }}</mat-chip></mat-chip-set>
-            </td>
+          <ng-container matColumnDef="vehicle">
+            <th mat-header-cell *matHeaderCellDef>Vehicle No.</th>
+            <td mat-cell *matCellDef="let l">{{ l.vehicleNumber }}</td>
           </ng-container>
-          <ng-container matColumnDef="paymentDate">
-            <th mat-header-cell *matHeaderCellDef>Payment Date</th>
-            <td mat-cell *matCellDef="let c">{{ c.paymentDate ? (c.paymentDate | date: 'mediumDate') : '—' }}</td>
+          <ng-container matColumnDef="tankers">
+            <th mat-header-cell *matHeaderCellDef>Tankers</th>
+            <td mat-cell *matCellDef="let l">{{ l.numberOfTankers }}</td>
+          </ng-container>
+          <ng-container matColumnDef="pricePerTanker">
+            <th mat-header-cell *matHeaderCellDef>Price / Tanker</th>
+            <td mat-cell *matCellDef="let l">₹{{ l.pricePerTanker | number }}</td>
+          </ng-container>
+          <ng-container matColumnDef="totalAmount">
+            <th mat-header-cell *matHeaderCellDef>Total</th>
+            <td mat-cell *matCellDef="let l">₹{{ l.totalAmount | number }}</td>
           </ng-container>
           <ng-container matColumnDef="notes">
             <th mat-header-cell *matHeaderCellDef>Notes</th>
-            <td mat-cell *matCellDef="let c">{{ c.notes || '—' }}</td>
+            <td mat-cell *matCellDef="let l">{{ l.notes || '—' }}</td>
           </ng-container>
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef></th>
-            <td mat-cell *matCellDef="let c">
-              @if (!c.isPaid) {
-                <button mat-icon-button matTooltip="Mark Paid" (click)="markPaid(c)"><mat-icon>check_circle</mat-icon></button>
-              }
+            <td mat-cell *matCellDef="let l">
+              <button mat-icon-button matTooltip="Edit" (click)="editEntry(l)"><mat-icon>edit</mat-icon></button>
+              <button mat-icon-button matTooltip="Delete" (click)="deleteEntry(l)"><mat-icon>delete_outline</mat-icon></button>
             </td>
           </ng-container>
 
@@ -104,24 +108,23 @@ import { MaintenanceService } from '../services/maintenance.service';
     .month-controls { display: flex; align-items: center; gap: 12px; }
     .month-field { width: 160px; }
     .stats-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
-    .status-paid { background: #ecfdf5 !important; color: #15803d !important; }
-    .status-pending { background: #fef2f2 !important; color: #b91c1c !important; }
   `]
 })
 export class WaterTankerComponent implements OnInit {
   private readonly maintenanceService = inject(MaintenanceService);
   private readonly societyService = inject(SocietyService);
   private readonly dialog = inject(MatDialog);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly toast = inject(ToastService);
 
   readonly loading = signal(true);
-  readonly collections = signal<WaterTankerCollectionDto[]>([]);
+  readonly logs = signal<WaterTankerLogDto[]>([]);
   readonly totalCount = signal(0);
   readonly pageIndex = signal(0);
   readonly pageSize = signal(10);
   readonly searchTerm = signal('');
-  readonly summary = signal<WaterTankerMonthSummaryDto | null>(null);
-  readonly displayedColumns = ['flat', 'amount', 'status', 'paymentDate', 'notes', 'actions'];
+  readonly summary = signal<WaterTankerLogMonthSummaryDto | null>(null);
+  readonly displayedColumns = ['date', 'provider', 'vehicle', 'tankers', 'pricePerTanker', 'totalAmount', 'notes', 'actions'];
 
   selectedMonthDate = new Date();
   societyId = 0;
@@ -149,18 +152,18 @@ export class WaterTankerComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.maintenanceService.getWaterTankerCollections({
+    this.maintenanceService.getWaterTankerLogs({
       societyId: this.societyId, month: this.monthAsDate(), search: this.searchTerm() || undefined,
       pageNumber: this.pageIndex() + 1, pageSize: this.pageSize()
     }).subscribe((result) => {
-      this.collections.set(result.items);
+      this.logs.set(result.items);
       this.totalCount.set(result.totalCount);
       this.loading.set(false);
     });
   }
 
   loadSummary(): void {
-    this.maintenanceService.getWaterTankerSummary(this.societyId, this.monthAsDate()).subscribe((data) => this.summary.set(data));
+    this.maintenanceService.getWaterTankerLogSummary(this.societyId, this.monthAsDate()).subscribe((data) => this.summary.set(data));
   }
 
   onMonthChange(): void {
@@ -181,39 +184,61 @@ export class WaterTankerComponent implements OnInit {
     this.load();
   }
 
-  generateCharges(): void {
+  private fields(log?: WaterTankerLogDto) {
+    return [
+      { key: 'date', label: 'Date', type: 'date' as const, defaultValue: log?.date?.substring(0, 10) ?? new Date().toISOString().substring(0, 10) },
+      { key: 'providerName', label: 'Tanker Provider Name', type: 'text' as const, defaultValue: log?.providerName ?? '' },
+      { key: 'vehicleNumber', label: 'Vehicle Number', type: 'text' as const, defaultValue: log?.vehicleNumber ?? '' },
+      { key: 'numberOfTankers', label: 'Number of Tankers', type: 'number' as const, defaultValue: log?.numberOfTankers ?? 1 },
+      { key: 'pricePerTanker', label: 'Price per Tanker (₹)', type: 'number' as const, defaultValue: log?.pricePerTanker ?? 0 },
+      { key: 'notes', label: 'Notes (optional)', type: 'text' as const, required: false, defaultValue: log?.notes ?? '' }
+    ];
+  }
+
+  addEntry(): void {
     const ref = this.dialog.open(PromptDialogComponent, {
-      width: '380px',
-      data: {
-        title: 'Generate Water Tanker Charges', submitLabel: 'Generate',
-        fields: [{ key: 'amount', label: 'Amount per Flat (₹)', type: 'number', defaultValue: 1000 }]
-      }
+      width: '420px', data: { title: 'Log Tanker Entry', submitLabel: 'Save', fields: this.fields() }
     });
     ref.afterClosed().subscribe((result) => {
       if (!result) return;
-      this.maintenanceService.generateWaterTankerCharges(this.societyId, this.monthAsDate(), Number(result.amount)).subscribe((count) => {
-        this.toast.success(`Charge generated for ${count} flat(s).`);
+      this.maintenanceService.createWaterTankerLog(this.societyId, {
+        date: result.date, providerName: result.providerName, vehicleNumber: result.vehicleNumber,
+        numberOfTankers: Number(result.numberOfTankers), pricePerTanker: Number(result.pricePerTanker),
+        notes: result.notes || null
+      }).subscribe(() => {
+        this.toast.success('Tanker entry logged.');
         this.load();
         this.loadSummary();
       });
     });
   }
 
-  markPaid(collection: WaterTankerCollectionDto): void {
+  editEntry(log: WaterTankerLogDto): void {
     const ref = this.dialog.open(PromptDialogComponent, {
-      width: '380px',
-      data: {
-        title: `Mark Paid — Flat ${collection.flatNumber}`, submitLabel: 'Confirm',
-        fields: [
-          { key: 'paymentDate', label: 'Payment Date', type: 'date', defaultValue: new Date().toISOString().substring(0, 10) },
-          { key: 'notes', label: 'Notes (optional)', type: 'text', required: false, defaultValue: '' }
-        ]
-      }
+      width: '420px', data: { title: 'Edit Tanker Entry', submitLabel: 'Save', fields: this.fields(log) }
     });
     ref.afterClosed().subscribe((result) => {
       if (!result) return;
-      this.maintenanceService.recordWaterTankerPayment(collection.id, result.paymentDate, result.notes || undefined).subscribe(() => {
-        this.toast.success('Payment recorded.');
+      this.maintenanceService.updateWaterTankerLog(log.id, {
+        date: result.date, providerName: result.providerName, vehicleNumber: result.vehicleNumber,
+        numberOfTankers: Number(result.numberOfTankers), pricePerTanker: Number(result.pricePerTanker),
+        notes: result.notes || null
+      }).subscribe(() => {
+        this.toast.success('Entry updated.');
+        this.load();
+        this.loadSummary();
+      });
+    });
+  }
+
+  deleteEntry(log: WaterTankerLogDto): void {
+    this.confirmDialog.confirm({
+      title: 'Delete Tanker Entry', destructive: true,
+      message: `Delete the ${log.providerName} entry from ${log.date}?`
+    }).subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.maintenanceService.deleteWaterTankerLog(log.id).subscribe(() => {
+        this.toast.success('Entry deleted.');
         this.load();
         this.loadSummary();
       });

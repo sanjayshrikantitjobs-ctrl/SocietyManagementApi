@@ -37,6 +37,7 @@ public interface IApplicationDbContext
     DbSet<FestivalExpense> FestivalExpenses { get; }
     DbSet<FestivalFlatTarget> FestivalFlatTargets { get; }
     DbSet<WaterTankerCollection> WaterTankerCollections { get; }
+    DbSet<WaterTankerLog> WaterTankerLogs { get; }
 
     DbSet<MaintenanceCategory> MaintenanceCategories { get; }
     DbSet<MaintenanceSettings> MaintenanceSettings { get; }

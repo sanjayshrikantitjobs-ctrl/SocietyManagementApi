@@ -192,3 +192,29 @@ export interface WaterTankerMonthSummaryDto {
   totalCollected: number;
   totalPending: number;
 }
+
+export interface WaterTankerLogDto {
+  id: number;
+  date: string;
+  providerName: string;
+  vehicleNumber: string;
+  numberOfTankers: number;
+  pricePerTanker: number;
+  totalAmount: number;
+  notes?: string | null;
+}
+
+export interface WaterTankerLogMonthSummaryDto {
+  totalDeliveries: number;
+  totalTankers: number;
+  totalAmount: number;
+}
+
+export interface WaterTankerLogPayload {
+  date: string;
+  providerName: string;
+  vehicleNumber: string;
+  numberOfTankers: number;
+  pricePerTanker: number;
+  notes?: string | null;
+}

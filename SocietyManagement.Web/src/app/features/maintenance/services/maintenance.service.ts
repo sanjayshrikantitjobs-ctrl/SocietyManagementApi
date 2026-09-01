@@ -6,7 +6,7 @@ import { ApiResponse, PaginatedResult } from '../../../core/models/api-response.
 import {
   BulkRecordPaymentResultDto, FineRecordDto, MaintenanceBillDetailDto, MaintenanceBillDto, MaintenanceCategoryDto,
   MaintenanceDashboardDto, MaintenanceSettingsDto, SpecialChargeDto, WaterTankerCollectionDto,
-  WaterTankerMonthSummaryDto
+  WaterTankerLogDto, WaterTankerLogMonthSummaryDto, WaterTankerLogPayload, WaterTankerMonthSummaryDto
 } from '../models/maintenance.model';
 
 function toHttpParams(params: Record<string, unknown>): HttpParams {
@@ -152,5 +152,26 @@ export class MaintenanceService {
   getMyWaterTankerCollections(): Observable<WaterTankerCollectionDto[]> {
     return this.http.get<ApiResponse<WaterTankerCollectionDto[]>>(`${this.baseUrl}/water-tanker/mine`)
       .pipe(map((r) => r.data!));
+  }
+
+  // ---- Water Tanker Log (operational log, replaces per-flat billing above going forward) ------
+  getWaterTankerLogs(params: {
+    societyId: number; month: string; search?: string; pageNumber?: number; pageSize?: number;
+  }): Observable<PaginatedResult<WaterTankerLogDto>> {
+    return this.http.get<ApiResponse<PaginatedResult<WaterTankerLogDto>>>(`${this.baseUrl}/water-tanker-logs`, { params: toHttpParams(params) })
+      .pipe(map((r) => r.data!));
+  }
+  getWaterTankerLogSummary(societyId: number, month: string): Observable<WaterTankerLogMonthSummaryDto> {
+    return this.http.get<ApiResponse<WaterTankerLogMonthSummaryDto>>(`${this.baseUrl}/water-tanker-logs/summary`, { params: { societyId, month } })
+      .pipe(map((r) => r.data!));
+  }
+  createWaterTankerLog(societyId: number, payload: WaterTankerLogPayload): Observable<number> {
+    return this.http.post<ApiResponse<number>>(`${this.baseUrl}/water-tanker-logs`, { societyId, ...payload }).pipe(map((r) => r.data!));
+  }
+  updateWaterTankerLog(id: number, payload: WaterTankerLogPayload): Observable<void> {
+    return this.http.put<ApiResponse<void>>(`${this.baseUrl}/water-tanker-logs/${id}`, { id, ...payload }).pipe(map(() => void 0));
+  }
+  deleteWaterTankerLog(id: number): Observable<void> {
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/water-tanker-logs/${id}`).pipe(map(() => void 0));
   }
 }

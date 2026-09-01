@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,6 +32,7 @@ public class VisitorApprovalPublicController : ControllerBase
     [HttpGet("{token}")]
     public async Task<ContentResult> Get(string token, [FromQuery] string? justActioned = null)
     {
+        token = ExtractToken(token);
         VisitorVisitDto visit;
         try
         {
@@ -47,6 +49,7 @@ public class VisitorApprovalPublicController : ControllerBase
     [HttpPost("{token}/approve")]
     public async Task<IActionResult> Approve(string token)
     {
+        token = ExtractToken(token);
         try
         {
             await _mediator.Send(new ApproveVisitByTokenCommand(token));
@@ -65,6 +68,7 @@ public class VisitorApprovalPublicController : ControllerBase
     [HttpPost("{token}/reject")]
     public async Task<IActionResult> Reject(string token, [FromForm] string? reason)
     {
+        token = ExtractToken(token);
         try
         {
             await _mediator.Send(new RejectVisitByTokenCommand(token, reason));
@@ -92,6 +96,7 @@ public class VisitorApprovalPublicController : ControllerBase
     [HttpGet("approve/{token}")]
     public async Task<IActionResult> ApproveViaButton(string token)
     {
+        token = ExtractToken(token);
         try
         {
             await _mediator.Send(new ApproveVisitByTokenCommand(token));
@@ -105,6 +110,7 @@ public class VisitorApprovalPublicController : ControllerBase
     [HttpGet("reject/{token}")]
     public async Task<IActionResult> RejectViaButton(string token)
     {
+        token = ExtractToken(token);
         try
         {
             await _mediator.Send(new RejectVisitByTokenCommand(token, Reason: null));
@@ -167,6 +173,20 @@ public class VisitorApprovalPublicController : ControllerBase
         VisitorVisitStatus.CheckedOut => "Approved — visitor has checked out",
         _ => status.ToString()
     };
+
+    private static readonly Regex TokenPattern = new("[0-9a-fA-F]{32}", RegexOptions.Compiled);
+
+    /// <summary>Defensive against a misconfigured WhatsApp template button: if
+    /// the "Website URL" dynamic suffix was set up in Meta's template editor
+    /// by typing the literal characters "{{1}}" into the URL field instead of
+    /// inserting Meta's own variable placeholder, Meta appends its own
+    /// separate {{1}} substitution AFTER that literal text rather than
+    /// replacing it — so the token this controller receives arrives as
+    /// "{{1}}&lt;realtoken&gt;" instead of just "&lt;realtoken&gt;". ApprovalToken is
+    /// always a 32-hex-char GUID ("N" format), so pulling out that pattern
+    /// works regardless of what junk precedes or follows it, and is a no-op
+    /// for an already-clean token.</summary>
+    private static string ExtractToken(string raw) => TokenPattern.Match(raw) is { Success: true } m ? m.Value : raw;
 
     private static string Enc(string? value) => WebUtility.HtmlEncode(value ?? "");
 

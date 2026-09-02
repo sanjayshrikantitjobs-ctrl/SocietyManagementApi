@@ -79,6 +79,7 @@ public class DbSeeder
         await BackfillUserSocietyIdAsync();
         await BackfillSocietyCodesAsync();
         await BackfillRentalAgreementDocumentsAsync();
+        await BackfillMaintenanceBillCascadeAsync();
 
         await _context.SaveChangesAsync();
         _logger.LogInformation("Database seeding completed.");
@@ -393,5 +394,87 @@ public class DbSeeder
             "Seeded default admin account {Email} with a well-known temporary password. " +
             "MustChangePassword=true forces an immediate reset — change it before exposing this environment.",
             adminEmail);
+    }
+
+    /// <summary>Fixes a pre-existing bug: each generated bill's
+    /// PreviousBalance summed every still-unpaid *prior* bill's own balance
+    /// instead of just the immediately-prior one, and never closed those
+    /// older bills out — so a flat's earliest unpaid month kept getting
+    /// re-added on top of a later bill that had *already* cascaded it
+    /// forward, double- (or triple-, ...) counting the same debt the longer
+    /// it stayed unpaid. The fix in GenerateMonthlyBillsCommand prevents
+    /// this for newly-generated bills; this backfill repairs bills already
+    /// corrupted before that fix shipped — both the inflated dollar amount
+    /// AND the stale "still unpaid" status on the superseded older rows.
+    ///
+    /// Reconstructs each flat's true position from first principles rather
+    /// than trusting any already-cascaded PreviousBalance/TotalAmount:
+    /// - "Own charge" for a bill (TotalAmount minus PreviousBalance) is just
+    ///   that month's real line-item total — untouched by the cascading bug,
+    ///   so it's safe to trust and sum across every bill for the flat.
+    /// - Real money collected is read from MaintenancePayment rows (ground
+    ///   truth), not from AmountPaid — this same method, on a prior run,
+    ///   may have already set AmountPaid on an older bill without a backing
+    ///   payment row, purely to mark it superseded/consolidated.
+    /// The flat's one true outstanding balance (sum of every month's own
+    /// charge, minus every real payment ever made) is written onto the
+    /// latest bill; every earlier bill for that flat is marked Paid, since
+    /// its debt now lives entirely in the latest one. Idempotent: on a
+    /// second run, TotalAmount - PreviousBalance on the latest bill still
+    /// recovers the same own-charge value, so nothing drifts further.</summary>
+    private async Task BackfillMaintenanceBillCascadeAsync()
+    {
+        var allBills = await _context.MaintenanceBills.Where(b => !b.IsDeleted).ToListAsync();
+        var flatGroups = allBills.GroupBy(b => b.FlatId).Where(g => g.Count() > 1).ToList();
+        if (flatGroups.Count == 0) return;
+
+        var relevantBillIds = flatGroups.SelectMany(g => g).Select(b => b.Id).ToHashSet();
+        var realPaidByFlat = (await _context.MaintenancePayments
+                .Where(p => !p.IsDeleted && relevantBillIds.Contains(p.MaintenanceBillId))
+                .Select(p => new { p.MaintenanceBillId, p.Amount })
+                .ToListAsync())
+            .GroupBy(p => allBills.First(b => b.Id == p.MaintenanceBillId).FlatId)
+            .ToDictionary(g => g.Key, g => g.Sum(p => p.Amount));
+
+        var changedCount = 0;
+        foreach (var group in flatGroups)
+        {
+            var bills = group.OrderBy(b => b.BillMonth).ToList();
+            var ownCharges = bills.Select(b => b.TotalAmount - b.PreviousBalance).ToList();
+            var totalOwnCharges = ownCharges.Sum();
+            var totalRealPaid = realPaidByFlat.GetValueOrDefault(group.Key, 0);
+            var correctPaid = Math.Min(totalRealPaid, totalOwnCharges);
+            var correctStatus = correctPaid >= totalOwnCharges ? BillStatus.Paid
+                : correctPaid > 0 ? BillStatus.PartiallyPaid : BillStatus.Pending;
+
+            var latest = bills[^1];
+            var correctPreviousBalance = totalOwnCharges - ownCharges[^1];
+
+            if (latest.PreviousBalance != correctPreviousBalance || latest.TotalAmount != totalOwnCharges
+                || latest.AmountPaid != correctPaid || latest.Status != correctStatus)
+            {
+                latest.PreviousBalance = correctPreviousBalance;
+                latest.TotalAmount = totalOwnCharges;
+                latest.AmountPaid = correctPaid;
+                latest.Status = correctStatus;
+                changedCount++;
+            }
+
+            foreach (var older in bills.Take(bills.Count - 1))
+            {
+                if (older.Status == BillStatus.Paid && older.AmountPaid == older.TotalAmount) continue;
+                older.AmountPaid = older.TotalAmount;
+                older.Status = BillStatus.Paid;
+                changedCount++;
+            }
+        }
+
+        if (changedCount > 0)
+        {
+            await _context.SaveChangesAsync();
+            _logger.LogInformation(
+                "Reconciled {Count} maintenance bill(s): consolidated each flat's true outstanding balance onto its latest bill and closed out superseded earlier ones.",
+                changedCount);
+        }
     }
 }

@@ -13,12 +13,13 @@ public class VisitorSettingsDto
     public int Id { get; set; }
     public int SocietyId { get; set; }
     public int ApprovalRequestExpiryMinutes { get; set; }
+    public int RetentionDays { get; set; }
 }
 
 // ---- Commands ----------------------------------------------------------------
 /// <summary>Single upsert — one settings row per society, mirrors
 /// MaintenanceSettingsFeature's shape.</summary>
-public record UpsertVisitorSettingsCommand(int SocietyId, int ApprovalRequestExpiryMinutes) : IRequest<Unit>;
+public record UpsertVisitorSettingsCommand(int SocietyId, int ApprovalRequestExpiryMinutes, int RetentionDays) : IRequest<Unit>;
 
 public class UpsertVisitorSettingsCommandValidator : AbstractValidator<UpsertVisitorSettingsCommand>
 {
@@ -26,6 +27,7 @@ public class UpsertVisitorSettingsCommandValidator : AbstractValidator<UpsertVis
     {
         RuleFor(x => x.SocietyId).GreaterThan(0);
         RuleFor(x => x.ApprovalRequestExpiryMinutes).InclusiveBetween(1, 1440);
+        RuleFor(x => x.RetentionDays).InclusiveBetween(1, 3650);
     }
 }
 
@@ -55,6 +57,7 @@ public class VisitorSettingsCommandHandlers : IRequestHandler<UpsertVisitorSetti
         }
 
         settings.ApprovalRequestExpiryMinutes = request.ApprovalRequestExpiryMinutes;
+        settings.RetentionDays = request.RetentionDays;
 
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditAction.Update, "Visitors", nameof(VisitorSettings), settings.Id.ToString(), ct: ct);
@@ -89,7 +92,8 @@ public class VisitorSettingsQueryHandlers : IRequestHandler<GetVisitorSettingsQu
 
         return new VisitorSettingsDto
         {
-            Id = settings.Id, SocietyId = settings.SocietyId, ApprovalRequestExpiryMinutes = settings.ApprovalRequestExpiryMinutes
+            Id = settings.Id, SocietyId = settings.SocietyId, ApprovalRequestExpiryMinutes = settings.ApprovalRequestExpiryMinutes,
+            RetentionDays = settings.RetentionDays
         };
     }
 }

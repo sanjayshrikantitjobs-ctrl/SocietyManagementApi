@@ -52,6 +52,7 @@ import { VisitorVisitDetailDialogComponent } from './visitor-visit-detail-dialog
         @if (auth.isAdmin()) {
           <button mat-stroked-button routerLink="/visitors/gates">Gates</button>
           <button mat-stroked-button routerLink="/visitors/purposes">Purposes</button>
+          <button mat-stroked-button routerLink="/visitors/settings"><mat-icon>settings</mat-icon> Settings</button>
         }
       </app-page-header>
 

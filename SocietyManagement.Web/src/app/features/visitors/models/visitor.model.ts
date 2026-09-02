@@ -59,3 +59,10 @@ export interface VisitorVisitDto {
   checkInTime?: string | null;
   checkOutTime?: string | null;
 }
+
+export interface VisitorSettingsDto {
+  id: number;
+  societyId: number;
+  approvalRequestExpiryMinutes: number;
+  retentionDays: number;
+}

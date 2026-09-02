@@ -17,6 +17,7 @@ import { MatTableModule } from '@angular/material/table';
 import { ToastService } from '../../../core/services/toast.service';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { PromptDialogComponent } from '../../../shared/components/prompt-dialog/prompt-dialog.component';
+import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.service';
 import { Society } from '../../../core/models/society.model';
 import { SocietyService } from '../../society-setup/services/society.service';
 import { BILL_STATUS_LABELS, BillStatus, MaintenanceBillDto } from '../models/maintenance.model';
@@ -57,7 +58,12 @@ import { MaintenanceService } from '../services/maintenance.service';
       @if (selection.selected.length > 0) {
         <div class="bulk-toolbar">
           <span>{{ selection.selected.length }} bill(s) selected</span>
-          <button mat-flat-button color="primary" (click)="bulkMarkPaid()"><mat-icon>payments</mat-icon> Mark as Paid</button>
+          @if (hasPayableSelection()) {
+            <button mat-flat-button color="primary" (click)="bulkMarkPaid()"><mat-icon>payments</mat-icon> Mark as Paid</button>
+          }
+          @if (hasReversibleSelection()) {
+            <button mat-stroked-button (click)="bulkMarkUnpaid()"><mat-icon>undo</mat-icon> Mark as Unpaid</button>
+          }
         </div>
       }
 
@@ -71,9 +77,7 @@ import { MaintenanceService } from '../services/maintenance.service';
               <mat-checkbox (change)="$event ? toggleAll() : null" [checked]="allSelected()" [indeterminate]="someSelected()" />
             </th>
             <td mat-cell *matCellDef="let b">
-              @if (b.status !== 3) {
-                <mat-checkbox (click)="$event.stopPropagation()" (change)="selection.toggle(b.id)" [checked]="selection.isSelected(b.id)" />
-              }
+              <mat-checkbox (click)="$event.stopPropagation()" (change)="selection.toggle(b.id)" [checked]="selection.isSelected(b.id)" />
             </td>
           </ng-container>
           <ng-container matColumnDef="flat">
@@ -112,6 +116,9 @@ import { MaintenanceService } from '../services/maintenance.service';
                 @if (b.status !== 3) {
                   <button mat-menu-item (click)="recordPayment(b)"><mat-icon>payments</mat-icon><span>Record Payment</span></button>
                 }
+                @if (b.status === 2 || b.status === 3) {
+                  <button mat-menu-item (click)="markUnpaid(b)"><mat-icon>undo</mat-icon><span>Mark as Unpaid</span></button>
+                }
                 <button mat-menu-item (click)="resendWhatsApp(b)"><mat-icon>send</mat-icon><span>Resend WhatsApp</span></button>
               </mat-menu>
             </td>
@@ -145,6 +152,7 @@ export class MaintenanceBillsListComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
+  private readonly confirmDialog = inject(ConfirmDialogService);
 
   readonly loading = signal(true);
   readonly bills = signal<MaintenanceBillDto[]>([]);
@@ -187,25 +195,33 @@ export class MaintenanceBillsListComponent implements OnInit {
     });
   }
 
-  private payableBills(): MaintenanceBillDto[] {
-    return this.bills().filter((b) => b.status !== 3);
-  }
-
   allSelected(): boolean {
-    const payable = this.payableBills();
-    return payable.length > 0 && payable.every((b) => this.selection.isSelected(b.id));
+    const rows = this.bills();
+    return rows.length > 0 && rows.every((b) => this.selection.isSelected(b.id));
   }
 
   someSelected(): boolean {
-    return this.payableBills().some((b) => this.selection.isSelected(b.id)) && !this.allSelected();
+    return this.bills().some((b) => this.selection.isSelected(b.id)) && !this.allSelected();
   }
 
   toggleAll(): void {
     if (this.allSelected()) {
-      this.payableBills().forEach((b) => this.selection.deselect(b.id));
+      this.bills().forEach((b) => this.selection.deselect(b.id));
     } else {
-      this.payableBills().forEach((b) => this.selection.select(b.id));
+      this.bills().forEach((b) => this.selection.select(b.id));
     }
+  }
+
+  /** Whether the current selection includes any bill "Mark as Paid" can
+   * act on — mirrors the per-row menu's own `b.status !== 3` gate. */
+  hasPayableSelection(): boolean {
+    return this.bills().some((b) => this.selection.isSelected(b.id) && b.status !== 3);
+  }
+
+  /** Whether the current selection includes any bill "Mark as Unpaid" can
+   * act on — mirrors the per-row menu's own `b.status === 2 || b.status === 3` gate. */
+  hasReversibleSelection(): boolean {
+    return this.bills().some((b) => this.selection.isSelected(b.id) && (b.status === 2 || b.status === 3));
   }
 
   bulkMarkPaid(): void {
@@ -233,6 +249,26 @@ export class MaintenanceBillsListComponent implements OnInit {
           recordedCount === results.length
             ? `${recordedCount} bill(s) marked paid.`
             : `${recordedCount} of ${results.length} bill(s) marked paid — the rest were already paid or not found.`
+        );
+        this.selection.clear();
+        this.load();
+      });
+    });
+  }
+
+  bulkMarkUnpaid(): void {
+    const billIds = [...this.selection.selected];
+    this.confirmDialog.confirm({
+      title: 'Mark as Unpaid', destructive: true,
+      message: `Reverse payment on ${billIds.length} bill(s)? Any payments recorded against them will be voided.`
+    }).subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.maintenanceService.bulkMarkUnpaid(billIds).subscribe((results) => {
+        const reversedCount = results.filter((r) => r.reversed).length;
+        this.toast.success(
+          reversedCount === results.length
+            ? `${reversedCount} bill(s) marked unpaid.`
+            : `${reversedCount} of ${results.length} bill(s) marked unpaid — the rest were already unpaid or not found.`
         );
         this.selection.clear();
         this.load();
@@ -324,5 +360,18 @@ export class MaintenanceBillsListComponent implements OnInit {
 
   resendWhatsApp(bill: MaintenanceBillDto): void {
     this.maintenanceService.resendWhatsApp(bill.id).subscribe(() => this.toast.success('Bill resent via WhatsApp.'));
+  }
+
+  markUnpaid(bill: MaintenanceBillDto): void {
+    this.confirmDialog.confirm({
+      title: 'Mark as Unpaid', destructive: true,
+      message: `Reverse payment on ${bill.invoiceNumber}? Any payments recorded against this bill will be voided.`
+    }).subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.maintenanceService.markBillUnpaid(bill.id).subscribe(() => {
+        this.toast.success('Bill marked unpaid.');
+        this.load();
+      });
+    });
   }
 }

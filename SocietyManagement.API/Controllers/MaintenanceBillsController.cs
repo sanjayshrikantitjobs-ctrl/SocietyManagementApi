@@ -63,6 +63,23 @@ public class MaintenanceBillsController : ApiControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(results, $"{recordedCount} of {results.Count} bill(s) marked paid."));
     }
 
+    [HttpPost("bills/{id:int}/mark-unpaid")]
+    [HasPermission(Permissions.Maintenance.Manage)]
+    public async Task<IActionResult> MarkUnpaid(int id)
+    {
+        await Mediator.Send(new SetBillUnpaidCommand(id));
+        return Ok(ApiResponse.SuccessResponse("Bill marked unpaid."));
+    }
+
+    [HttpPost("bulk-mark-unpaid")]
+    [HasPermission(Permissions.Maintenance.Manage)]
+    public async Task<IActionResult> BulkMarkUnpaid(BulkSetBillsUnpaidCommand command)
+    {
+        var results = await Mediator.Send(command);
+        var reversedCount = results.Count(r => r.Reversed);
+        return Ok(ApiResponse<object>.SuccessResponse(results, $"{reversedCount} of {results.Count} bill(s) marked unpaid."));
+    }
+
     [HttpPost("bills/{id:int}/resend-whatsapp")]
     [HasPermission(Permissions.Maintenance.Manage)]
     public async Task<IActionResult> ResendWhatsApp(int id)

@@ -29,5 +29,11 @@ export const VISITORS_ROUTES: Routes = [
     canActivate: [roleGuard],
     data: { roles: ['Admin'] },
     loadComponent: () => import('./purposes.component').then((m) => m.PurposesComponent)
+  },
+  {
+    path: 'settings',
+    canActivate: [roleGuard],
+    data: { roles: ['Admin'] },
+    loadComponent: () => import('./visitor-settings.component').then((m) => m.VisitorSettingsComponent)
   }
 ];

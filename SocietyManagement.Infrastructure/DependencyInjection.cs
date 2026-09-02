@@ -92,6 +92,7 @@ public static class DependencyInjection
         services.AddScoped<IVehiclePlateOcrService, VehiclePlateOcrService>();
         services.AddHostedService<MaintenanceBillGenerationService>();
         services.AddHostedService<VisitorRequestExpiryService>();
+        services.AddHostedService<VisitorDataRetentionService>();
 
         services.AddScoped<DbSeeder>();
 

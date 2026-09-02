@@ -66,38 +66,50 @@ public class FestivalDashboardQueryHandler : IRequestHandler<GetFestivalDashboar
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException(nameof(Festival), request.FestivalId);
 
-        var categories = await _context.FestivalBudgetCategories
-            .Where(c => c.FestivalId == request.FestivalId && !c.IsDeleted)
-            .Select(c => new BudgetVsActualPointDto
-            {
-                CategoryName = c.Category.ToString(),
-                Estimated = c.EstimatedAmount,
-                Approved = c.ApprovedAmount,
-                Actual = c.Expenses.Where(e => SpentStatuses.Contains(e.ApprovalStatus)).Sum(e => (decimal?)e.Amount) ?? 0
-            })
-            .OrderBy(c => c.CategoryName)
-            .ToListAsync(ct);
-
-        var expenseByCategory = categories
-            .Where(c => c.Actual > 0)
-            .Select(c => new ExpenseCategoryPointDto { CategoryName = c.CategoryName, Amount = c.Actual })
-            .ToList();
-
-        // A Pool festival's own FestivalId rarely has direct sponsors — its
-        // Child festivals do (see FestivalKind's doc comment). Additive, not
-        // either/or: a Pool could in principle also have direct sponsors.
-        var sponsorFestivalIds = new List<int> { request.FestivalId };
+        // A Pool festival's own FestivalId rarely carries budget categories,
+        // sponsors, or expenses directly — its Child festivals do (see
+        // FestivalKind's doc comment). Additive, not either/or: a Pool could
+        // in principle also have direct data of its own.
+        var relatedFestivalIds = new List<int> { request.FestivalId };
         if (festivalKind == FestivalKind.Pool)
         {
             var childIds = await _context.Festivals
                 .Where(f => f.ContributionPoolFestivalId == request.FestivalId && !f.IsDeleted)
                 .Select(f => f.Id)
                 .ToListAsync(ct);
-            sponsorFestivalIds.AddRange(childIds);
+            relatedFestivalIds.AddRange(childIds);
         }
 
+        var categoryRows = await _context.FestivalBudgetCategories
+            .Where(c => relatedFestivalIds.Contains(c.FestivalId) && !c.IsDeleted) // relatedFestivalIds is a small in-memory list — Contains translates to a SQL IN clause
+            .Select(c => new
+            {
+                CategoryName = c.Category.ToString(),
+                c.EstimatedAmount,
+                c.ApprovedAmount,
+                Actual = c.Expenses.Where(e => SpentStatuses.Contains(e.ApprovalStatus)).Sum(e => (decimal?)e.Amount) ?? 0
+            })
+            .ToListAsync(ct);
+
+        // A Pool aggregates the same category (e.g. "Decoration") across
+        // multiple Child festivals into one bar, not one per child.
+        var categories = categoryRows
+            .GroupBy(c => c.CategoryName)
+            .Select(g => new BudgetVsActualPointDto
+            {
+                CategoryName = g.Key, Estimated = g.Sum(c => c.EstimatedAmount),
+                Approved = g.Sum(c => c.ApprovedAmount), Actual = g.Sum(c => c.Actual)
+            })
+            .OrderBy(c => c.CategoryName)
+            .ToList();
+
+        var expenseByCategory = categories
+            .Where(c => c.Actual > 0)
+            .Select(c => new ExpenseCategoryPointDto { CategoryName = c.CategoryName, Amount = c.Actual })
+            .ToList();
+
         var sponsors = await _context.FestivalSponsors
-            .Where(s => sponsorFestivalIds.Contains(s.FestivalId) && !s.IsDeleted) // sponsorFestivalIds is a small in-memory list — Contains translates to a SQL IN clause
+            .Where(s => relatedFestivalIds.Contains(s.FestivalId) && !s.IsDeleted)
             .Select(s => new SponsorContributionPointDto
             {
                 CompanyName = s.CompanyName,
@@ -114,7 +126,7 @@ public class FestivalDashboardQueryHandler : IRequestHandler<GetFestivalDashboar
             .SumAsync(c => (decimal?)c.Amount, ct) ?? 0;
         var sponsorsCount = sponsors.Count;
         var pendingExpensesCount = await _context.FestivalExpenses
-            .CountAsync(e => e.FestivalId == request.FestivalId && !e.IsDeleted && e.ApprovalStatus == ExpenseApprovalStatus.Pending, ct);
+            .CountAsync(e => relatedFestivalIds.Contains(e.FestivalId) && !e.IsDeleted && e.ApprovalStatus == ExpenseApprovalStatus.Pending, ct);
         var volunteersCount = await _context.FestivalVolunteers
             .CountAsync(v => v.FestivalId == request.FestivalId && !v.IsDeleted, ct);
         var tasksPendingCount = await _context.FestivalTasks

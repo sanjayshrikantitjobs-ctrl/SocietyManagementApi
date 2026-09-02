@@ -1,8 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { SelectionModel } from '@angular/cdk/collections';
+import { concatMap, from, toArray } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -36,8 +39,8 @@ const NO_FLAT_OPTION_VALUE = 0;
   selector: 'app-festival-contribution-tab',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, MatButtonModule, MatButtonToggleModule, MatChipsModule, MatFormFieldModule,
-    MatIconModule, MatSelectModule, MatSortModule, MatTableModule, DataTableComponent, StatCardComponent
+    CommonModule, FormsModule, MatButtonModule, MatButtonToggleModule, MatCheckboxModule, MatChipsModule,
+    MatFormFieldModule, MatIconModule, MatSelectModule, MatSortModule, MatTableModule, DataTableComponent, StatCardComponent
   ],
   template: `
     <div class="tab-content">
@@ -64,6 +67,14 @@ const NO_FLAT_OPTION_VALUE = 0;
       </div>
 
       @if (view() === 'flats') {
+        @if (canContribute() && flatSelection.selected.length > 0) {
+          <div class="bulk-toolbar">
+            <span>{{ flatSelection.selected.length }} flat(s) selected</span>
+            <button mat-flat-button color="primary" [disabled]="bulkMarkingPaid()" (click)="bulkMarkFlatsPaid()">
+              <mat-icon>volunteer_activism</mat-icon> Mark as Paid
+            </button>
+          </div>
+        }
         <app-data-table
           [loading]="flatsLoading()" [totalCount]="flatsTotalCount()" [pageSize]="flatsPageSize()" [pageIndex]="flatsPageIndex()"
           searchPlaceholder="Search flat number..." emptyTitle="No flats found"
@@ -78,6 +89,18 @@ const NO_FLAT_OPTION_VALUE = 0;
             </mat-form-field>
           </div>
           <table mat-table [dataSource]="flatContributions()" matSort (matSortChange)="onFlatsSort($event)" table>
+            @if (canContribute()) {
+              <ng-container matColumnDef="select">
+                <th mat-header-cell *matHeaderCellDef>
+                  <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? toggleAllFlats() : null" [checked]="allFlatsSelected()" [indeterminate]="someFlatsSelected()" />
+                </th>
+                <td mat-cell *matCellDef="let f">
+                  @if (f.outstandingAmount > 0) {
+                    <mat-checkbox (click)="$event.stopPropagation()" (change)="flatSelection.toggle(f.flatId)" [checked]="flatSelection.isSelected(f.flatId)" />
+                  }
+                </td>
+              </ng-container>
+            }
             <ng-container matColumnDef="flat">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Flat</th>
               <td mat-cell *matCellDef="let f"><strong>{{ f.flatNumber }}</strong></td>
@@ -158,6 +181,8 @@ const NO_FLAT_OPTION_VALUE = 0;
     .stats-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:16px; margin-bottom:20px; }
     .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
     .toolbar .actions { display: flex; gap: 8px; }
+    .bulk-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 10px 14px; background: var(--app-primary-light); border-radius: 8px; }
+    .bulk-toolbar span { font-size: 13px; font-weight: 600; color: var(--app-primary); }
     .status-filter { width: 180px; }
     div[toolbar] { display: flex; align-items: center; gap: 12px; }
     .muted { color: var(--app-text-muted); font-size: 12px; }
@@ -189,7 +214,13 @@ export class FestivalContributionTabComponent implements OnInit {
   readonly flatsPageSize = signal(10);
   readonly flatsSearchTerm = signal('');
   readonly flatsSortState = signal<Sort | null>(null);
-  readonly flatColumns = ['flat', 'target', 'paid', 'outstanding', 'status'];
+  readonly flatSelection = new SelectionModel<number>(true, []);
+  readonly bulkMarkingPaid = signal(false);
+  get flatColumns(): string[] {
+    return this.canContribute()
+      ? ['select', 'flat', 'target', 'paid', 'outstanding', 'status']
+      : ['flat', 'target', 'paid', 'outstanding', 'status'];
+  }
   statusFilter: FlatContributionStatus | null = null;
   readonly statusOptions = [
     { value: 1 as FlatContributionStatus, label: 'Pending' },
@@ -231,6 +262,7 @@ export class FestivalContributionTabComponent implements OnInit {
 
   loadFlats(): void {
     this.flatsLoading.set(true);
+    this.flatSelection.clear();
     const sort = this.flatsSortState();
     this.festivalService.getFlatContributions({
       festivalId: this.festivalId(), search: this.flatsSearchTerm() || undefined, status: this.statusFilter ?? undefined,
@@ -240,6 +272,79 @@ export class FestivalContributionTabComponent implements OnInit {
       this.flatContributions.set(result.items);
       this.flatsTotalCount.set(result.totalCount);
       this.flatsLoading.set(false);
+    });
+  }
+
+  private payableFlats(): FlatContributionDto[] {
+    return this.flatContributions().filter((f) => f.outstandingAmount > 0);
+  }
+
+  allFlatsSelected(): boolean {
+    const payable = this.payableFlats();
+    return payable.length > 0 && payable.every((f) => this.flatSelection.isSelected(f.flatId));
+  }
+
+  someFlatsSelected(): boolean {
+    return this.payableFlats().some((f) => this.flatSelection.isSelected(f.flatId)) && !this.allFlatsSelected();
+  }
+
+  toggleAllFlats(): void {
+    if (this.allFlatsSelected()) {
+      this.payableFlats().forEach((f) => this.flatSelection.deselect(f.flatId));
+    } else {
+      this.payableFlats().forEach((f) => this.flatSelection.select(f.flatId));
+    }
+  }
+
+  /** Records a full-outstanding-amount contribution for each selected flat,
+   * one at a time (concatMap, not parallel) — CreateContributionCommand
+   * already sends the WhatsApp receipt as a side effect, so this is just
+   * that same single-flat flow run in sequence per flat, nothing new. */
+  bulkMarkFlatsPaid(): void {
+    const flats = this.payableFlats().filter((f) => this.flatSelection.isSelected(f.flatId));
+    if (flats.length === 0) return;
+
+    const ref = this.dialog.open(PromptDialogComponent, {
+      width: '420px',
+      data: {
+        title: `Mark ${flats.length} Flat(s) as Paid`, submitLabel: 'Mark as Paid',
+        fields: [
+          { key: 'paymentDate', label: 'Payment Date', type: 'date', defaultValue: new Date().toISOString().substring(0, 10) },
+          { key: 'paymentMethod', label: 'Payment Method', type: 'select', options: [{ value: 1, label: 'Cash' }, { value: 2, label: 'UPI' }, { value: 3, label: 'Bank Transfer' }] },
+          { key: 'transactionId', label: 'Transaction ID', type: 'text', required: false }
+        ]
+      }
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (!result) return;
+      this.bulkMarkingPaid.set(true);
+      from(flats).pipe(
+        concatMap((f) => this.festivalService.createContribution({
+          festivalId: this.festivalId(), flatId: f.flatId, memberName: `Flat ${f.flatNumber}`,
+          amount: f.outstandingAmount, paymentMethod: Number(result.paymentMethod), paymentDate: result.paymentDate,
+          transactionId: result.transactionId || null, isAnonymous: false, whatsAppNumber: null
+        })),
+        toArray()
+      ).subscribe({
+        next: () => {
+          this.bulkMarkingPaid.set(false);
+          this.toast.success(`${flats.length} flat(s) marked as paid — WhatsApp receipts sent.`);
+          this.flatSelection.clear();
+          this.loadFlats();
+          this.loadKpis();
+          this.load();
+        },
+        // One flat's payment failing partway through the sequence still
+        // leaves the earlier ones recorded — reload to reflect whatever
+        // actually went through instead of leaving the UI stuck mid-batch.
+        error: () => {
+          this.bulkMarkingPaid.set(false);
+          this.flatSelection.clear();
+          this.loadFlats();
+          this.loadKpis();
+          this.load();
+        }
+      });
     });
   }
 

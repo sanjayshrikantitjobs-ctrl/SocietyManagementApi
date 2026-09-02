@@ -43,4 +43,16 @@ public class LocalFileStorageService : IFileStorageService
 
         return Task.FromResult($"/uploads/{safeFolder}/{uniqueFileName}");
     }
+
+    public Task DeleteAsync(string url, CancellationToken ct = default)
+    {
+        const string prefix = "/uploads/";
+        if (!url.StartsWith(prefix, StringComparison.Ordinal)) return Task.CompletedTask;
+
+        var relativePath = url[prefix.Length..].Replace('/', Path.DirectorySeparatorChar);
+        var absolutePath = Path.Combine(AppContext.BaseDirectory, "wwwroot", "uploads", relativePath);
+        if (File.Exists(absolutePath)) File.Delete(absolutePath);
+
+        return Task.CompletedTask;
+    }
 }

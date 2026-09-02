@@ -20,6 +20,10 @@ export interface PromptField {
   /** Shown under the field when `pattern` fails and the field has a value. */
   patternError?: string;
   maxLength?: number;
+  /** Always-visible helper text under the field (e.g. when a field only
+   * matters for a certain choice elsewhere in the form) — keeps that
+   * explanation out of the label itself. */
+  hint?: string;
 }
 
 export interface PromptDialogData {
@@ -59,6 +63,9 @@ export interface PromptDialogData {
                 <textarea matInput rows="3" [formControlName]="field.key"></textarea>
               } @else {
                 <input matInput [type]="field.type" [formControlName]="field.key" [maxlength]="field.maxLength ?? null" />
+              }
+              @if (field.hint) {
+                <mat-hint>{{ field.hint }}</mat-hint>
               }
               @if (field.patternError && form.get(field.key)?.hasError('pattern')) {
                 <mat-error>{{ field.patternError }}</mat-error>

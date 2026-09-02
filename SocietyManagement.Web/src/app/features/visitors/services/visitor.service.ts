@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../../../core/models/api-response.model';
-import { Gate, VisitorDto, VisitorPurpose, VisitorVisitDto } from '../models/visitor.model';
+import { Gate, VisitorDto, VisitorPurpose, VisitorSettingsDto, VisitorVisitDto } from '../models/visitor.model';
 
 function toHttpParams(params: Record<string, unknown>): HttpParams {
   let httpParams = new HttpParams();
@@ -100,5 +100,14 @@ export class VisitorService {
   }
   cancelVisit(id: number): Observable<void> {
     return this.http.post<ApiResponse<void>>(`${this.baseUrl}/visitor-visits/${id}/cancel`, {}).pipe(map(() => void 0));
+  }
+
+  // ---- Settings ------------------------------------------------------------------
+  getSettings(societyId: number): Observable<VisitorSettingsDto> {
+    return this.http.get<ApiResponse<VisitorSettingsDto>>(`${this.baseUrl}/visitor-settings`, { params: { societyId } })
+      .pipe(map((r) => r.data!));
+  }
+  saveSettings(payload: { societyId: number; approvalRequestExpiryMinutes: number; retentionDays: number }): Observable<void> {
+    return this.http.put<ApiResponse<void>>(`${this.baseUrl}/visitor-settings`, payload).pipe(map(() => void 0));
   }
 }

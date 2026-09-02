@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,7 +7,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTabsModule } from '@angular/material/tabs';
+import { MatTabChangeEvent, MatTabsModule } from '@angular/material/tabs';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
@@ -75,7 +75,7 @@ import { FestivalService } from './services/festival.service';
           </div>
         }
 
-        <mat-tab-group animationDuration="150ms" preserveContent>
+        <mat-tab-group animationDuration="150ms" preserveContent (selectedTabChange)="onTabChange($event)">
           @if (f.kind === 2) {
             <mat-tab label="Dashboard"><app-festival-dashboard-tab [festivalId]="f.id" [kind]="f.kind" /></mat-tab>
             <mat-tab label="Child Festivals & Events"><app-festival-child-festivals-tab [festivalId]="f.id" [poolName]="f.name" [societyId]="f.societyId" [canManage]="canManage()" /></mat-tab>
@@ -125,6 +125,11 @@ import { FestivalService } from './services/festival.service';
   `]
 })
 export class FestivalDetailComponent {
+  // Dashboard is always the first tab in every f.kind branch, and only one
+  // branch ever renders — ViewChild finds whichever instance is actually in
+  // the DOM regardless of which @if/@else if arm produced it.
+  @ViewChild(FestivalDashboardTabComponent) dashboardTab?: FestivalDashboardTabComponent;
+
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly festivalService = inject(FestivalService);
@@ -148,6 +153,10 @@ export class FestivalDetailComponent {
 
   canContribute(): boolean {
     return this.auth.hasPermission('festivals.contribute');
+  }
+
+  onTabChange(event: MatTabChangeEvent): void {
+    if (event.index === 0) this.dashboardTab?.reload();
   }
 
   private currentId = 0;

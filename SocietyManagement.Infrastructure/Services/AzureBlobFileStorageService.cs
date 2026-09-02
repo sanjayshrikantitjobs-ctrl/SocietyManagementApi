@@ -66,6 +66,18 @@ public class AzureBlobFileStorageService : IFileStorageService
         return blobClient.Uri.ToString();
     }
 
+    public async Task DeleteAsync(string url, CancellationToken ct = default)
+    {
+        // SaveAsync returned blobClient.Uri.ToString() — the blob name is
+        // everything after the container's own URI prefix.
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return;
+        var containerPath = _containerClient.Uri.AbsolutePath.TrimEnd('/');
+        if (!uri.AbsolutePath.StartsWith(containerPath + "/", StringComparison.Ordinal)) return;
+
+        var blobName = Uri.UnescapeDataString(uri.AbsolutePath[(containerPath.Length + 1)..]);
+        await _containerClient.GetBlobClient(blobName).DeleteIfExistsAsync(cancellationToken: ct);
+    }
+
     private async Task EnsureContainerAsync(CancellationToken ct)
     {
         if (_containerEnsured) return;

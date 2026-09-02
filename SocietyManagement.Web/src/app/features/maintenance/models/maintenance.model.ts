@@ -103,6 +103,13 @@ export interface BulkRecordPaymentResultDto {
   skipReason?: string | null;
 }
 
+export interface BulkSetBillsUnpaidResultDto {
+  maintenanceBillId: number;
+  invoiceNumber: string;
+  reversed: boolean;
+  skipReason?: string | null;
+}
+
 export interface MaintenanceBillItemDto {
   id: number;
   description: string;

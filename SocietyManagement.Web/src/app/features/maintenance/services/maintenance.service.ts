@@ -4,8 +4,8 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../../../core/models/api-response.model';
 import {
-  BulkRecordPaymentResultDto, FineRecordDto, MaintenanceBillDetailDto, MaintenanceBillDto, MaintenanceCategoryDto,
-  MaintenanceDashboardDto, MaintenanceSettingsDto, SpecialChargeDto, WaterTankerCollectionDto,
+  BulkRecordPaymentResultDto, BulkSetBillsUnpaidResultDto, FineRecordDto, MaintenanceBillDetailDto, MaintenanceBillDto,
+  MaintenanceCategoryDto, MaintenanceDashboardDto, MaintenanceSettingsDto, SpecialChargeDto, WaterTankerCollectionDto,
   WaterTankerLogDto, WaterTankerLogMonthSummaryDto, WaterTankerLogPayload, WaterTankerMonthSummaryDto
 } from '../models/maintenance.model';
 
@@ -118,6 +118,13 @@ export class MaintenanceService {
   }
   resendWhatsApp(id: number): Observable<void> {
     return this.http.post<ApiResponse<void>>(`${this.baseUrl}/maintenance/bills/${id}/resend-whatsapp`, {}).pipe(map(() => void 0));
+  }
+  markBillUnpaid(id: number): Observable<void> {
+    return this.http.post<ApiResponse<void>>(`${this.baseUrl}/maintenance/bills/${id}/mark-unpaid`, {}).pipe(map(() => void 0));
+  }
+  bulkMarkUnpaid(maintenanceBillIds: number[]): Observable<BulkSetBillsUnpaidResultDto[]> {
+    return this.http.post<ApiResponse<BulkSetBillsUnpaidResultDto[]>>(`${this.baseUrl}/maintenance/bulk-mark-unpaid`, { maintenanceBillIds })
+      .pipe(map((r) => r.data!));
   }
 
   // ---- Dashboard -----------------------------------------------------------------

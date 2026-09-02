@@ -104,6 +104,15 @@ export class FestivalDashboardTabComponent implements OnInit {
     this.load();
   }
 
+  /** Called by the parent when this tab is re-selected — mat-tab-group's
+   * `preserveContent` keeps this component instance alive across tab
+   * switches, so ngOnInit never fires again on its own and edits made on
+   * another tab (e.g. adding an expense) wouldn't otherwise show up here
+   * without a full page reload. */
+  reload(): void {
+    this.load();
+  }
+
   private load(): void {
     this.loading.set(true);
     this.festivalService.getDashboard(this.festivalId()).subscribe((data) => {

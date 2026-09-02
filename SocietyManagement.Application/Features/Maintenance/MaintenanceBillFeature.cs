@@ -104,10 +104,36 @@ public class BulkRecordPaymentCommandValidator : AbstractValidator<BulkRecordPay
 
 public record ResendBillWhatsAppCommand(int MaintenanceBillId) : IRequest<Unit>;
 
+/// <summary>Admin override for the reverse direction of RecordPaymentCommand
+/// — corrects a bill that was marked paid in error. Voids (soft-deletes)
+/// every payment recorded against this specific bill and resets it to
+/// Pending; it does not touch any other bill for the flat, so if this
+/// bill's balance had already been rolled forward into a later one (see
+/// GenerateMonthlyBillsCommand's PreviousBalance), reopening it here is a
+/// deliberate admin call, not something this command tries to untangle.</summary>
+public record SetBillUnpaidCommand(int MaintenanceBillId) : IRequest<Unit>;
+
+/// <summary>Bulk sibling of SetBillUnpaidCommand, mirroring
+/// BulkRecordPaymentCommand's shape exactly — never throws for one bad id,
+/// skips it with a reason instead.</summary>
+public record BulkSetBillsUnpaidResultDto(int MaintenanceBillId, string InvoiceNumber, bool Reversed, string? SkipReason);
+
+public record BulkSetBillsUnpaidCommand(List<int> MaintenanceBillIds) : IRequest<List<BulkSetBillsUnpaidResultDto>>;
+
+public class BulkSetBillsUnpaidCommandValidator : AbstractValidator<BulkSetBillsUnpaidCommand>
+{
+    public BulkSetBillsUnpaidCommandValidator()
+    {
+        RuleFor(x => x.MaintenanceBillIds).NotEmpty();
+    }
+}
+
 public class MaintenanceBillCommandHandlers :
     IRequestHandler<GenerateMonthlyBillsCommand, int>,
     IRequestHandler<RecordPaymentCommand, int>,
     IRequestHandler<BulkRecordPaymentCommand, List<BulkRecordPaymentResultDto>>,
+    IRequestHandler<SetBillUnpaidCommand, Unit>,
+    IRequestHandler<BulkSetBillsUnpaidCommand, List<BulkSetBillsUnpaidResultDto>>,
     IRequestHandler<ResendBillWhatsAppCommand, Unit>
 {
     private readonly IApplicationDbContext _context;
@@ -238,6 +264,21 @@ public class MaintenanceBillCommandHandlers :
                 .ToListAsync(ct);
             var previousBalance = priorUnpaidBills.Sum(b => b.TotalAmount - b.AmountPaid);
 
+            // Each prior unpaid bill's remaining balance is rolled forward in
+            // full into this new bill's PreviousBalance/TotalAmount below —
+            // so once that's done, the old bill's own debt is settled here,
+            // not there. Close them out (AmountPaid = TotalAmount, Paid) so a
+            // *future* month's bill generation doesn't sum the same
+            // now-superseded balance again — without this, a flat that never
+            // gets its very-first unpaid bill individually resolved has that
+            // balance re-added on top of the (already-cascaded) newer bills
+            // every month, compounding the total forever.
+            foreach (var priorBill in priorUnpaidBills)
+            {
+                priorBill.AmountPaid = priorBill.TotalAmount;
+                priorBill.Status = BillStatus.Paid;
+            }
+
             var chargeTotal = lineItems.Sum(i => i.Amount);
             var totalAmount = chargeTotal + previousBalance;
 
@@ -353,8 +394,78 @@ public class MaintenanceBillCommandHandlers :
         }
 
         await _context.SaveChangesAsync(ct);
-        var recordedIds = results.Where(r => r.Recorded).Select(r => r.MaintenanceBillId.ToString());
-        await _auditService.LogAsync(AuditAction.Payment, "Maintenance", nameof(MaintenanceBill), string.Join(",", recordedIds), ct: ct);
+        // EntityId is capped at 50 chars (see AuditLogConfiguration) — a
+        // comma-joined id list overflows it past ~a dozen bills and throws
+        // *after* the payments above already committed, so the request 500s
+        // even though the data saved fine. Keep EntityId short; put the
+        // actual ids in NewValues (unbounded JSON column) instead.
+        var recordedIds = results.Where(r => r.Recorded).Select(r => r.MaintenanceBillId).ToList();
+        await _auditService.LogAsync(AuditAction.Payment, "Maintenance", nameof(MaintenanceBill),
+            $"bulk:{recordedIds.Count}", newValues: new { MaintenanceBillIds = recordedIds }, ct: ct);
+
+        return results;
+    }
+
+    public async Task<Unit> Handle(SetBillUnpaidCommand request, CancellationToken ct)
+    {
+        var bill = await _context.MaintenanceBills.FirstOrDefaultAsync(b => b.Id == request.MaintenanceBillId && !b.IsDeleted, ct)
+            ?? throw new NotFoundException(nameof(MaintenanceBill), request.MaintenanceBillId);
+
+        var payments = await _context.MaintenancePayments
+            .Where(p => p.MaintenanceBillId == bill.Id && !p.IsDeleted)
+            .ToListAsync(ct);
+        foreach (var payment in payments) payment.IsDeleted = true;
+
+        bill.AmountPaid = 0;
+        bill.Status = BillStatus.Pending;
+
+        await _context.SaveChangesAsync(ct);
+        await _auditService.LogAsync(AuditAction.Update, "Maintenance", nameof(MaintenanceBill), bill.Id.ToString(),
+            newValues: new { MarkedUnpaid = true, VoidedPaymentCount = payments.Count }, ct: ct);
+        return Unit.Value;
+    }
+
+    public async Task<List<BulkSetBillsUnpaidResultDto>> Handle(BulkSetBillsUnpaidCommand request, CancellationToken ct)
+    {
+        var bills = await _context.MaintenanceBills
+            .Where(b => request.MaintenanceBillIds.Contains(b.Id) && !b.IsDeleted)
+            .ToListAsync(ct);
+        var billsById = bills.ToDictionary(b => b.Id);
+
+        var payments = await _context.MaintenancePayments
+            .Where(p => !p.IsDeleted && request.MaintenanceBillIds.Contains(p.MaintenanceBillId))
+            .ToListAsync(ct);
+        var paymentsByBillId = payments.GroupBy(p => p.MaintenanceBillId).ToDictionary(g => g.Key, g => g.ToList());
+
+        var results = new List<BulkSetBillsUnpaidResultDto>();
+        foreach (var id in request.MaintenanceBillIds)
+        {
+            if (!billsById.TryGetValue(id, out var bill))
+            {
+                results.Add(new BulkSetBillsUnpaidResultDto(id, "", false, "Bill not found."));
+                continue;
+            }
+            if (bill.Status == BillStatus.Pending)
+            {
+                results.Add(new BulkSetBillsUnpaidResultDto(id, bill.InvoiceNumber, false, "Already unpaid."));
+                continue;
+            }
+
+            if (paymentsByBillId.TryGetValue(id, out var billPayments))
+            {
+                foreach (var payment in billPayments) payment.IsDeleted = true;
+            }
+            bill.AmountPaid = 0;
+            bill.Status = BillStatus.Pending;
+            results.Add(new BulkSetBillsUnpaidResultDto(id, bill.InvoiceNumber, true, null));
+        }
+
+        await _context.SaveChangesAsync(ct);
+        // Same EntityId-length pitfall as BulkRecordPaymentCommand (see its
+        // comment) — kept short here from the start.
+        var reversedIds = results.Where(r => r.Reversed).Select(r => r.MaintenanceBillId).ToList();
+        await _auditService.LogAsync(AuditAction.Update, "Maintenance", nameof(MaintenanceBill),
+            $"bulk-unpaid:{reversedIds.Count}", newValues: new { MaintenanceBillIds = reversedIds }, ct: ct);
 
         return results;
     }

@@ -96,7 +96,7 @@ export class FestivalBudgetTabComponent implements OnInit {
           // visibility — but only meaningful (and only sent) when Category
           // is 'Custom'; ignored/nulled out otherwise. See the backend
           // validator's matching Empty()/NotEmpty() pair.
-          { key: 'customCategoryName', label: 'Custom Category Name (only if Category = Custom)', type: 'text', required: false },
+          { key: 'customCategoryName', label: 'Custom Category Name', type: 'text', required: false, hint: 'Only used when Category is set to Custom' },
           { key: 'estimatedAmount', label: 'Estimated Amount', type: 'number' },
           { key: 'approvedAmount', label: 'Approved Amount', type: 'number' },
           { key: 'notes', label: 'Notes', type: 'textarea', required: false }

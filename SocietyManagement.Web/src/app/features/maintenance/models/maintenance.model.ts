@@ -94,6 +94,8 @@ export interface MaintenanceBillDto {
   status: BillStatus;
   pdfUrl?: string | null;
   ownerNameSnapshot?: string | null;
+  ownerName?: string | null;
+  tenantName?: string | null;
 }
 
 export interface BulkRecordPaymentResultDto {

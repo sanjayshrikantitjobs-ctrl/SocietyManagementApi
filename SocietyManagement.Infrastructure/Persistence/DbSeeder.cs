@@ -42,15 +42,18 @@ public class DbSeeder
 
         var allPermissions = await SeedPermissionsAsync();
 
-        // Super Admin gets everything, including Society.Create. Admin gets
-        // everything EXCEPT Society.Create — the one capability reserved
-        // for Super Admin (creating new societies); every other permission
-        // is identical between the two tiers, since the actual boundary
+        // Super Admin gets everything, including Society.Create and
+        // SupportTickets.ManageAll. Admin gets everything EXCEPT those two —
+        // both reserved for Super Admin (creating new societies; seeing/
+        // resolving every society's support tickets, since Super Admin is
+        // effectively the software vendor here); every other permission is
+        // identical between the two tiers, since the actual boundary
         // between them is SocietyScopeFilter + User.SocietyId, not a
         // smaller permission grant.
+        var superAdminOnlyCodes = new[] { Permissions.Society.Create, Permissions.SupportTickets.ManageAll };
         await SeedRolePermissionsAsync(superAdminRole, allPermissions);
         await SeedRolePermissionsAsync(
-            adminRole, allPermissions.Where(p => p.Code != Permissions.Society.Create).ToList());
+            adminRole, allPermissions.Where(p => !superAdminOnlyCodes.Contains(p.Code)).ToList());
 
         var memberPermissionCodes = new[]
         {
@@ -59,7 +62,8 @@ public class DbSeeder
             Permissions.Notices.View, Permissions.Complaints.View, Permissions.Complaints.Create,
             Permissions.Polls.View, Permissions.Polls.Vote, Permissions.Events.View, Permissions.Events.Rsvp,
             Permissions.Visitors.View, Permissions.Visitors.Approve, Permissions.Visitors.Reject,
-            Permissions.Occupancy.View, Permissions.Committee.View, Permissions.Occupancy.ManageOwn
+            Permissions.Occupancy.View, Permissions.Committee.View, Permissions.Occupancy.ManageOwn,
+            Permissions.SupportTickets.Create
         };
         await SeedRolePermissionsAsync(
             memberRole, allPermissions.Where(p => memberPermissionCodes.Contains(p.Code)).ToList());
@@ -330,7 +334,9 @@ public class DbSeeder
             ("Vehicles", "Register", Permissions.Vehicles.Register),
             ("ParkingFines", "View", Permissions.ParkingFines.View),
             ("ParkingFines", "Create", Permissions.ParkingFines.Create),
-            ("ParkingFines", "Delete", Permissions.ParkingFines.Delete)
+            ("ParkingFines", "Delete", Permissions.ParkingFines.Delete),
+            ("SupportTickets", "Create", Permissions.SupportTickets.Create),
+            ("SupportTickets", "ManageAll", Permissions.SupportTickets.ManageAll)
         };
 
         var existingCodes = await _context.Permissions.Select(p => p.Code).ToListAsync();
@@ -477,4 +483,5 @@ public class DbSeeder
                 changedCount);
         }
     }
+
 }

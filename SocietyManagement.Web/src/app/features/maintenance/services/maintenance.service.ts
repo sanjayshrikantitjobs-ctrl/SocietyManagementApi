@@ -128,8 +128,8 @@ export class MaintenanceService {
   }
 
   // ---- Dashboard -----------------------------------------------------------------
-  getDashboard(societyId: number): Observable<MaintenanceDashboardDto> {
-    return this.http.get<ApiResponse<MaintenanceDashboardDto>>(`${this.baseUrl}/maintenance/dashboard`, { params: { societyId } })
+  getDashboard(societyId: number, month?: string): Observable<MaintenanceDashboardDto> {
+    return this.http.get<ApiResponse<MaintenanceDashboardDto>>(`${this.baseUrl}/maintenance/dashboard`, { params: toHttpParams({ societyId, month }) })
       .pipe(map((r) => r.data!));
   }
 

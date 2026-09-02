@@ -55,6 +55,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<VehicleScanLog> VehicleScanLogs => Set<VehicleScanLog>();
     public DbSet<ParkingFine> ParkingFines => Set<ParkingFine>();
+    public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
     public DbSet<EmergencyContact> EmergencyContacts => Set<EmergencyContact>();
     public DbSet<FlatResaleListing> FlatResaleListings => Set<FlatResaleListing>();
 

@@ -103,5 +103,21 @@
     <main class="content app-fade-in">
       <router-outlet />
     </main>
+
+    <footer class="app-footer">
+      <span class="copyright">&copy; {{ currentYear }} Shrios Software Technologies. All rights reserved.</span>
+      <div class="contact-links">
+        <span class="connect-label">Connect with us:</span>
+        <a href="https://wa.me/919867343302" target="_blank" rel="noopener" matTooltip="WhatsApp" aria-label="WhatsApp">
+          <mat-icon>chat</mat-icon>
+        </a>
+        <a href="tel:+919867343302" matTooltip="Call" aria-label="Phone">
+          <mat-icon>call</mat-icon>
+        </a>
+        <a href="mailto:shriossoftware@gmail.com" matTooltip="Email" aria-label="Email">
+          <mat-icon>mail</mat-icon>
+        </a>
+      </div>
+    </footer>
   </mat-sidenav-content>
 </mat-sidenav-container>

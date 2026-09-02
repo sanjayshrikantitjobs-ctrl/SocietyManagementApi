@@ -13,9 +13,9 @@ public class MaintenanceDashboardController : ApiControllerBase
 {
     [HttpGet("dashboard")]
     [HasPermission(Permissions.Maintenance.View)]
-    public async Task<IActionResult> GetDashboard([FromQuery] int societyId)
+    public async Task<IActionResult> GetDashboard([FromQuery] int societyId, [FromQuery] DateTime? month)
     {
-        var result = await Mediator.Send(new GetMaintenanceDashboardQuery(societyId));
+        var result = await Mediator.Send(new GetMaintenanceDashboardQuery(societyId, month));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 }

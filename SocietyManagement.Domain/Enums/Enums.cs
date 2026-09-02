@@ -171,3 +171,14 @@ public enum ComplaintStatus
     Resolved = 4,
     Closed = 5
 }
+
+/// <summary>A bug/support ticket raised against the software itself by an
+/// Admin or Member, resolved by Super Admin (the software vendor's own
+/// role in this app) — a simpler pipeline than ComplaintStatus since there's
+/// no assignment step.</summary>
+public enum SupportTicketStatus
+{
+    Open = 1,
+    InProgress = 2,
+    Resolved = 3
+}

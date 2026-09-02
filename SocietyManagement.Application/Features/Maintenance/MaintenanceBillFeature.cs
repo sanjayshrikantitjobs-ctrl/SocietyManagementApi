@@ -30,6 +30,12 @@ public class MaintenanceBillDto
     public BillStatus Status { get; set; }
     public string? PdfUrl { get; set; }
     public string? OwnerNameSnapshot { get; set; }
+    /// <summary>Current owner/tenant, resolved live from FlatResidencies —
+    /// distinct from OwnerNameSnapshot, which is frozen at bill-generation
+    /// time and may be either depending who was primary contact then. Null
+    /// when no primary-contact resident is on file for that role.</summary>
+    public string? OwnerName { get; set; }
+    public string? TenantName { get; set; }
 }
 
 public class MaintenanceBillItemDto
@@ -578,7 +584,24 @@ public class MaintenanceBillQueryHandlers :
             .Take(pageSize)
             .ToListAsync(ct);
 
-        return new PaginatedResult<MaintenanceBillDto>(items.Select(Project).ToList(), totalCount, pageNumber, pageSize);
+        var dtos = items.Select(Project).ToList();
+
+        var flatIds = dtos.Select(d => d.FlatId).Distinct().ToList();
+        var primaryContacts = await _context.FlatResidencies
+            .Where(r => !r.IsDeleted && r.MoveOutDate == null && r.IsPrimaryContact
+                && (r.MemberType == MemberType.Owner || r.MemberType == MemberType.Tenant) && flatIds.Contains(r.FlatId))
+            .Select(r => new { r.FlatId, r.MemberType, Name = r.Member.FirstName + " " + r.Member.LastName })
+            .ToListAsync(ct);
+        var ownerNamesByFlat = primaryContacts.Where(r => r.MemberType == MemberType.Owner).ToDictionary(r => r.FlatId, r => r.Name);
+        var tenantNamesByFlat = primaryContacts.Where(r => r.MemberType == MemberType.Tenant).ToDictionary(r => r.FlatId, r => r.Name);
+
+        foreach (var dto in dtos)
+        {
+            dto.OwnerName = ownerNamesByFlat.GetValueOrDefault(dto.FlatId);
+            dto.TenantName = tenantNamesByFlat.GetValueOrDefault(dto.FlatId);
+        }
+
+        return new PaginatedResult<MaintenanceBillDto>(dtos, totalCount, pageNumber, pageSize);
     }
 
     public async Task<MaintenanceBillDetailDto> Handle(GetBillByIdQuery request, CancellationToken ct)

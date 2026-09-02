@@ -196,4 +196,14 @@ public static class Permissions
         public const string Create = "parking_fines.create";
         public const string Delete = "parking_fines.delete";
     }
+
+    /// <summary>Support/bug tickets raised against the software itself
+    /// (Shrios Software Technologies), not a society-internal complaint —
+    /// that's Complaints.*. ManageAll is Super Admin-only, same exclusion
+    /// pattern as Society.Create — never granted to the Admin role.</summary>
+    public static class SupportTickets
+    {
+        public const string Create = "support_tickets.create";
+        public const string ManageAll = "support_tickets.manage_all";
+    }
 }

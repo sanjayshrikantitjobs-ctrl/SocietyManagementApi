@@ -21,11 +21,17 @@ import { MatIconModule } from '@angular/material/icon';
     </div>
   `,
   styles: [`
-    .stat-card { display:flex; align-items:center; gap:16px; padding:20px; overflow: hidden; }
+    /* container-type lets .stat-value's clamp() react to *this card's* width
+       (cqw), not the viewport — so the number shrinks just enough to always
+       fit on one line instead of wrapping mid-digit ("₹194," / "000"). */
+    .stat-card { container-type: inline-size; display:flex; align-items:center; gap:16px; padding:20px; overflow: hidden; }
     .stat-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
     .stat-body { display:flex; flex-direction:column; min-width:0; flex:1; }
     .stat-label { font-size:13px; color: var(--app-text-muted); }
-    .stat-value { font-size:24px; font-weight:700; line-height:1.3; overflow-wrap: anywhere; }
+    .stat-value {
+      font-size: clamp(15px, 9cqw, 24px); font-weight:700; line-height:1.3;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
     .stat-subtext { font-size:12px; color: var(--app-text-muted); overflow-wrap: anywhere; }
   `]
 })

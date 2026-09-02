@@ -52,6 +52,7 @@ public interface IApplicationDbContext
     DbSet<Vehicle> Vehicles { get; }
     DbSet<VehicleScanLog> VehicleScanLogs { get; }
     DbSet<ParkingFine> ParkingFines { get; }
+    DbSet<SupportTicket> SupportTickets { get; }
     DbSet<EmergencyContact> EmergencyContacts { get; }
     DbSet<FlatResaleListing> FlatResaleListings { get; }
 

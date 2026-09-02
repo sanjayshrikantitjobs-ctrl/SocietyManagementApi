@@ -4,26 +4,44 @@ import { RouterLink } from '@angular/router';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { MatChipsModule } from '@angular/material/chips';
+import { MAT_DATE_FORMATS } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatTableModule } from '@angular/material/table';
 import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 import { Society } from '../../../core/models/society.model';
 import { SocietyService } from '../../society-setup/services/society.service';
+import { MONTH_YEAR_FORMATS } from '../../../shared/utils/month-picker-format';
 import { MaintenanceDashboardDto, PAYMENT_MODE_LABELS } from '../models/maintenance.model';
 import { MaintenanceService } from '../services/maintenance.service';
 
 @Component({
   selector: 'app-maintenance-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, BaseChartDirective, MatChipsModule, MatTableModule, SkeletonLoaderComponent, StatCardComponent],
+  imports: [
+    CommonModule, RouterLink, BaseChartDirective, MatChipsModule, MatDatepickerModule, MatFormFieldModule,
+    MatInputModule, MatTableModule, SkeletonLoaderComponent, StatCardComponent
+  ],
+  providers: [{ provide: MAT_DATE_FORMATS, useValue: MONTH_YEAR_FORMATS }],
   template: `
     <div class="tab-content">
+      <div class="toolbar">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="month-field">
+          <mat-label>Month</mat-label>
+          <input matInput [matDatepicker]="picker" [value]="selectedMonthDate" readonly (click)="picker.open()" />
+          <mat-datepicker-toggle matIconSuffix [for]="picker" />
+          <mat-datepicker #picker startView="year" (monthSelected)="onMonthSelected($event, picker)" />
+        </mat-form-field>
+      </div>
+
       @if (loading()) {
         <app-skeleton-loader [rows]="3" [height]="90" />
       } @else if (data(); as d) {
         <div class="stats-grid">
           <app-stat-card label="Total Flats" [value]="d.kpis.totalFlats" icon="apartment" />
-          <app-stat-card label="Bills Generated" [value]="d.kpis.billsGenerated" icon="receipt_long" subtext="this month" />
+          <app-stat-card label="Bills Generated" [value]="d.kpis.billsGenerated" icon="receipt_long" [subtext]="selectedMonthDate | date: 'MMMM yyyy'" />
           <app-stat-card label="Paid" [value]="d.kpis.paid" icon="check_circle" iconColor="#16a34a" iconBg="#ecfdf5" />
           <app-stat-card label="Pending" [value]="d.kpis.pending" icon="pending_actions" iconColor="#b45309" iconBg="#fffbeb" />
           <app-stat-card label="Overdue" [value]="d.kpis.overdue" icon="warning" iconColor="#dc2626" iconBg="#fef2f2" />
@@ -108,6 +126,8 @@ import { MaintenanceService } from '../services/maintenance.service';
   `,
   styles: [`
     .tab-content { padding: 20px 0; }
+    .toolbar { margin-bottom: 16px; }
+    .month-field { width: 160px; }
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 20px; }
     .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px; }
     .chart-card { padding: 16px; height: 300px; display: flex; flex-direction: column; }
@@ -144,14 +164,35 @@ export class MaintenanceDashboardComponent implements OnInit {
   readonly paidVsPendingData = signal<ChartConfiguration<'doughnut'>['data']>({ labels: [], datasets: [{ data: [] }] });
   readonly outstandingByWingData = signal<ChartConfiguration<'bar'>['data']>({ labels: [], datasets: [] });
 
+  selectedMonthDate = new Date();
+  private societyId = 0;
+
+  private monthAsDate(): string {
+    const y = this.selectedMonthDate.getFullYear();
+    const m = String(this.selectedMonthDate.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}-01`;
+  }
+
+  onMonthSelected(date: Date, picker: { close: () => void }): void {
+    this.selectedMonthDate = date;
+    picker.close();
+    this.load();
+  }
+
   ngOnInit(): void {
     this.societyService.getSocieties().subscribe((societies: Society[]) => {
       if (societies.length === 0) { this.loading.set(false); return; }
-      this.maintenanceService.getDashboard(societies[0].id).subscribe((data) => {
-        this.data.set(data);
-        this.applyChartData(data);
-        this.loading.set(false);
-      });
+      this.societyId = societies[0].id;
+      this.load();
+    });
+  }
+
+  private load(): void {
+    this.loading.set(true);
+    this.maintenanceService.getDashboard(this.societyId, this.monthAsDate()).subscribe((data) => {
+      this.data.set(data);
+      this.applyChartData(data);
+      this.loading.set(false);
     });
   }
 

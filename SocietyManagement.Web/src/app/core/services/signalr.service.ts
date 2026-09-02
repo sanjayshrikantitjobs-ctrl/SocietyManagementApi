@@ -56,7 +56,8 @@ export class SignalrService {
     [
       'NewNotice', 'ComplaintUpdate', 'PaymentSuccess', 'FestivalReminder',
       'FestivalContributionRecorded', 'FestivalExpenseApproved',
-      'VisitorApprovalRequested', 'VisitorApproved', 'VisitorRejected', 'VisitorRequestExpired'
+      'VisitorApprovalRequested', 'VisitorApproved', 'VisitorRejected', 'VisitorRequestExpired',
+      'SupportTicketCreated', 'SupportTicketResolved'
     ].forEach((eventName) => {
       this.connection!.on(eventName, (payload: unknown) => {
         this.notifications.update((list) => [{ eventName, payload, receivedAt: new Date() }, ...list].slice(0, 50));

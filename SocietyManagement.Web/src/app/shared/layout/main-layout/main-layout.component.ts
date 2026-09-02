@@ -31,6 +31,7 @@ interface NavItem {
   adminOnly?: boolean;
   superAdminOnly?: boolean;
   hideForWatchman?: boolean;
+  hideForSuperAdmin?: boolean;
   group?: string;
 }
 
@@ -49,12 +50,13 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Complaints', icon: 'report_problem', link: '/complaints', adminOnly: true },
   { label: 'Committee', icon: 'groups', link: '/committee', hideForWatchman: true },
   { label: 'My Bills', icon: 'payments', link: '/my-bills', group: 'My Society', hideForWatchman: true },
-  { label: 'My Water Tanker', icon: 'water_drop', link: '/my-water-tanker', group: 'My Society', hideForWatchman: true },
   { label: 'My Complaints', icon: 'report_problem', link: '/my-complaints', group: 'My Society', hideForWatchman: true },
   { label: 'My Family', icon: 'family_restroom', link: '/my-family', group: 'My Society', hideForWatchman: true },
+  { label: 'Help & Support', icon: 'support_agent', link: '/support', group: 'My Society', hideForWatchman: true, hideForSuperAdmin: true },
   { label: 'Societies', icon: 'apartment', link: '/society-setup', adminOnly: true },
   { label: 'Users', icon: 'group', link: '/users', adminOnly: true },
-  { label: 'Roles & Permissions', icon: 'admin_panel_settings', link: '/roles', adminOnly: true }
+  { label: 'Roles & Permissions', icon: 'admin_panel_settings', link: '/roles', adminOnly: true },
+  { label: 'Support Tickets', icon: 'confirmation_number', link: '/admin/support-tickets', superAdminOnly: true }
 ];
 
 const GROUP_ICONS: Record<string, string> = {
@@ -90,6 +92,8 @@ export class MainLayoutComponent {
   // Topbar notification bell — a live count, not a persisted inbox (see
   // SocietyServiceFeature.cs's GetExpiringServicesQuery comment for why).
   readonly expiringServicesCount = signal(0);
+
+  readonly currentYear = new Date().getFullYear();
 
   // Desktop: sidenav is always present, this only toggles icon-only vs full
   // width. Mobile: sidenav is an overlay drawer, closed by default, and this
@@ -176,7 +180,8 @@ export class MainLayoutComponent {
     return this.navItems.filter((item) =>
       (!item.adminOnly || this.auth.isAdmin()) &&
       (!item.superAdminOnly || this.auth.isSuperAdmin()) &&
-      (!item.hideForWatchman || !this.auth.isWatchman()));
+      (!item.hideForWatchman || !this.auth.isWatchman()) &&
+      (!item.hideForSuperAdmin || !this.auth.isSuperAdmin()));
   }
 
   // Buckets consecutive same-`group` items into one node so the template

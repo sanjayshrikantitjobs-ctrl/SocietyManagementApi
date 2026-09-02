@@ -62,7 +62,13 @@ public class MaintenanceDashboardDto
     public List<OverdueFlatDto> OverdueFlats { get; set; } = new();
 }
 
-public record GetMaintenanceDashboardQuery(int SocietyId) : IRequest<MaintenanceDashboardDto>;
+/// <summary>Month is optional — defaults to the current calendar month, same
+/// as before this became selectable. Every KPI card (and the Overdue Flats
+/// table below it) scopes to whichever month is selected; the 6-month
+/// trend chart and Outstanding-by-Wing table deliberately stay unscoped
+/// (a rolling window and a current-state snapshot respectively, not tied
+/// to one month).</summary>
+public record GetMaintenanceDashboardQuery(int SocietyId, DateTime? Month = null) : IRequest<MaintenanceDashboardDto>;
 
 public class MaintenanceDashboardQueryHandler : IRequestHandler<GetMaintenanceDashboardQuery, MaintenanceDashboardDto>
 {
@@ -74,6 +80,9 @@ public class MaintenanceDashboardQueryHandler : IRequestHandler<GetMaintenanceDa
     {
         var today = DateTime.UtcNow.Date;
         var currentMonth = new DateTime(today.Year, today.Month, 1);
+        var selectedMonth = request.Month.HasValue
+            ? new DateTime(request.Month.Value.Year, request.Month.Value.Month, 1)
+            : currentMonth;
 
         var totalFlats = await _context.Flats
             .CountAsync(f => !f.IsDeleted && f.Floor.Wing.Building.SocietyId == request.SocietyId, ct);
@@ -83,9 +92,9 @@ public class MaintenanceDashboardQueryHandler : IRequestHandler<GetMaintenanceDa
             .Select(b => new { b.Id, b.FlatId, b.Status, b.DueDate, b.TotalAmount, b.AmountPaid, b.BillMonth, b.InvoiceNumber })
             .ToListAsync(ct);
 
-        var currentMonthBills = allBills.Where(b => b.BillMonth == currentMonth).ToList();
+        var currentMonthBills = allBills.Where(b => b.BillMonth == selectedMonth).ToList();
 
-        var unpaidBills = allBills.Where(b => b.Status != BillStatus.Paid).ToList();
+        var unpaidBills = currentMonthBills.Where(b => b.Status != BillStatus.Paid).ToList();
         var overdueBills = unpaidBills.Where(b => b.DueDate < today).ToList();
 
         var kpis = new MaintenanceKpisDto
@@ -95,7 +104,7 @@ public class MaintenanceDashboardQueryHandler : IRequestHandler<GetMaintenanceDa
             Paid = currentMonthBills.Count(b => b.Status == BillStatus.Paid),
             Pending = currentMonthBills.Count(b => b.Status != BillStatus.Paid && b.DueDate >= today),
             Overdue = overdueBills.Count,
-            TotalCollection = allBills.Sum(b => b.AmountPaid),
+            TotalCollection = currentMonthBills.Sum(b => b.AmountPaid),
             Outstanding = unpaidBills.Sum(b => b.TotalAmount - b.AmountPaid)
         };
 
@@ -118,7 +127,7 @@ public class MaintenanceDashboardQueryHandler : IRequestHandler<GetMaintenanceDa
 
         var paidVsPending = new PaidVsPendingDto
         {
-            PaidAmount = allBills.Sum(b => b.AmountPaid),
+            PaidAmount = kpis.TotalCollection,
             OutstandingAmount = kpis.Outstanding
         };
 

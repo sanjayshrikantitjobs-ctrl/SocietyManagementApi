@@ -5,6 +5,7 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
+import { MAT_DATE_FORMATS } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -20,6 +21,7 @@ import { PromptDialogComponent } from '../../../shared/components/prompt-dialog/
 import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.service';
 import { Society } from '../../../core/models/society.model';
 import { SocietyService } from '../../society-setup/services/society.service';
+import { MONTH_YEAR_FORMATS } from '../../../shared/utils/month-picker-format';
 import { BILL_STATUS_LABELS, BillStatus, MaintenanceBillDto } from '../models/maintenance.model';
 import { MaintenanceService } from '../services/maintenance.service';
 
@@ -30,6 +32,7 @@ import { MaintenanceService } from '../services/maintenance.service';
     CommonModule, MatButtonModule, MatCheckboxModule, MatChipsModule, MatDatepickerModule, MatFormFieldModule,
     MatIconModule, MatInputModule, MatMenuModule, MatSelectModule, MatTableModule, DataTableComponent
   ],
+  providers: [{ provide: MAT_DATE_FORMATS, useValue: MONTH_YEAR_FORMATS }],
   template: `
     <div class="tab-content">
       <div class="toolbar">
@@ -86,13 +89,25 @@ import { MaintenanceService } from '../services/maintenance.service';
               <strong>{{ b.flatNumber }}</strong><br /><span class="muted">{{ b.buildingName }} / {{ b.wingName }}</span>
             </td>
           </ng-container>
+          <ng-container matColumnDef="occupant">
+            <th mat-header-cell *matHeaderCellDef>Owner / Tenant</th>
+            <td mat-cell *matCellDef="let b">
+              <span>{{ b.ownerName || '—' }}</span>
+              @if (b.tenantName) { <br /><span class="muted">Tenant: {{ b.tenantName }}</span> }
+            </td>
+          </ng-container>
           <ng-container matColumnDef="invoice">
             <th mat-header-cell *matHeaderCellDef>Invoice</th>
             <td mat-cell *matCellDef="let b">{{ b.invoiceNumber }}<br /><span class="muted">{{ b.billMonth | date: 'MMMM yyyy' }}</span></td>
           </ng-container>
           <ng-container matColumnDef="total">
             <th mat-header-cell *matHeaderCellDef>Total</th>
-            <td mat-cell *matCellDef="let b">₹{{ b.totalAmount | number }}</td>
+            <td mat-cell *matCellDef="let b">
+              ₹{{ b.totalAmount | number }}
+              @if (b.previousBalance > 0) {
+                <br /><span class="muted">incl. ₹{{ b.previousBalance | number }} carried forward</span>
+              }
+            </td>
           </ng-container>
           <ng-container matColumnDef="balance">
             <th mat-header-cell *matHeaderCellDef>Balance</th>
@@ -160,8 +175,8 @@ export class MaintenanceBillsListComponent implements OnInit {
   readonly pageIndex = signal(0);
   readonly pageSize = signal(10);
   readonly statusFilter = signal<BillStatus | null>(null);
-  readonly monthFilterDate = signal<Date | null>(null);
-  readonly displayedColumns = ['select', 'flat', 'invoice', 'total', 'balance', 'dueDate', 'status', 'actions'];
+  readonly monthFilterDate = signal<Date | null>(new Date());
+  readonly displayedColumns = ['select', 'flat', 'occupant', 'invoice', 'total', 'balance', 'dueDate', 'status', 'actions'];
   readonly statusLabels: Record<number, string> = BILL_STATUS_LABELS;
   readonly statusOptions = Object.entries(BILL_STATUS_LABELS).map(([value, label]) => ({ value: Number(value), label }));
   readonly selection = new SelectionModel<number>(true, []);

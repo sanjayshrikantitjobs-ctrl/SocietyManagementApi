@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MAT_DATE_FORMATS } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,19 +11,24 @@ import { MatInputModule } from '@angular/material/input';
 import { PageEvent } from '@angular/material/paginator';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { PromptDialogComponent } from '../../../shared/components/prompt-dialog/prompt-dialog.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.service';
 import { SocietyService } from '../../society-setup/services/society.service';
+import { MONTH_YEAR_FORMATS } from '../../../shared/utils/month-picker-format';
 import { WaterTankerLogDto, WaterTankerLogMonthSummaryDto } from '../models/maintenance.model';
 import { MaintenanceService } from '../services/maintenance.service';
 
 /** Operational log of tanker deliveries (provider, vehicle, count, cost) —
  * not billed to flats. Replaces the old per-flat water tanker collection
  * feature going forward (that data/Finance history is left untouched, just
- * no longer reachable from this screen — see [[water-tanker-billing-removed]]). */
+ * no longer reachable from this screen — see [[water-tanker-billing-removed]]).
+ * Add/Edit/Delete are Admin/Super Admin-only (maintenance.manage), matching
+ * the API's own [HasPermission(Permissions.Maintenance.Manage)] gate on
+ * those endpoints — everyone else with maintenance.view sees a read-only log. */
 @Component({
   selector: 'app-water-tanker',
   standalone: true,
@@ -30,6 +36,7 @@ import { MaintenanceService } from '../services/maintenance.service';
     CommonModule, FormsModule, MatButtonModule, MatDatepickerModule, MatFormFieldModule,
     MatIconModule, MatInputModule, MatTableModule, MatTooltipModule, DataTableComponent, StatCardComponent
   ],
+  providers: [{ provide: MAT_DATE_FORMATS, useValue: MONTH_YEAR_FORMATS }],
   template: `
     <div class="tab-content">
       <div class="toolbar">
@@ -41,9 +48,11 @@ import { MaintenanceService } from '../services/maintenance.service';
             <mat-datepicker-toggle matIconSuffix [for]="picker" />
             <mat-datepicker #picker startView="year" (monthSelected)="onMonthSelected($event, picker)" />
           </mat-form-field>
-          <button mat-flat-button color="primary" (click)="addEntry()" [disabled]="societyId === 0">
-            <mat-icon>add</mat-icon> Log Tanker Entry
-          </button>
+          @if (canManage()) {
+            <button mat-flat-button color="primary" (click)="addEntry()" [disabled]="societyId === 0">
+              <mat-icon>add</mat-icon> Log Tanker Entry
+            </button>
+          }
         </div>
       </div>
 
@@ -87,13 +96,15 @@ import { MaintenanceService } from '../services/maintenance.service';
             <th mat-header-cell *matHeaderCellDef>Notes</th>
             <td mat-cell *matCellDef="let l">{{ l.notes || '—' }}</td>
           </ng-container>
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef></th>
-            <td mat-cell *matCellDef="let l">
-              <button mat-icon-button matTooltip="Edit" (click)="editEntry(l)"><mat-icon>edit</mat-icon></button>
-              <button mat-icon-button matTooltip="Delete" (click)="deleteEntry(l)"><mat-icon>delete_outline</mat-icon></button>
-            </td>
-          </ng-container>
+          @if (canManage()) {
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let l">
+                <button mat-icon-button matTooltip="Edit" (click)="editEntry(l)"><mat-icon>edit</mat-icon></button>
+                <button mat-icon-button matTooltip="Delete" (click)="deleteEntry(l)"><mat-icon>delete_outline</mat-icon></button>
+              </td>
+            </ng-container>
+          }
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
@@ -124,7 +135,16 @@ export class WaterTankerComponent implements OnInit {
   readonly pageSize = signal(10);
   readonly searchTerm = signal('');
   readonly summary = signal<WaterTankerLogMonthSummaryDto | null>(null);
-  readonly displayedColumns = ['date', 'provider', 'vehicle', 'tankers', 'pricePerTanker', 'totalAmount', 'notes', 'actions'];
+  private readonly auth = inject(AuthService);
+
+  get displayedColumns(): string[] {
+    const base = ['date', 'provider', 'vehicle', 'tankers', 'pricePerTanker', 'totalAmount', 'notes'];
+    return this.canManage() ? [...base, 'actions'] : base;
+  }
+
+  canManage(): boolean {
+    return this.auth.hasPermission('maintenance.manage');
+  }
 
   selectedMonthDate = new Date();
   societyId = 0;

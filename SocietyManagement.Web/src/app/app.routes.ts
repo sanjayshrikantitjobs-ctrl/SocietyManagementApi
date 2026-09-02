@@ -91,8 +91,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/maintenance/my-bills/my-bills.component').then((m) => m.MyBillsComponent)
       },
       {
-        path: 'my-water-tanker',
-        loadComponent: () => import('./features/maintenance/my-water-tanker/my-water-tanker.component').then((m) => m.MyWaterTankerComponent)
+        path: 'support',
+        loadComponent: () => import('./features/support/my-tickets.component').then((m) => m.MyTicketsComponent)
+      },
+      {
+        path: 'admin/support-tickets',
+        canActivate: [roleGuard],
+        data: { roles: ['SuperAdmin'] },
+        loadComponent: () => import('./features/support/support-tickets-admin.component').then((m) => m.SupportTicketsAdminComponent)
       },
       {
         path: 'society-setup',

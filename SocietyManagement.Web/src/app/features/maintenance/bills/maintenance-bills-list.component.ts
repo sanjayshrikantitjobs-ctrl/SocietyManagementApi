@@ -55,7 +55,14 @@ import { MaintenanceService } from '../services/maintenance.service';
             </mat-select>
           </mat-form-field>
         </div>
-        <button mat-flat-button color="primary" (click)="generateNow()"><mat-icon>bolt</mat-icon> Generate Bills</button>
+        <div class="toolbar-actions">
+          <button mat-stroked-button [matMenuTriggerFor]="exportMenu"><mat-icon>download</mat-icon> Export</button>
+          <mat-menu #exportMenu="matMenu">
+            <button mat-menu-item (click)="exportPdf()"><mat-icon>picture_as_pdf</mat-icon><span>Export as PDF</span></button>
+            <button mat-menu-item (click)="exportExcel()"><mat-icon>grid_on</mat-icon><span>Export as Excel</span></button>
+          </mat-menu>
+          <button mat-flat-button color="primary" (click)="generateNow()"><mat-icon>bolt</mat-icon> Generate Bills</button>
+        </div>
       </div>
 
       @if (selection.selected.length > 0) {
@@ -158,6 +165,7 @@ import { MaintenanceService } from '../services/maintenance.service';
     .tab-content { padding: 20px 0; }
     .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
     .filters { display: flex; align-items: center; gap: 12px; }
+    .toolbar-actions { display: flex; align-items: center; gap: 10px; }
     .bulk-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 10px 14px; background: var(--app-primary-light); border-radius: 8px; }
     .bulk-toolbar span { font-size: 13px; font-weight: 600; color: var(--app-primary); }
     .month-field { width: 200px; }
@@ -355,6 +363,36 @@ export class MaintenanceBillsListComponent implements OnInit {
       link.download = `${bill.invoiceNumber}.pdf`;
       link.click();
       window.URL.revokeObjectURL(url);
+    });
+  }
+
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  /** Exports whatever the current Month/Status filters show — every
+   * matching bill, not just the current page. */
+  private exportParams() {
+    return {
+      societyId: this.societyId, status: this.statusFilter() ?? undefined,
+      billMonth: this.monthFilterAsString()
+    };
+  }
+
+  exportPdf(): void {
+    this.maintenanceService.exportBillsPdf(this.exportParams()).subscribe((blob) => {
+      this.downloadBlob(blob, 'maintenance-bills.pdf');
+    });
+  }
+
+  exportExcel(): void {
+    this.maintenanceService.exportBillsExcel(this.exportParams()).subscribe((blob) => {
+      this.downloadBlob(blob, 'maintenance-bills.xlsx');
     });
   }
 

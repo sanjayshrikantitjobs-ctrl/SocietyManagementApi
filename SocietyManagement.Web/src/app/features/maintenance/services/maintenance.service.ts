@@ -100,6 +100,12 @@ export class MaintenanceService {
   downloadBillPdf(id: number): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/maintenance/bills/${id}/pdf`, { responseType: 'blob' });
   }
+  exportBillsPdf(params: { societyId: number; status?: number; billMonth?: string }): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/maintenance/bills/export/pdf`, { params: toHttpParams(params), responseType: 'blob' });
+  }
+  exportBillsExcel(params: { societyId: number; status?: number; billMonth?: string }): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/maintenance/bills/export/excel`, { params: toHttpParams(params), responseType: 'blob' });
+  }
   generateBills(societyId: number, billMonth?: string): Observable<number> {
     return this.http.post<ApiResponse<number>>(`${this.baseUrl}/maintenance/generate`, { societyId, billMonth })
       .pipe(map((r) => r.data!));
@@ -128,8 +134,8 @@ export class MaintenanceService {
   }
 
   // ---- Dashboard -----------------------------------------------------------------
-  getDashboard(societyId: number, month?: string): Observable<MaintenanceDashboardDto> {
-    return this.http.get<ApiResponse<MaintenanceDashboardDto>>(`${this.baseUrl}/maintenance/dashboard`, { params: toHttpParams({ societyId, month }) })
+  getDashboard(societyId: number, month?: string, year?: number): Observable<MaintenanceDashboardDto> {
+    return this.http.get<ApiResponse<MaintenanceDashboardDto>>(`${this.baseUrl}/maintenance/dashboard`, { params: toHttpParams({ societyId, month, year }) })
       .pipe(map((r) => r.data!));
   }
 

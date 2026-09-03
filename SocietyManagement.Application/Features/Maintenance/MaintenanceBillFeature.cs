@@ -283,7 +283,13 @@ public class MaintenanceBillCommandHandlers :
                 .OrderByDescending(b => b.BillMonth)
                 .FirstOrDefaultAsync(ct);
             var previousBalance = mostRecentPrior?.TotalAmount ?? 0;
-            var previousPaid = mostRecentPrior?.AmountPaid ?? 0;
+            // Capped at previousBalance: an overpayment on some earlier bill
+            // must not silently carry forward as a credit that forgives a
+            // brand-new month's charge before it's even due — each month's
+            // own charge only counts as paid by money actually applied to
+            // it or carried as genuine unpaid arrears, never by unrelated
+            // excess sitting further back in the history.
+            var previousPaid = Math.Min(mostRecentPrior?.AmountPaid ?? 0, previousBalance);
             if (mostRecentPrior != null) mostRecentPrior.IsRolledForward = true;
 
             var chargeTotal = lineItems.Sum(i => i.Amount);
@@ -304,6 +310,13 @@ public class MaintenanceBillCommandHandlers :
 
             await _context.MaintenanceBills.AddAsync(bill, ct);
             await _context.SaveChangesAsync(ct);
+
+            // Bills are normally generated in calendar order, but if an
+            // earlier month's bill is created after a later one already
+            // exists (e.g. catching up a missed month), that later bill's
+            // Total/AmountPaid were computed without this one and are now
+            // stale. Cascade the recompute forward.
+            await PropagateForwardAsync(flat.Id, billMonth, ct);
 
             var pdfBytes = _pdfService.GenerateBillPdf(BuildPdfData(society, settings, flat.FlatNumber, bill));
             bill.PdfUrl = await _fileStorage.SaveAsync(pdfBytes, $"{invoiceNumber}.pdf", "maintenance-bills", ct);
@@ -366,6 +379,7 @@ public class MaintenanceBillCommandHandlers :
         bill.Status = bill.AmountPaid >= bill.TotalAmount ? BillStatus.Paid : BillStatus.PartiallyPaid;
 
         await _context.SaveChangesAsync(ct);
+        await PropagateForwardAsync(bill.FlatId, bill.BillMonth, ct);
         await _auditService.LogAsync(AuditAction.Payment, "Maintenance", nameof(MaintenanceBill), bill.Id.ToString(), ct: ct);
         return payment.Id;
     }
@@ -411,6 +425,12 @@ public class MaintenanceBillCommandHandlers :
         }
 
         await _context.SaveChangesAsync(ct);
+
+        foreach (var bill in results.Where(r => r.Recorded).Select(r => billsById[r.MaintenanceBillId]))
+        {
+            await PropagateForwardAsync(bill.FlatId, bill.BillMonth, ct);
+        }
+
         // EntityId is capped at 50 chars (see AuditLogConfiguration) — a
         // comma-joined id list overflows it past ~a dozen bills and throws
         // *after* the payments above already committed, so the request 500s
@@ -438,6 +458,7 @@ public class MaintenanceBillCommandHandlers :
         await RecalculateBalanceAsync(bill, ct);
 
         await _context.SaveChangesAsync(ct);
+        await PropagateForwardAsync(bill.FlatId, bill.BillMonth, ct);
         await _auditService.LogAsync(AuditAction.Update, "Maintenance", nameof(MaintenanceBill), bill.Id.ToString(),
             newValues: new { MarkedUnpaid = true, VoidedPaymentCount = payments.Count }, ct: ct);
         return Unit.Value;
@@ -480,6 +501,12 @@ public class MaintenanceBillCommandHandlers :
         }
 
         await _context.SaveChangesAsync(ct);
+
+        foreach (var bill in results.Where(r => r.Reversed).Select(r => billsById[r.MaintenanceBillId]))
+        {
+            await PropagateForwardAsync(bill.FlatId, bill.BillMonth, ct);
+        }
+
         // Same EntityId-length pitfall as BulkRecordPaymentCommand (see its
         // comment) — kept short here from the start.
         var reversedIds = results.Where(r => r.Reversed).Select(r => r.MaintenanceBillId).ToList();
@@ -515,7 +542,10 @@ public class MaintenanceBillCommandHandlers :
             .OrderByDescending(b => b.BillMonth)
             .FirstOrDefaultAsync(ct);
         var previousBalance = mostRecentPrior?.TotalAmount ?? 0;
-        var previousPaid = mostRecentPrior?.AmountPaid ?? 0;
+        // Capped at previousBalance — see GenerateMonthlyBillsCommand's own
+        // comment on this: an overpayment further back in the history must
+        // not silently forgive the month being reopened here.
+        var previousPaid = Math.Min(mostRecentPrior?.AmountPaid ?? 0, previousBalance);
         if (mostRecentPrior != null) mostRecentPrior.IsRolledForward = true;
 
         bill.PreviousBalance = previousBalance;
@@ -523,6 +553,29 @@ public class MaintenanceBillCommandHandlers :
         bill.AmountPaid = ownPaid + previousPaid;
         bill.Status = bill.AmountPaid >= bill.TotalAmount ? BillStatus.Paid
             : bill.AmountPaid > 0 ? BillStatus.PartiallyPaid : BillStatus.Pending;
+    }
+
+    /// <summary>Whenever a bill's own Total/AmountPaid changes — a new bill
+    /// is inserted earlier in the flat's history, a payment lands, a bill
+    /// is reopened — any bill *already existing* for a later month has a
+    /// cumulative Total/AmountPaid computed from what this bill used to
+    /// hold, not what it holds now. Cascades RecalculateBalanceAsync
+    /// forward across every later bill for the flat, oldest first, so each
+    /// one picks up the (by then already-updated) figures from the one
+    /// immediately before it.</summary>
+    private async Task PropagateForwardAsync(int flatId, DateTime fromBillMonthInclusive, CancellationToken ct)
+    {
+        var laterBills = await _context.MaintenanceBills
+            .Where(b => b.FlatId == flatId && !b.IsDeleted && b.BillMonth > fromBillMonthInclusive)
+            .OrderBy(b => b.BillMonth)
+            .ToListAsync(ct);
+        if (laterBills.Count == 0) return;
+
+        foreach (var laterBill in laterBills)
+        {
+            await RecalculateBalanceAsync(laterBill, ct);
+        }
+        await _context.SaveChangesAsync(ct);
     }
 
     public async Task<Unit> Handle(ResendBillWhatsAppCommand request, CancellationToken ct)
@@ -573,18 +626,29 @@ public record GetBillByIdQuery(int Id) : IRequest<MaintenanceBillDetailDto>;
 
 public record GetBillPdfQuery(int Id) : IRequest<byte[]>;
 
+/// <summary>Same filters as GetBillsQuery, unpaginated — every matching bill
+/// is exported, not just the current page.</summary>
+public record GetBillsExportPdfQuery(int SocietyId, BillStatus? Status, DateTime? BillMonth) : IRequest<byte[]>;
+
+public record GetBillsExportExcelQuery(int SocietyId, BillStatus? Status, DateTime? BillMonth) : IRequest<byte[]>;
+
 public class MaintenanceBillQueryHandlers :
     IRequestHandler<GetBillsQuery, PaginatedResult<MaintenanceBillDto>>,
     IRequestHandler<GetBillByIdQuery, MaintenanceBillDetailDto>,
-    IRequestHandler<GetBillPdfQuery, byte[]>
+    IRequestHandler<GetBillPdfQuery, byte[]>,
+    IRequestHandler<GetBillsExportPdfQuery, byte[]>,
+    IRequestHandler<GetBillsExportExcelQuery, byte[]>
 {
     private readonly IApplicationDbContext _context;
     private readonly IMaintenanceBillPdfService _pdfService;
+    private readonly IMaintenanceBillsExportService _exportService;
 
-    public MaintenanceBillQueryHandlers(IApplicationDbContext context, IMaintenanceBillPdfService pdfService)
+    public MaintenanceBillQueryHandlers(
+        IApplicationDbContext context, IMaintenanceBillPdfService pdfService, IMaintenanceBillsExportService exportService)
     {
         _context = context;
         _pdfService = pdfService;
+        _exportService = exportService;
     }
 
     private static MaintenanceBillDto Project(MaintenanceBill b) => new()
@@ -596,15 +660,20 @@ public class MaintenanceBillQueryHandlers :
         IsRolledForward = b.IsRolledForward, PdfUrl = b.PdfUrl, OwnerNameSnapshot = b.OwnerNameSnapshot
     };
 
-    public async Task<PaginatedResult<MaintenanceBillDto>> Handle(GetBillsQuery request, CancellationToken ct)
+    /// <summary>Shared by the paginated list query and both unpaginated
+    /// export queries — same filters, same owner/tenant enrichment, so the
+    /// export always matches exactly what the list screen would show for
+    /// the same filters, just without a page cut.</summary>
+    private async Task<(List<MaintenanceBillDto> Items, int TotalCount)> GetFilteredDtosAsync(
+        int societyId, int? flatId, BillStatus? status, DateTime? billMonth, int? skip, int? take, CancellationToken ct)
     {
         var query = _context.MaintenanceBills
-            .Where(b => !b.IsDeleted && b.SocietyId == request.SocietyId);
+            .Where(b => !b.IsDeleted && b.SocietyId == societyId);
 
-        if (request.FlatId.HasValue) query = query.Where(b => b.FlatId == request.FlatId);
-        if (request.BillMonth.HasValue)
+        if (flatId.HasValue) query = query.Where(b => b.FlatId == flatId);
+        if (billMonth.HasValue)
         {
-            var month = new DateTime(request.BillMonth.Value.Year, request.BillMonth.Value.Month, 1);
+            var month = new DateTime(billMonth.Value.Year, billMonth.Value.Month, 1);
             query = query.Where(b => b.BillMonth == month);
         }
 
@@ -613,26 +682,23 @@ public class MaintenanceBillQueryHandlers :
         // filtering the *computed* display status in memory after Skip/Take
         // would desync the count and the page contents.
         var today = DateTime.UtcNow.Date;
-        query = request.Status switch
+        query = status switch
         {
             BillStatus.Overdue => query.Where(b => b.Status != BillStatus.Paid && b.DueDate < today),
             BillStatus.Paid => query.Where(b => b.Status == BillStatus.Paid),
             BillStatus.Pending or BillStatus.PartiallyPaid =>
-                query.Where(b => b.Status == request.Status && b.DueDate >= today),
+                query.Where(b => b.Status == status && b.DueDate >= today),
             _ => query
         };
 
         var totalCount = await query.CountAsync(ct);
-        var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
-        var pageNumber = Math.Max(request.PageNumber, 1);
 
-        var items = await query
+        var ordered = query
             .Include(b => b.Flat).ThenInclude(f => f.Floor).ThenInclude(fl => fl.Wing).ThenInclude(w => w.Building)
-            .OrderByDescending(b => b.BillMonth).ThenBy(b => b.FlatId)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(ct);
+            .OrderByDescending(b => b.BillMonth).ThenBy(b => b.FlatId);
+        var paged = skip.HasValue && take.HasValue ? ordered.Skip(skip.Value).Take(take.Value) : ordered;
 
+        var items = await paged.ToListAsync(ct);
         var dtos = items.Select(Project).ToList();
 
         var flatIds = dtos.Select(d => d.FlatId).Distinct().ToList();
@@ -650,7 +716,54 @@ public class MaintenanceBillQueryHandlers :
             dto.TenantName = tenantNamesByFlat.GetValueOrDefault(dto.FlatId);
         }
 
+        return (dtos, totalCount);
+    }
+
+    public async Task<PaginatedResult<MaintenanceBillDto>> Handle(GetBillsQuery request, CancellationToken ct)
+    {
+        var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
+        var pageNumber = Math.Max(request.PageNumber, 1);
+
+        var (dtos, totalCount) = await GetFilteredDtosAsync(
+            request.SocietyId, request.FlatId, request.Status, request.BillMonth,
+            (pageNumber - 1) * pageSize, pageSize, ct);
+
         return new PaginatedResult<MaintenanceBillDto>(dtos, totalCount, pageNumber, pageSize);
+    }
+
+    private async Task<MaintenanceBillsExportData> BuildExportDataAsync(
+        int societyId, BillStatus? status, DateTime? billMonth, CancellationToken ct)
+    {
+        var (dtos, _) = await GetFilteredDtosAsync(societyId, null, status, billMonth, null, null, ct);
+
+        var society = await _context.Societies.FirstOrDefaultAsync(s => s.Id == societyId, ct);
+        var monthLabel = billMonth.HasValue ? billMonth.Value.ToString("MMMM yyyy") : "All Months";
+        var statusLabel = status.HasValue ? status.Value.ToString() : "All Statuses";
+
+        return new MaintenanceBillsExportData
+        {
+            SocietyName = society?.Name ?? "Society",
+            FilterLabel = $"{monthLabel} — {statusLabel}",
+            Rows = dtos.Select(d => new MaintenanceBillExportRow
+            {
+                FlatNumber = d.FlatNumber, BuildingName = d.BuildingName, WingName = d.WingName,
+                OwnerName = d.OwnerName, TenantName = d.TenantName, InvoiceNumber = d.InvoiceNumber,
+                BillMonth = d.BillMonth, TotalAmount = d.TotalAmount, AmountPaid = d.AmountPaid,
+                Balance = d.Balance, DueDate = d.DueDate, StatusLabel = d.Status.ToString()
+            }).ToList()
+        };
+    }
+
+    public async Task<byte[]> Handle(GetBillsExportPdfQuery request, CancellationToken ct)
+    {
+        var data = await BuildExportDataAsync(request.SocietyId, request.Status, request.BillMonth, ct);
+        return _exportService.GeneratePdf(data);
+    }
+
+    public async Task<byte[]> Handle(GetBillsExportExcelQuery request, CancellationToken ct)
+    {
+        var data = await BuildExportDataAsync(request.SocietyId, request.Status, request.BillMonth, ct);
+        return _exportService.GenerateExcel(data);
     }
 
     public async Task<MaintenanceBillDetailDto> Handle(GetBillByIdQuery request, CancellationToken ct)

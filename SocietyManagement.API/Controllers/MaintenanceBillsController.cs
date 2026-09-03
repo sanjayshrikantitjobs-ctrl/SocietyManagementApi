@@ -38,6 +38,22 @@ public class MaintenanceBillsController : ApiControllerBase
         return File(pdfBytes, "application/pdf", $"bill-{id}.pdf");
     }
 
+    [HttpGet("bills/export/pdf")]
+    [HasPermission(Permissions.Maintenance.View)]
+    public async Task<IActionResult> ExportBillsPdf([FromQuery] int societyId, [FromQuery] BillStatus? status, [FromQuery] DateTime? billMonth)
+    {
+        var pdfBytes = await Mediator.Send(new GetBillsExportPdfQuery(societyId, status, billMonth));
+        return File(pdfBytes, "application/pdf", "maintenance-bills.pdf");
+    }
+
+    [HttpGet("bills/export/excel")]
+    [HasPermission(Permissions.Maintenance.View)]
+    public async Task<IActionResult> ExportBillsExcel([FromQuery] int societyId, [FromQuery] BillStatus? status, [FromQuery] DateTime? billMonth)
+    {
+        var excelBytes = await Mediator.Send(new GetBillsExportExcelQuery(societyId, status, billMonth));
+        return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "maintenance-bills.xlsx");
+    }
+
     [HttpPost("generate")]
     [HasPermission(Permissions.Maintenance.Manage)]
     public async Task<IActionResult> Generate([FromBody] GenerateBillsRequest request)

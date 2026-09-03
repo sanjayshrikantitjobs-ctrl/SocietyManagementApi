@@ -64,11 +64,12 @@ public class MaintenanceDashboardDto
 
 /// <summary>Month is optional — defaults to the current calendar month, same
 /// as before this became selectable. Every KPI card (and the Overdue Flats
-/// table below it) scopes to whichever month is selected; the 6-month
-/// trend chart and Outstanding-by-Wing table deliberately stay unscoped
-/// (a rolling window and a current-state snapshot respectively, not tied
-/// to one month).</summary>
-public record GetMaintenanceDashboardQuery(int SocietyId, DateTime? Month = null) : IRequest<MaintenanceDashboardDto>;
+/// table below it) scopes to whichever month is selected; the
+/// Outstanding-by-Wing table deliberately stays unscoped (a current-state
+/// snapshot, not tied to one month). Pass Year instead of Month to scope
+/// every KPI card and the trend chart to a full calendar year (Jan–Dec)
+/// rather than one month — Year takes precedence when both are given.</summary>
+public record GetMaintenanceDashboardQuery(int SocietyId, DateTime? Month = null, int? Year = null) : IRequest<MaintenanceDashboardDto>;
 
 public class MaintenanceDashboardQueryHandler : IRequestHandler<GetMaintenanceDashboardQuery, MaintenanceDashboardDto>
 {
@@ -83,19 +84,45 @@ public class MaintenanceDashboardQueryHandler : IRequestHandler<GetMaintenanceDa
         var selectedMonth = request.Month.HasValue
             ? new DateTime(request.Month.Value.Year, request.Month.Value.Month, 1)
             : currentMonth;
+        var selectedYear = request.Year;
 
         var totalFlats = await _context.Flats
             .CountAsync(f => !f.IsDeleted && f.Floor.Wing.Building.SocietyId == request.SocietyId, ct);
 
         var allBills = await _context.MaintenanceBills
             .Where(b => !b.IsDeleted && b.Flat.Floor.Wing.Building.SocietyId == request.SocietyId)
-            .Select(b => new { b.Id, b.FlatId, b.Status, b.DueDate, b.TotalAmount, b.AmountPaid, b.BillMonth, b.InvoiceNumber })
+            .Select(b => new { b.Id, b.FlatId, b.Status, b.DueDate, b.TotalAmount, b.AmountPaid, b.PreviousBalance, b.BillMonth, b.InvoiceNumber })
             .ToListAsync(ct);
 
-        var currentMonthBills = allBills.Where(b => b.BillMonth == selectedMonth).ToList();
+        // Year, when given, scopes every KPI card to the whole calendar year
+        // (Jan–Dec) instead of one month — Year takes precedence over Month.
+        var currentMonthBills = selectedYear.HasValue
+            ? allBills.Where(b => b.BillMonth.Year == selectedYear.Value).ToList()
+            : allBills.Where(b => b.BillMonth == selectedMonth).ToList();
 
         var unpaidBills = currentMonthBills.Where(b => b.Status != BillStatus.Paid).ToList();
         var overdueBills = unpaidBills.Where(b => b.DueDate < today).ToList();
+
+        // TotalAmount/AmountPaid are running cumulative figures (see
+        // GenerateMonthlyBillsCommand's doc comment), so neither "money collected
+        // this month" nor "still owed for this month" can be read off them directly
+        // — both have to come from each bill's own line items and its own
+        // MaintenancePayment rows specifically, the same ground truth the
+        // reconciliation logic uses elsewhere. Otherwise this KPI silently includes
+        // whatever an earlier month's bill carried forward into this one.
+        var currentMonthBillIds = currentMonthBills.Select(b => b.Id).ToHashSet();
+        var paidByBillThisMonth = currentMonthBillIds.Count == 0
+            ? new Dictionary<int, decimal>()
+            : (await _context.MaintenancePayments
+                .Where(p => !p.IsDeleted && currentMonthBillIds.Contains(p.MaintenanceBillId))
+                .Select(p => new { p.MaintenanceBillId, p.Amount })
+                .ToListAsync(ct))
+              .GroupBy(p => p.MaintenanceBillId)
+              .ToDictionary(g => g.Key, g => g.Sum(p => p.Amount));
+
+        var totalCollectionThisMonth = paidByBillThisMonth.Values.Sum();
+        var outstandingThisMonth = currentMonthBills.Sum(b =>
+            Math.Max(0, (b.TotalAmount - b.PreviousBalance) - paidByBillThisMonth.GetValueOrDefault(b.Id, 0)));
 
         var kpis = new MaintenanceKpisDto
         {
@@ -104,24 +131,30 @@ public class MaintenanceDashboardQueryHandler : IRequestHandler<GetMaintenanceDa
             Paid = currentMonthBills.Count(b => b.Status == BillStatus.Paid),
             Pending = currentMonthBills.Count(b => b.Status != BillStatus.Paid && b.DueDate >= today),
             Overdue = overdueBills.Count,
-            TotalCollection = currentMonthBills.Sum(b => b.AmountPaid),
-            Outstanding = unpaidBills.Sum(b => b.TotalAmount - b.AmountPaid)
+            TotalCollection = totalCollectionThisMonth,
+            Outstanding = outstandingThisMonth
         };
 
-        var sixMonthsAgo = currentMonth.AddMonths(-5);
+        // Year mode shows the full Jan–Dec trend for that year; month mode
+        // keeps the existing rolling 6-month window ending at the current
+        // (not necessarily selected) month.
+        var trendStart = selectedYear.HasValue ? new DateTime(selectedYear.Value, 1, 1) : currentMonth.AddMonths(-5);
+        var trendMonthCount = selectedYear.HasValue ? 12 : 6;
+        var trendEndExclusive = trendStart.AddMonths(trendMonthCount);
+
         var monthlyCollection = await _context.MaintenancePayments
             .Where(p => !p.IsDeleted && p.MaintenanceBill.Flat.Floor.Wing.Building.SocietyId == request.SocietyId
-                && p.PaymentDate >= sixMonthsAgo)
+                && p.PaymentDate >= trendStart && p.PaymentDate < trendEndExclusive)
             .GroupBy(p => new { p.PaymentDate.Year, p.PaymentDate.Month })
             .Select(g => new { g.Key.Year, g.Key.Month, Amount = g.Sum(p => p.Amount) })
             .ToListAsync(ct);
 
-        var monthlyTrend = Enumerable.Range(0, 6)
-            .Select(offset => sixMonthsAgo.AddMonths(offset))
+        var monthlyTrend = Enumerable.Range(0, trendMonthCount)
+            .Select(offset => trendStart.AddMonths(offset))
             .Select(month =>
             {
                 var match = monthlyCollection.FirstOrDefault(m => m.Year == month.Year && m.Month == month.Month);
-                return new MonthlyCollectionPointDto { MonthLabel = month.ToString("MMM yyyy"), Amount = match?.Amount ?? 0 };
+                return new MonthlyCollectionPointDto { MonthLabel = month.ToString(selectedYear.HasValue ? "MMM" : "MMM yyyy"), Amount = match?.Amount ?? 0 };
             })
             .ToList();
 

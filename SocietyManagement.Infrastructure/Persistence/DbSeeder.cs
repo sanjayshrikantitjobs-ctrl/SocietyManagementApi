@@ -83,7 +83,6 @@ public class DbSeeder
         await BackfillUserSocietyIdAsync();
         await BackfillSocietyCodesAsync();
         await BackfillRentalAgreementDocumentsAsync();
-        await ReconcileMaintenanceBillsOneOffAsync();
 
         await _context.SaveChangesAsync();
         _logger.LogInformation("Database seeding completed.");
@@ -400,85 +399,6 @@ public class DbSeeder
             "Seeded default admin account {Email} with a well-known temporary password. " +
             "MustChangePassword=true forces an immediate reset — change it before exposing this environment.",
             adminEmail);
-    }
-
-    /// <summary>TEMPORARY — one-off reconciliation. A now-removed startup
-    /// backfill (BackfillMaintenanceBillCascadeAsync) used to re-run its own
-    /// older, conflicting cascade logic on every app start, repeatedly
-    /// overwriting bills with stale figures even after they'd been
-    /// correctly recomputed elsewhere. This walks every flat's bill history
-    /// chronologically and rebuilds Total/AmountPaid/Status/PreviousBalance
-    /// from first principles — each bill's own line items and its own
-    /// MaintenancePayment rows (ground truth, untouched by any of this),
-    /// never from a previously-stored AmountPaid/Status that may have been
-    /// forced by the old bug. Total/AmountPaid are running cumulative
-    /// figures per GenerateMonthlyBillsCommand's model — see its doc
-    /// comment. Idempotent (safe to run more than once), but only needs to
-    /// run once now that nothing keeps re-corrupting the data — remove this
-    /// method and its call site after this pass.</summary>
-    private async Task ReconcileMaintenanceBillsOneOffAsync()
-    {
-        var allBills = await _context.MaintenanceBills.Where(b => !b.IsDeleted).ToListAsync();
-        if (allBills.Count == 0) return;
-
-        var billIds = allBills.Select(b => b.Id).ToHashSet();
-        var itemTotalsByBill = (await _context.MaintenanceBillItems
-                .Where(i => !i.IsDeleted && billIds.Contains(i.MaintenanceBillId))
-                .Select(i => new { i.MaintenanceBillId, i.Amount })
-                .ToListAsync())
-            .GroupBy(i => i.MaintenanceBillId)
-            .ToDictionary(g => g.Key, g => g.Sum(i => i.Amount));
-        var paidTotalsByBill = (await _context.MaintenancePayments
-                .Where(p => !p.IsDeleted && billIds.Contains(p.MaintenanceBillId))
-                .Select(p => new { p.MaintenanceBillId, p.Amount })
-                .ToListAsync())
-            .GroupBy(p => p.MaintenanceBillId)
-            .ToDictionary(g => g.Key, g => g.Sum(p => p.Amount));
-
-        var changedCount = 0;
-        foreach (var group in allBills.GroupBy(b => b.FlatId))
-        {
-            var bills = group.OrderBy(b => b.BillMonth).ToList();
-            var runningTotal = 0m;
-            var runningPaid = 0m;
-
-            for (var i = 0; i < bills.Count; i++)
-            {
-                var bill = bills[i];
-                var ownCharges = itemTotalsByBill.GetValueOrDefault(bill.Id, 0);
-                var ownPaid = paidTotalsByBill.GetValueOrDefault(bill.Id, 0);
-
-                var correctPreviousBalance = runningTotal;
-                var correctTotal = ownCharges + runningTotal;
-                var correctPaid = ownPaid + runningPaid;
-                var correctStatus = correctPaid >= correctTotal ? BillStatus.Paid
-                    : correctPaid > 0 ? BillStatus.PartiallyPaid : BillStatus.Pending;
-                var correctRolledForward = i < bills.Count - 1;
-
-                if (bill.PreviousBalance != correctPreviousBalance || bill.TotalAmount != correctTotal
-                    || bill.AmountPaid != correctPaid || bill.Status != correctStatus
-                    || bill.IsRolledForward != correctRolledForward)
-                {
-                    bill.PreviousBalance = correctPreviousBalance;
-                    bill.TotalAmount = correctTotal;
-                    bill.AmountPaid = correctPaid;
-                    bill.Status = correctStatus;
-                    bill.IsRolledForward = correctRolledForward;
-                    changedCount++;
-                }
-
-                runningTotal = correctTotal;
-                runningPaid = correctPaid;
-            }
-        }
-
-        if (changedCount > 0)
-        {
-            await _context.SaveChangesAsync();
-            _logger.LogWarning(
-                "DOCS ONE-OFF: reconciled {Count} maintenance bill(s) to the cumulative Total/AmountPaid model from real payment records.",
-                changedCount);
-        }
     }
 
 }

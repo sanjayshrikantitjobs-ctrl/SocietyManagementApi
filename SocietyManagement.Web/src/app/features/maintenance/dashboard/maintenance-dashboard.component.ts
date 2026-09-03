@@ -3,11 +3,13 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatChipsModule } from '@angular/material/chips';
 import { MAT_DATE_FORMATS } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
@@ -21,19 +23,33 @@ import { MaintenanceService } from '../services/maintenance.service';
   selector: 'app-maintenance-dashboard',
   standalone: true,
   imports: [
-    CommonModule, RouterLink, BaseChartDirective, MatChipsModule, MatDatepickerModule, MatFormFieldModule,
-    MatInputModule, MatTableModule, SkeletonLoaderComponent, StatCardComponent
+    CommonModule, RouterLink, BaseChartDirective, MatButtonToggleModule, MatChipsModule, MatDatepickerModule, MatFormFieldModule,
+    MatInputModule, MatSelectModule, MatTableModule, SkeletonLoaderComponent, StatCardComponent
   ],
   providers: [{ provide: MAT_DATE_FORMATS, useValue: MONTH_YEAR_FORMATS }],
   template: `
     <div class="tab-content">
       <div class="toolbar">
-        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="month-field">
-          <mat-label>Month</mat-label>
-          <input matInput [matDatepicker]="picker" [value]="selectedMonthDate" readonly (click)="picker.open()" />
-          <mat-datepicker-toggle matIconSuffix [for]="picker" />
-          <mat-datepicker #picker startView="year" (monthSelected)="onMonthSelected($event, picker)" />
-        </mat-form-field>
+        <mat-button-toggle-group [value]="viewMode()" (change)="onViewModeChange($event.value)">
+          <mat-button-toggle value="month">Monthly</mat-button-toggle>
+          <mat-button-toggle value="year">Yearly</mat-button-toggle>
+        </mat-button-toggle-group>
+
+        @if (viewMode() === 'month') {
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="month-field">
+            <mat-label>Month</mat-label>
+            <input matInput [matDatepicker]="picker" [value]="selectedMonthDate" readonly (click)="picker.open()" />
+            <mat-datepicker-toggle matIconSuffix [for]="picker" />
+            <mat-datepicker #picker startView="year" (monthSelected)="onMonthSelected($event, picker)" />
+          </mat-form-field>
+        } @else {
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="year-field">
+            <mat-label>Year</mat-label>
+            <mat-select [value]="selectedYear()" (selectionChange)="onYearSelected($event.value)">
+              @for (y of availableYears; track y) { <mat-option [value]="y">{{ y }}</mat-option> }
+            </mat-select>
+          </mat-form-field>
+        }
       </div>
 
       @if (loading()) {
@@ -41,7 +57,7 @@ import { MaintenanceService } from '../services/maintenance.service';
       } @else if (data(); as d) {
         <div class="stats-grid">
           <app-stat-card label="Total Flats" [value]="d.kpis.totalFlats" icon="apartment" />
-          <app-stat-card label="Bills Generated" [value]="d.kpis.billsGenerated" icon="receipt_long" [subtext]="selectedMonthDate | date: 'MMMM yyyy'" />
+          <app-stat-card label="Bills Generated" [value]="d.kpis.billsGenerated" icon="receipt_long" [subtext]="viewMode() === 'month' ? (selectedMonthDate | date: 'MMMM yyyy') : (selectedYear() + '')" />
           <app-stat-card label="Paid" [value]="d.kpis.paid" icon="check_circle" iconColor="#16a34a" iconBg="#ecfdf5" />
           <app-stat-card label="Pending" [value]="d.kpis.pending" icon="pending_actions" iconColor="#b45309" iconBg="#fffbeb" />
           <app-stat-card label="Overdue" [value]="d.kpis.overdue" icon="warning" iconColor="#dc2626" iconBg="#fef2f2" />
@@ -126,8 +142,8 @@ import { MaintenanceService } from '../services/maintenance.service';
   `,
   styles: [`
     .tab-content { padding: 20px 0; }
-    .toolbar { margin-bottom: 16px; }
-    .month-field { width: 200px; }
+    .toolbar { margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+    .month-field, .year-field { width: 200px; }
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 20px; }
     .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px; }
     .chart-card { padding: 16px; height: 300px; display: flex; flex-direction: column; }
@@ -165,6 +181,12 @@ export class MaintenanceDashboardComponent implements OnInit {
   readonly outstandingByWingData = signal<ChartConfiguration<'bar'>['data']>({ labels: [], datasets: [] });
 
   selectedMonthDate = new Date();
+  readonly viewMode = signal<'month' | 'year'>('month');
+  readonly selectedYear = signal(new Date().getFullYear());
+  readonly availableYears: number[] = (() => {
+    const current = new Date().getFullYear();
+    return Array.from({ length: 6 }, (_, i) => current + 1 - i);
+  })();
   private societyId = 0;
 
   private monthAsDate(): string {
@@ -179,6 +201,16 @@ export class MaintenanceDashboardComponent implements OnInit {
     this.load();
   }
 
+  onViewModeChange(mode: 'month' | 'year'): void {
+    this.viewMode.set(mode);
+    this.load();
+  }
+
+  onYearSelected(year: number): void {
+    this.selectedYear.set(year);
+    this.load();
+  }
+
   ngOnInit(): void {
     this.societyService.getSocieties().subscribe((societies: Society[]) => {
       if (societies.length === 0) { this.loading.set(false); return; }
@@ -189,7 +221,9 @@ export class MaintenanceDashboardComponent implements OnInit {
 
   private load(): void {
     this.loading.set(true);
-    this.maintenanceService.getDashboard(this.societyId, this.monthAsDate()).subscribe((data) => {
+    const month = this.viewMode() === 'month' ? this.monthAsDate() : undefined;
+    const year = this.viewMode() === 'year' ? this.selectedYear() : undefined;
+    this.maintenanceService.getDashboard(this.societyId, month, year).subscribe((data) => {
       this.data.set(data);
       this.applyChartData(data);
       this.loading.set(false);

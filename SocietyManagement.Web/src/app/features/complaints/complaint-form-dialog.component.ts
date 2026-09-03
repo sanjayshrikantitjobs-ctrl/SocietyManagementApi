@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
+import { CurrentSocietyService } from '../../core/services/current-society.service';
 import { FileUploadService } from '../../core/services/file-upload.service';
 import { SocietyService } from '../society-setup/services/society.service';
 import { COMPLAINT_CATEGORY_LABELS } from './models/complaint.model';
@@ -113,6 +114,7 @@ export class ComplaintFormDialogComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly fileUploadService = inject(FileUploadService);
   private readonly societyService = inject(SocietyService);
+  private readonly currentSociety = inject(CurrentSocietyService);
 
   readonly uploading = signal(false);
   readonly flatOptions = signal<{ value: number; label: string }[]>([]);
@@ -134,8 +136,11 @@ export class ComplaintFormDialogComponent implements OnInit {
       this.flatOptions.set(this.data.flatOptions);
     } else {
       // No caller-supplied list means this is the admin board's "Add"
-      // action — admins may raise a complaint for any flat in the society.
-      this.societyService.getFlats({ pageSize: 500 }).subscribe((result) => {
+      // action — admins may raise a complaint for any flat in THEIR OWN
+      // society only. Without societyId this endpoint returns every flat
+      // platform-wide (it doesn't auto-scope from the caller's JWT), which
+      // let an Admin pick another society's flat entirely.
+      this.societyService.getFlats({ pageSize: 500, societyId: this.currentSociety.society()?.id }).subscribe((result) => {
         this.flatOptions.set(result.items.map((f) => ({ value: f.id, label: f.flatNumber })));
       });
     }

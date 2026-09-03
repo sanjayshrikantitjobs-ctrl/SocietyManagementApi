@@ -13,6 +13,7 @@ import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loa
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.service';
 import { SocietyService } from '../../society-setup/services/society.service';
+import { CurrentSocietyService } from '../../../core/services/current-society.service';
 import { EmergencyContactDto } from '../models/resident.model';
 import { ResidentService } from '../services/resident.service';
 import { MOBILE_PATTERN, MOBILE_PATTERN_ERROR } from '../../../shared/validators/mobile.validator';
@@ -89,6 +90,7 @@ import { MOBILE_PATTERN, MOBILE_PATTERN_ERROR } from '../../../shared/validators
 export class EmergencyContactsListComponent implements OnInit {
   private readonly residentService = inject(ResidentService);
   private readonly societyService = inject(SocietyService);
+  private readonly currentSociety = inject(CurrentSocietyService);
   private readonly dialog = inject(MatDialog);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly toast = inject(ToastService);
@@ -101,7 +103,7 @@ export class EmergencyContactsListComponent implements OnInit {
   selectedFlatId: number | null = null;
 
   ngOnInit(): void {
-    this.societyService.getFlats({ pageSize: 500 }).subscribe((result) => {
+    this.societyService.getFlats({ societyId: this.currentSociety.society()?.id, pageSize: 500 }).subscribe((result) => {
       this.flatOptions = result.items.map((f) => ({ value: f.id, label: f.flatNumber }));
     });
   }

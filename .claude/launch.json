@@ -13,6 +13,12 @@
       "runtimeArgs": ["run", "--project", "SocietyManagement.API/SocietyManagement.API.csproj", "--launch-profile", "SocietyManagement.API"],
       "port": 7001,
       "url": "https://localhost:7001"
+    },
+    {
+      "name": "shrios-website-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/Sanjay/MyProject/ShriosWebsite/ShriosWebsite.Web", "start", "--", "--port", "4300"],
+      "port": 4300
     }
   ]
 }

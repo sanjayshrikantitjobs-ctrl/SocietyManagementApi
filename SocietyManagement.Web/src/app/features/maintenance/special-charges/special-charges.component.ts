@@ -108,7 +108,7 @@ export class SpecialChargesComponent implements OnInit {
     this.societyService.getSocieties().subscribe((societies: Society[]) => {
       if (societies.length === 0) { this.loading.set(false); return; }
       this.societyId = societies[0].id;
-      this.societyService.getFlats({ pageSize: 500 }).subscribe((result) => {
+      this.societyService.getFlats({ societyId: this.societyId, pageSize: 500 }).subscribe((result) => {
         this.flatOptions = result.items.map((f) => ({ value: f.id, label: f.flatNumber }));
       });
       this.load();

@@ -74,7 +74,13 @@ const MY_FLAT_STORAGE_KEY = 'societyManagement.myFlatId';
           </ng-container>
           <ng-container matColumnDef="balance">
             <th mat-header-cell *matHeaderCellDef>Balance</th>
-            <td mat-cell *matCellDef="let b">₹{{ b.balance | number }}</td>
+            <td mat-cell *matCellDef="let b">
+              @if (b.balance < 0) {
+                <span class="credit">Credit ₹{{ -b.balance | number }}</span>
+              } @else {
+                ₹{{ b.balance | number }}
+              }
+            </td>
           </ng-container>
           <ng-container matColumnDef="dueDate">
             <th mat-header-cell *matHeaderCellDef>Due Date</th>
@@ -101,6 +107,7 @@ const MY_FLAT_STORAGE_KEY = 'societyManagement.myFlatId';
   styles: [`
     .flat-picker { width: 200px; }
     .flat-label { display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--app-text); }
+    .credit { color: #15803d; font-weight: 600; }
     table { width: 100%; }
     .muted { color: var(--app-text-muted); font-size: 12px; }
     .badge { padding: 2px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; }

@@ -88,6 +88,10 @@ export class StructureComponent implements OnInit {
     this.societyService.getWings(building.id).subscribe((wings) => {
       building.wings = wings;
       building.wingsLoaded = true;
+      // Mutating a property on an object already inside the `buildings` signal
+      // doesn't notify subscribers — re-set with a fresh array reference so the
+      // template (which reads `buildings()`) actually re-renders with the wings.
+      this.buildings.update((bs) => [...bs]);
     });
   }
 
@@ -99,6 +103,7 @@ export class StructureComponent implements OnInit {
       if (!result) return;
       this.societyService.createWing(building.id, result.name).subscribe(() => {
         this.toast.success('Wing added.');
+        building.wingCount = (building.wingCount ?? 0) + 1;
         building.wingsLoaded = false;
         this.loadWings(building);
       });
@@ -112,6 +117,7 @@ export class StructureComponent implements OnInit {
       if (!confirmed) return;
       this.societyService.deleteWing(wing.id).subscribe(() => {
         this.toast.success('Wing deleted.');
+        building.wingCount = Math.max(0, (building.wingCount ?? 1) - 1);
         building.wingsLoaded = false;
         this.loadWings(building);
       });
@@ -123,6 +129,9 @@ export class StructureComponent implements OnInit {
     this.societyService.getFloors(wing.id).subscribe((floors) => {
       wing.floors = floors;
       wing.floorsLoaded = true;
+      // Same reasoning as loadWings(): force a signal notification so the
+      // newly-loaded floors actually show up without a manual reload.
+      this.buildings.update((bs) => [...bs]);
     });
   }
 
@@ -140,6 +149,7 @@ export class StructureComponent implements OnInit {
       if (!result) return;
       this.societyService.createFloor(wing.id, Number(result.floorNumber), result.name).subscribe(() => {
         this.toast.success('Floor added.');
+        wing.floorCount = (wing.floorCount ?? 0) + 1;
         wing.floorsLoaded = false;
         this.loadFloors(wing);
       });
@@ -153,6 +163,7 @@ export class StructureComponent implements OnInit {
       if (!confirmed) return;
       this.societyService.deleteFloor(floor.id).subscribe(() => {
         this.toast.success('Floor deleted.');
+        wing.floorCount = Math.max(0, (wing.floorCount ?? 1) - 1);
         wing.floorsLoaded = false;
         this.loadFloors(wing);
       });

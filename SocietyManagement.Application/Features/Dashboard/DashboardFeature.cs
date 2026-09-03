@@ -53,8 +53,15 @@ public class GetAdminDashboardSummaryQueryHandler : IRequestHandler<GetAdminDash
 
         var totalFlats = await _context.Flats
             .CountAsync(f => !f.IsDeleted && f.Floor.Wing.Building.SocietyId == societyId, ct);
-        var occupiedFlats = await _context.Flats
-            .CountAsync(f => !f.IsDeleted && f.Status == FlatStatus.Occupied && f.Floor.Wing.Building.SocietyId == societyId, ct);
+        // Flat.Status is a legacy field that isn't kept in sync with the
+        // Occupancy module (see ResidentsOverviewFeature's own doc comment) —
+        // occupancy must be derived from FlatOccupancy, same as OwnersCount/
+        // TenantsCount below, or this disagrees with them on the same dashboard.
+        var occupiedFlats = await _context.FlatOccupancies
+            .Where(o => !o.IsDeleted && o.EndDate == null && o.Flat.Floor.Wing.Building.SocietyId == societyId)
+            .Select(o => o.FlatId)
+            .Distinct()
+            .CountAsync(ct);
 
         var ownersCount = await _context.OccupancyMembers
             .Where(m => !m.IsDeleted && m.LeftDate == null && m.FlatOccupancy.Type == OccupancyType.Owner
@@ -70,7 +77,7 @@ public class GetAdminDashboardSummaryQueryHandler : IRequestHandler<GetAdminDash
             .CountAsync(ct);
 
         var unpaidBills = await _context.MaintenanceBills
-            .Where(b => !b.IsDeleted && b.Status != BillStatus.Paid && b.Flat.Floor.Wing.Building.SocietyId == societyId)
+            .Where(b => !b.IsDeleted && !b.IsRolledForward && b.Status != BillStatus.Paid && b.Flat.Floor.Wing.Building.SocietyId == societyId)
             .Select(b => b.TotalAmount - b.AmountPaid)
             .ToListAsync(ct);
         var outstandingBillsCount = unpaidBills.Count;
@@ -338,7 +345,7 @@ public class GetMemberDashboardSummaryQueryHandler
         if (currentFlatId.HasValue)
         {
             myMaintenanceDue = await _context.MaintenanceBills
-                .Where(b => !b.IsDeleted && b.FlatId == currentFlatId && b.Status != BillStatus.Paid)
+                .Where(b => !b.IsDeleted && !b.IsRolledForward && b.FlatId == currentFlatId && b.Status != BillStatus.Paid)
                 .SumAsync(b => (decimal?)(b.TotalAmount - b.AmountPaid), ct) ?? 0;
         }
 

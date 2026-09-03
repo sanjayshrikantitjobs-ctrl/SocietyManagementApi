@@ -42,7 +42,14 @@ import { MaintenanceService } from '../services/maintenance.service';
         <div class="app-card summary-card"><span class="label">Due Date</span><span class="value">{{ b.dueDate | date: 'mediumDate' }}</span></div>
         <div class="app-card summary-card"><span class="label">Total</span><span class="value">₹{{ b.totalAmount | number }}</span></div>
         <div class="app-card summary-card"><span class="label">Paid</span><span class="value paid">₹{{ b.amountPaid | number }}</span></div>
-        <div class="app-card summary-card"><span class="label">Balance</span><span class="value" [class.overdue]="b.balance > 0">₹{{ b.balance | number }}</span></div>
+        <div class="app-card summary-card">
+          <span class="label">Balance</span>
+          @if (b.balance < 0) {
+            <span class="value credit">Credit ₹{{ -b.balance | number }}</span>
+          } @else {
+            <span class="value" [class.overdue]="b.balance > 0">₹{{ b.balance | number }}</span>
+          }
+        </div>
       </div>
 
       <div class="app-card section">
@@ -107,6 +114,7 @@ import { MaintenanceService } from '../services/maintenance.service';
     .summary-card .value { font-size: 16px; font-weight: 700; }
     .summary-card .value.paid { color: #15803d; }
     .summary-card .value.overdue { color: #dc2626; }
+    .summary-card .value.credit, .credit { color: #15803d; }
     .summary-card .muted { font-size: 11px; color: var(--app-text-muted); }
     .section { padding: 20px; margin-bottom: 16px; }
     .section h3 { margin: 0 0 12px; font-size: 14px; }

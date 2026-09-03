@@ -60,6 +60,10 @@ export class FlatsListComponent implements OnInit {
     this.loading.set(true);
     this.societyService.getFlats({
       floorId: this.floorId() ?? undefined,
+      // Without a specific floor, this list must still be scoped to the society
+      // whose "Flats" page we're on — otherwise a Super Admin browsing one
+      // society's flats gets an unscoped, platform-wide result instead.
+      societyId: this.floorId() ? undefined : this.societyId(),
       search: this.searchTerm() || undefined,
       pageNumber: this.pageIndex() + 1,
       pageSize: this.pageSize()

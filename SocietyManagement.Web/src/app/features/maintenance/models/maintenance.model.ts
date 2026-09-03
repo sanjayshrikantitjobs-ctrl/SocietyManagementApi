@@ -92,6 +92,9 @@ export interface MaintenanceBillDto {
   balance: number;
   dueDate: string;
   status: BillStatus;
+  /** True once this bill's balance has been carried into a later month's
+   * bill — no longer independently payable; pay the newer bill instead. */
+  isRolledForward: boolean;
   pdfUrl?: string | null;
   ownerNameSnapshot?: string | null;
   ownerName?: string | null;

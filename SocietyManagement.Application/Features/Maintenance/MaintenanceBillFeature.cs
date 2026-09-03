@@ -28,6 +28,10 @@ public class MaintenanceBillDto
     public decimal Balance => TotalAmount - AmountPaid;
     public DateTime DueDate { get; set; }
     public BillStatus Status { get; set; }
+    /// <summary>True once this bill's balance has been carried into a later
+    /// month's bill — it is no longer independently payable; any remaining
+    /// debt should be settled against the newer bill instead.</summary>
+    public bool IsRolledForward { get; set; }
     public string? PdfUrl { get; set; }
     public string? OwnerNameSnapshot { get; set; }
     /// <summary>Current owner/tenant, resolved live from FlatResidencies —
@@ -265,25 +269,22 @@ public class MaintenanceBillCommandHandlers :
                 fine.Status = FineStatus.Billed;
             }
 
-            var priorUnpaidBills = await _context.MaintenanceBills
-                .Where(b => b.FlatId == flat.Id && !b.IsDeleted && b.Status != BillStatus.Paid)
-                .ToListAsync(ct);
-            var previousBalance = priorUnpaidBills.Sum(b => b.TotalAmount - b.AmountPaid);
-
-            // Each prior unpaid bill's remaining balance is rolled forward in
-            // full into this new bill's PreviousBalance/TotalAmount below —
-            // so once that's done, the old bill's own debt is settled here,
-            // not there. Close them out (AmountPaid = TotalAmount, Paid) so a
-            // *future* month's bill generation doesn't sum the same
-            // now-superseded balance again — without this, a flat that never
-            // gets its very-first unpaid bill individually resolved has that
-            // balance re-added on top of the (already-cascaded) newer bills
-            // every month, compounding the total forever.
-            foreach (var priorBill in priorUnpaidBills)
-            {
-                priorBill.AmountPaid = priorBill.TotalAmount;
-                priorBill.Status = BillStatus.Paid;
-            }
+            // Total/AmountPaid are running cumulative figures — "everything
+            // this flat has ever been billed / paid, through this month" —
+            // not just this one month's own charges. The most recent prior
+            // bill already holds last month's cumulative totals (regardless
+            // of whether it was ever marked Paid), so this month's own
+            // charge and any new payment simply add on top of that running
+            // figure. Flag the prior bill superseded rather than closing it
+            // as Paid — it was never independently payable again once a
+            // newer bill exists.
+            var mostRecentPrior = await _context.MaintenanceBills
+                .Where(b => b.FlatId == flat.Id && !b.IsDeleted && b.BillMonth < billMonth)
+                .OrderByDescending(b => b.BillMonth)
+                .FirstOrDefaultAsync(ct);
+            var previousBalance = mostRecentPrior?.TotalAmount ?? 0;
+            var previousPaid = mostRecentPrior?.AmountPaid ?? 0;
+            if (mostRecentPrior != null) mostRecentPrior.IsRolledForward = true;
 
             var chargeTotal = lineItems.Sum(i => i.Amount);
             var totalAmount = chargeTotal + previousBalance;
@@ -295,8 +296,9 @@ public class MaintenanceBillCommandHandlers :
             {
                 SocietyId = request.SocietyId, FlatId = flat.Id, BillMonth = billMonth, InvoiceNumber = invoiceNumber,
                 PreviousBalance = previousBalance, FineAmount = fineTotal, TotalAmount = totalAmount,
-                AmountPaid = 0, DueDate = dueDate, Status = BillStatus.Pending, GeneratedAt = DateTime.UtcNow,
-                OwnerNameSnapshot = ownerName, OwnerPhoneSnapshot = ownerPhone
+                AmountPaid = previousPaid, DueDate = dueDate,
+                Status = previousPaid >= totalAmount ? BillStatus.Paid : previousPaid > 0 ? BillStatus.PartiallyPaid : BillStatus.Pending,
+                GeneratedAt = DateTime.UtcNow, OwnerNameSnapshot = ownerName, OwnerPhoneSnapshot = ownerPhone
             };
             foreach (var item in lineItems) bill.Items.Add(item);
 
@@ -347,6 +349,10 @@ public class MaintenanceBillCommandHandlers :
         {
             throw new ConflictAppException("This bill is already fully paid.");
         }
+        if (bill.IsRolledForward)
+        {
+            throw new ConflictAppException("This bill's balance has been carried into a later bill — record the payment against that bill instead.");
+        }
 
         var payment = new MaintenancePayment
         {
@@ -382,6 +388,11 @@ public class MaintenanceBillCommandHandlers :
             if (bill.Status == BillStatus.Paid)
             {
                 results.Add(new BulkRecordPaymentResultDto(id, bill.InvoiceNumber, false, "Already fully paid."));
+                continue;
+            }
+            if (bill.IsRolledForward)
+            {
+                results.Add(new BulkRecordPaymentResultDto(id, bill.InvoiceNumber, false, "Balance carried into a later bill — pay that bill instead."));
                 continue;
             }
 
@@ -424,6 +435,7 @@ public class MaintenanceBillCommandHandlers :
 
         bill.AmountPaid = 0;
         bill.Status = BillStatus.Pending;
+        await RecalculateBalanceAsync(bill, ct);
 
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditAction.Update, "Maintenance", nameof(MaintenanceBill), bill.Id.ToString(),
@@ -463,6 +475,7 @@ public class MaintenanceBillCommandHandlers :
             }
             bill.AmountPaid = 0;
             bill.Status = BillStatus.Pending;
+            await RecalculateBalanceAsync(bill, ct);
             results.Add(new BulkSetBillsUnpaidResultDto(id, bill.InvoiceNumber, true, null));
         }
 
@@ -474,6 +487,42 @@ public class MaintenanceBillCommandHandlers :
             $"bulk-unpaid:{reversedIds.Count}", newValues: new { MaintenanceBillIds = reversedIds }, ct: ct);
 
         return results;
+    }
+
+    /// <summary>Recomputes Total/AmountPaid for a bill being reopened via
+    /// Mark Unpaid, against the flat's *current* billing history — not the
+    /// frozen snapshot taken when this bill was originally generated.
+    /// Total/AmountPaid are running cumulative figures (see
+    /// GenerateMonthlyBillsCommand's own doc comment on this), so reopening
+    /// this bill must also re-derive them from whatever the most recent
+    /// prior bill currently holds, the same way generation does — otherwise
+    /// a stale cumulative figure from before some other correction would
+    /// stick around forever. Only this bill's own payments are voided by
+    /// the caller before this runs; everything the flat paid in earlier
+    /// months stays credited, same as it would on a freshly generated
+    /// bill.</summary>
+    private async Task RecalculateBalanceAsync(MaintenanceBill bill, CancellationToken ct)
+    {
+        var ownCharges = await _context.MaintenanceBillItems
+            .Where(i => i.MaintenanceBillId == bill.Id && !i.IsDeleted)
+            .SumAsync(i => (decimal?)i.Amount, ct) ?? 0;
+        var ownPaid = await _context.MaintenancePayments
+            .Where(p => p.MaintenanceBillId == bill.Id && !p.IsDeleted)
+            .SumAsync(p => (decimal?)p.Amount, ct) ?? 0;
+
+        var mostRecentPrior = await _context.MaintenanceBills
+            .Where(b => b.FlatId == bill.FlatId && b.Id != bill.Id && !b.IsDeleted && b.BillMonth < bill.BillMonth)
+            .OrderByDescending(b => b.BillMonth)
+            .FirstOrDefaultAsync(ct);
+        var previousBalance = mostRecentPrior?.TotalAmount ?? 0;
+        var previousPaid = mostRecentPrior?.AmountPaid ?? 0;
+        if (mostRecentPrior != null) mostRecentPrior.IsRolledForward = true;
+
+        bill.PreviousBalance = previousBalance;
+        bill.TotalAmount = ownCharges + previousBalance;
+        bill.AmountPaid = ownPaid + previousPaid;
+        bill.Status = bill.AmountPaid >= bill.TotalAmount ? BillStatus.Paid
+            : bill.AmountPaid > 0 ? BillStatus.PartiallyPaid : BillStatus.Pending;
     }
 
     public async Task<Unit> Handle(ResendBillWhatsAppCommand request, CancellationToken ct)
@@ -544,7 +593,7 @@ public class MaintenanceBillQueryHandlers :
         WingName = b.Flat.Floor.Wing.Name, BillMonth = b.BillMonth, InvoiceNumber = b.InvoiceNumber,
         PreviousBalance = b.PreviousBalance, FineAmount = b.FineAmount, TotalAmount = b.TotalAmount,
         AmountPaid = b.AmountPaid, DueDate = b.DueDate, Status = BillStatusDisplay.Compute(b.Status, b.DueDate),
-        PdfUrl = b.PdfUrl, OwnerNameSnapshot = b.OwnerNameSnapshot
+        IsRolledForward = b.IsRolledForward, PdfUrl = b.PdfUrl, OwnerNameSnapshot = b.OwnerNameSnapshot
     };
 
     public async Task<PaginatedResult<MaintenanceBillDto>> Handle(GetBillsQuery request, CancellationToken ct)
@@ -619,7 +668,7 @@ public class MaintenanceBillQueryHandlers :
             Id = dto.Id, FlatId = dto.FlatId, FlatNumber = dto.FlatNumber, BuildingName = dto.BuildingName,
             WingName = dto.WingName, BillMonth = dto.BillMonth, InvoiceNumber = dto.InvoiceNumber,
             PreviousBalance = dto.PreviousBalance, FineAmount = dto.FineAmount, TotalAmount = dto.TotalAmount,
-            AmountPaid = dto.AmountPaid, DueDate = dto.DueDate, Status = dto.Status, PdfUrl = dto.PdfUrl,
+            AmountPaid = dto.AmountPaid, DueDate = dto.DueDate, Status = dto.Status, IsRolledForward = dto.IsRolledForward, PdfUrl = dto.PdfUrl,
             OwnerNameSnapshot = dto.OwnerNameSnapshot,
             Items = bill.Items.Where(i => !i.IsDeleted).Select(i => new MaintenanceBillItemDto
             {

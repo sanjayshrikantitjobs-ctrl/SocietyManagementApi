@@ -117,7 +117,7 @@ import { MaintenanceService } from '../services/maintenance.service';
     .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
     .toolbar h3 { margin: 0; font-size: 15px; }
     .month-controls { display: flex; align-items: center; gap: 12px; }
-    .month-field { width: 160px; }
+    .month-field { width: 200px; }
     .stats-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
   `]
 })

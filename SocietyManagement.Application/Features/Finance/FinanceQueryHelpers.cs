@@ -200,7 +200,7 @@ internal static class FinanceQueryHelpers
         var today = DateTime.UtcNow.Date;
 
         var unpaidBills = await context.MaintenanceBills
-            .Where(b => !b.IsDeleted && b.Status != BillStatus.Paid && b.Flat.Floor.Wing.Building.SocietyId == societyId)
+            .Where(b => !b.IsDeleted && !b.IsRolledForward && b.Status != BillStatus.Paid && b.Flat.Floor.Wing.Building.SocietyId == societyId)
             .Select(b => new
             {
                 FlatNumber = b.Flat.FlatNumber, PayerName = b.OwnerNameSnapshot ?? b.Flat.FlatNumber,

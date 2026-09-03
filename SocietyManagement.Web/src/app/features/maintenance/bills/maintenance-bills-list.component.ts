@@ -111,7 +111,16 @@ import { MaintenanceService } from '../services/maintenance.service';
           </ng-container>
           <ng-container matColumnDef="balance">
             <th mat-header-cell *matHeaderCellDef>Balance</th>
-            <td mat-cell *matCellDef="let b">₹{{ b.balance | number }}</td>
+            <td mat-cell *matCellDef="let b">
+              @if (b.balance < 0) {
+                <span class="credit">Credit ₹{{ -b.balance | number }}</span>
+              } @else {
+                ₹{{ b.balance | number }}
+              }
+              @if (b.isRolledForward) {
+                <br /><span class="muted">carried into a later bill</span>
+              }
+            </td>
           </ng-container>
           <ng-container matColumnDef="dueDate">
             <th mat-header-cell *matHeaderCellDef>Due Date</th>
@@ -128,7 +137,7 @@ import { MaintenanceService } from '../services/maintenance.service';
               <mat-menu #menu="matMenu">
                 <button mat-menu-item (click)="viewDetail(b)"><mat-icon>visibility</mat-icon><span>View Detail</span></button>
                 <button mat-menu-item (click)="downloadPdf(b)"><mat-icon>download</mat-icon><span>Download PDF</span></button>
-                @if (b.status !== 3) {
+                @if (b.status !== 3 && !b.isRolledForward) {
                   <button mat-menu-item (click)="recordPayment(b)"><mat-icon>payments</mat-icon><span>Record Payment</span></button>
                 }
                 @if (b.status === 2 || b.status === 3) {
@@ -151,9 +160,10 @@ import { MaintenanceService } from '../services/maintenance.service';
     .filters { display: flex; align-items: center; gap: 12px; }
     .bulk-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 10px 14px; background: var(--app-primary-light); border-radius: 8px; }
     .bulk-toolbar span { font-size: 13px; font-weight: 600; color: var(--app-primary); }
-    .month-field { width: 160px; }
+    .month-field { width: 200px; }
     .status-select { width: 200px; }
     .muted { color: var(--app-text-muted); font-size: 12px; }
+    .credit { color: #15803d; font-weight: 600; }
     .badge { padding: 2px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; }
     .status-1 { background: #e2e8f0; color: #475569; }
     .status-2 { background: #fef3c7; color: #b45309; }
@@ -230,7 +240,7 @@ export class MaintenanceBillsListComponent implements OnInit {
   /** Whether the current selection includes any bill "Mark as Paid" can
    * act on — mirrors the per-row menu's own `b.status !== 3` gate. */
   hasPayableSelection(): boolean {
-    return this.bills().some((b) => this.selection.isSelected(b.id) && b.status !== 3);
+    return this.bills().some((b) => this.selection.isSelected(b.id) && b.status !== 3 && !b.isRolledForward);
   }
 
   /** Whether the current selection includes any bill "Mark as Unpaid" can

@@ -132,7 +132,7 @@ public class MaintenanceDashboardQueryHandler : IRequestHandler<GetMaintenanceDa
         };
 
         var outstandingByWing = await _context.MaintenanceBills
-            .Where(b => !b.IsDeleted && b.Status != BillStatus.Paid && b.Flat.Floor.Wing.Building.SocietyId == request.SocietyId)
+            .Where(b => !b.IsDeleted && !b.IsRolledForward && b.Status != BillStatus.Paid && b.Flat.Floor.Wing.Building.SocietyId == request.SocietyId)
             .GroupBy(b => b.Flat.Floor.Wing.Name)
             .Select(g => new OutstandingByWingPointDto { WingName = g.Key, Outstanding = g.Sum(b => b.TotalAmount - b.AmountPaid) })
             .OrderByDescending(x => x.Outstanding)

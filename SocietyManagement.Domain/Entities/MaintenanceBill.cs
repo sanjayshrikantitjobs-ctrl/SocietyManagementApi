@@ -34,6 +34,17 @@ public class MaintenanceBill : BaseAuditableEntity
 
     public BillStatus Status { get; set; } = BillStatus.Pending;
 
+    /// <summary>True once this bill's outstanding balance has been rolled
+    /// forward into a later month's bill (see GenerateMonthlyBillsCommand).
+    /// Deliberately separate from Status/AmountPaid — being rolled forward
+    /// is not the same fact as being paid, and conflating the two used to
+    /// mean a bill an admin manually reopened via Mark Unpaid would get
+    /// silently re-closed as "Paid" the moment the next month's bills were
+    /// generated. Every unpaid-balance aggregate must exclude bills where
+    /// this is true, to avoid double-counting the same debt on both the old
+    /// bill and the newer one it was rolled into.</summary>
+    public bool IsRolledForward { get; set; }
+
     public string? PdfUrl { get; set; }
 
     public DateTime GeneratedAt { get; set; }

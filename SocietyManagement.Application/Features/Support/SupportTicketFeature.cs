@@ -156,6 +156,14 @@ public class SupportTicketQueryHandlers :
 
     public async Task<List<SupportTicketDto>> Handle(GetMyTicketsQuery request, CancellationToken ct) =>
         await _context.SupportTickets
+            // Project() isn't translatable to SQL (it's a separate static method, not
+            // an inline lambda EF Core can decompile), so it runs client-side against
+            // materialized entities — without these Includes, Society/CreatedByUser/
+            // ResolvedByUser are never loaded and Project() NullReferenceExceptions
+            // the moment it dereferences them.
+            .Include(t => t.Society)
+            .Include(t => t.CreatedByUser)
+            .Include(t => t.ResolvedByUser)
             .Where(t => !t.IsDeleted && t.CreatedByUserId == _currentUser.UserId)
             .OrderByDescending(t => t.CreatedAt)
             .Select(t => Project(t))
@@ -163,7 +171,11 @@ public class SupportTicketQueryHandlers :
 
     public async Task<PaginatedResult<SupportTicketDto>> Handle(GetAllTicketsQuery request, CancellationToken ct)
     {
-        var query = _context.SupportTickets.Where(t => !t.IsDeleted);
+        var query = _context.SupportTickets
+            .Include(t => t.Society)
+            .Include(t => t.CreatedByUser)
+            .Include(t => t.ResolvedByUser)
+            .Where(t => !t.IsDeleted);
         if (request.Status.HasValue) query = query.Where(t => t.Status == request.Status);
 
         var totalCount = await query.CountAsync(ct);

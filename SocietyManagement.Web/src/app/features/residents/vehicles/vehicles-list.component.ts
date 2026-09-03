@@ -104,7 +104,7 @@ export class VehiclesListComponent implements OnInit {
       this.residentService.getMembers({ societyId: this.societyId, pageSize: 500 }).subscribe((result) => {
         this.memberOptions = result.items.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }));
       });
-      this.societyService.getFlats({ pageSize: 500 }).subscribe((result) => {
+      this.societyService.getFlats({ societyId: this.societyId, pageSize: 500 }).subscribe((result) => {
         this.flatOptions = result.items.map((f) => ({ value: f.id, label: f.flatNumber }));
       });
       this.societyService.getParkingSlots(this.societyId).subscribe((slots) => {

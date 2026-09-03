@@ -127,7 +127,7 @@ import { MaintenanceService } from '../services/maintenance.service';
   styles: [`
     .tab-content { padding: 20px 0; }
     .toolbar { margin-bottom: 16px; }
-    .month-field { width: 160px; }
+    .month-field { width: 200px; }
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 20px; }
     .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px; }
     .chart-card { padding: 16px; height: 300px; display: flex; flex-direction: column; }

@@ -63,7 +63,7 @@ export class VehicleRegisterDialogService {
 
   private loadOptions(societyId: number) {
     return this.residentService.getMembers({ societyId, pageSize: 500 }).pipe(
-      switchMap((members) => this.societyService.getFlats({ pageSize: 500 }).pipe(
+      switchMap((members) => this.societyService.getFlats({ societyId, pageSize: 500 }).pipe(
         switchMap((flats) => this.societyService.getParkingSlots(societyId).pipe(
           map((slots) => ({
             memberOptions: members.items.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` })),

@@ -13,6 +13,7 @@ public class VehiclesController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Members.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<VehicleDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int? memberId, [FromQuery] int? flatId, [FromQuery] int? societyId, [FromQuery] string? search,
         [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,
@@ -24,6 +25,7 @@ public class VehiclesController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Members.Create)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create(CreateVehicleCommand command)
     {
         var id = await Mediator.Send(command);
@@ -32,6 +34,7 @@ public class VehiclesController : ApiControllerBase
 
     [HttpPut("{id:int}")]
     [HasPermission(Permissions.Members.Update)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(int id, UpdateVehicleCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
@@ -41,6 +44,7 @@ public class VehiclesController : ApiControllerBase
 
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.Members.Delete)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id)
     {
         await Mediator.Send(new DeleteVehicleCommand(id));

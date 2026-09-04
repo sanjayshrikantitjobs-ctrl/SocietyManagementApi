@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:pf="clr-namespace:SocietyManagement.Mobile.Features.ParkingFines"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.ParkingFines.ParkingFinesPage"
+             x:Name="RootPage"
+             x:DataType="pf:ParkingFinesViewModel"
+             Title="Parking Fines">
+
+    <Grid RowDefinitions="*,Auto">
+
+        <RefreshView Grid.Row="0" Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+            <CollectionView ItemsSource="{Binding Fines}">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="32" VerticalOptions="Center">
+                        <Label Text="No parking fines recorded." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:ParkingFineDto">
+                        <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding RegistrationNumber}" FontAttributes="Bold" FontSize="16" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding Reason}" FontSize="13" TextColor="{StaticResource Gray500}" />
+                            <Label Grid.Row="2" Grid.Column="0" Text="{Binding FineDate, StringFormat='{0:d}'}" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Grid.Row="0" Grid.RowSpan="3" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0}'}" VerticalOptions="Center" FontAttributes="Bold" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <Button Grid.Row="1" Text="Record New Fine" Command="{Binding StartAddCommand}" Margin="16" HeightRequest="48"
+                IsVisible="{Binding IsAdding, Converter={StaticResource InvertedBoolConverter}}" />
+
+        <ScrollView Grid.Row="0" Grid.RowSpan="2" BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray950}}"
+                    IsVisible="{Binding IsAdding}">
+            <VerticalStackLayout Padding="20" Spacing="12">
+
+                <Label Text="Vehicle" FontSize="13" TextColor="{StaticResource Gray500}" />
+                <Entry Text="{Binding VehicleSearchText}" Placeholder="Search registration number" TextChanged="OnVehicleSearchTextChanged" />
+                <CollectionView x:Name="VehicleResultsView" ItemsSource="{Binding VehicleSearchResults}"
+                                 SelectionMode="Single" SelectionChanged="OnVehicleSelected"
+                                 IsVisible="{Binding VehicleSearchResults.Count, Converter={StaticResource CountToBoolConverter}}"
+                                 HeightRequest="120">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="gen:VehicleSearchItemDto">
+                            <Grid Padding="8">
+                                <Label Text="{Binding RegistrationNumber}" FontAttributes="Bold" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Label Text="Reason" FontSize="13" TextColor="{StaticResource Gray500}" />
+                <Picker ItemsSource="{Binding Reasons}" SelectedItem="{Binding SelectedReason}" />
+
+                <Label Text="Amount" FontSize="13" TextColor="{StaticResource Gray500}" />
+                <Entry Text="{Binding Amount}" Placeholder="e.g. 500" Keyboard="Numeric" />
+
+                <Label Text="Fine Date" FontSize="13" TextColor="{StaticResource Gray500}" />
+                <DatePicker Date="{Binding FineDate}" />
+
+                <Label Text="Notes (optional)" FontSize="13" TextColor="{StaticResource Gray500}" />
+                <Entry Text="{Binding Notes}" Placeholder="Notes" />
+
+                <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+                       IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+                <HorizontalStackLayout Spacing="12" Margin="0,8,0,0">
+                    <Button Text="Cancel" Command="{Binding CancelAddCommand}" />
+                    <Button Text="Save" Command="{Binding SubmitCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+                </HorizontalStackLayout>
+
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Center" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+
+</ContentPage>

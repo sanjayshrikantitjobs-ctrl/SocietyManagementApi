@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SocietyManagement.API.Authorization;
 using SocietyManagement.Application.Features.Societies.Commands;
+using SocietyManagement.Application.Features.Societies.Common;
 using SocietyManagement.Application.Features.Societies.Queries;
 using SocietyManagement.Shared.Constants;
 using SocietyManagement.Shared.Wrappers;
@@ -15,6 +16,7 @@ public class SocietiesController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Society.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<SocietyDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
         var result = await Mediator.Send(new GetSocietiesQuery());

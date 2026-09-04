@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:auth="clr-namespace:SocietyManagement.Mobile.Features.Auth"
+             x:Class="SocietyManagement.Mobile.Features.Auth.LoginPage"
+             x:DataType="auth:LoginViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray950}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="32,64,32,32" Spacing="20" MaximumWidthRequest="420" HorizontalOptions="Center">
+
+            <Image Source="shrios_logo.png" HeightRequest="72" Aspect="AspectFit" HorizontalOptions="Center" />
+
+            <Label Text="Society Management"
+                   FontSize="26"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+
+            <Label Text="Sign in to your account"
+                   FontSize="14"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource Gray500}"
+                   Margin="0,0,0,12" />
+
+            <Label Text="Email or Mobile Number" FontSize="13" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding Identifier}"
+                   Placeholder="e.g. you@example.com or 9XXXXXXXXX"
+                   Keyboard="Email"
+                   ReturnType="Next" />
+
+            <Label Text="Password" FontSize="13" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding Password}"
+                   Placeholder="Password"
+                   IsPassword="True"
+                   ReturnType="Next" />
+
+            <Label Text="Society Code" FontSize="13" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding SocietyCode}"
+                   Placeholder="Society Code" />
+            <Label Text="Not required for Super Admin login."
+                   FontSize="11"
+                   TextColor="{StaticResource Gray400}" />
+
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="#DC2626"
+                   FontSize="13"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Button Text="Sign In"
+                    Command="{Binding LoginCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                    HeightRequest="48"
+                    Margin="0,8,0,0" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

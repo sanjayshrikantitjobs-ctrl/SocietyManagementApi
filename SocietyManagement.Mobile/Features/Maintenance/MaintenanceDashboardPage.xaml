@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:maint="clr-namespace:SocietyManagement.Mobile.Features.Maintenance"
+             x:Class="SocietyManagement.Mobile.Features.Maintenance.MaintenanceDashboardPage"
+             x:DataType="maint:MaintenanceDashboardViewModel"
+             Title="Maintenance">
+
+    <RefreshView Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+        <ScrollView>
+            <VerticalStackLayout Padding="16" Spacing="12">
+
+                <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+                       IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="12"
+                      IsVisible="{Binding Kpis, Converter={StaticResource IsNotNullConverter}}">
+
+                    <Border Grid.Row="0" Grid.Column="0" Stroke="{StaticResource Gray300}" StrokeShape="RoundRectangle 12" Padding="14">
+                        <VerticalStackLayout>
+                            <Label Text="Bills Generated" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Text="{Binding Kpis.BillsGenerated}" FontSize="24" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Row="0" Grid.Column="1" Stroke="{StaticResource Gray300}" StrokeShape="RoundRectangle 12" Padding="14">
+                        <VerticalStackLayout>
+                            <Label Text="Total Flats" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Text="{Binding Kpis.TotalFlats}" FontSize="24" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Row="1" Grid.Column="0" Stroke="{StaticResource Gray300}" StrokeShape="RoundRectangle 12" Padding="14">
+                        <VerticalStackLayout>
+                            <Label Text="Paid" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Text="{Binding Kpis.Paid}" FontSize="24" FontAttributes="Bold" TextColor="#15803D" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Row="1" Grid.Column="1" Stroke="{StaticResource Gray300}" StrokeShape="RoundRectangle 12" Padding="14">
+                        <VerticalStackLayout>
+                            <Label Text="Overdue" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Text="{Binding Kpis.Overdue}" FontSize="24" FontAttributes="Bold" TextColor="#DC2626" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Row="2" Grid.Column="0" Stroke="{StaticResource Gray300}" StrokeShape="RoundRectangle 12" Padding="14">
+                        <VerticalStackLayout>
+                            <Label Text="Collected" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Text="{Binding Kpis.TotalCollection, StringFormat='₹{0:N0}'}" FontSize="20" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Row="2" Grid.Column="1" Stroke="{StaticResource Gray300}" StrokeShape="RoundRectangle 12" Padding="14">
+                        <VerticalStackLayout>
+                            <Label Text="Outstanding" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Text="{Binding Kpis.Outstanding, StringFormat='₹{0:N0}'}" FontSize="20" FontAttributes="Bold" TextColor="#DC2626" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Stroke="{StaticResource Gray300}" StrokeShape="RoundRectangle 12" Padding="14">
+                        <VerticalStackLayout>
+                            <Label Text="Tanker Expense" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Text="{Binding Kpis.TankerExpense, StringFormat='₹{0:N0}'}" FontSize="20" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                </Grid>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+
+</ContentPage>

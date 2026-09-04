@@ -13,6 +13,7 @@ public class VisitorPurposesController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Visitors.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<VisitorPurposeDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] int societyId, [FromQuery] bool? isActive)
     {
         var result = await Mediator.Send(new GetPurposesQuery(societyId, isActive));
@@ -21,6 +22,7 @@ public class VisitorPurposesController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Visitors.ManagePurposes)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create(CreatePurposeCommand command)
     {
         var id = await Mediator.Send(command);
@@ -29,6 +31,7 @@ public class VisitorPurposesController : ApiControllerBase
 
     [HttpPut("{id:int}")]
     [HasPermission(Permissions.Visitors.ManagePurposes)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(int id, UpdatePurposeCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
@@ -38,6 +41,7 @@ public class VisitorPurposesController : ApiControllerBase
 
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.Visitors.ManagePurposes)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id)
     {
         await Mediator.Send(new DeletePurposeCommand(id));

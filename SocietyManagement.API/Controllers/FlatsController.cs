@@ -13,6 +13,7 @@ public class FlatsController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Society.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<FlatDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int? floorId, [FromQuery] FlatStatus? status, [FromQuery] string? search, [FromQuery] int? societyId,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)

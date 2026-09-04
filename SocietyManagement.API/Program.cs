@@ -110,7 +110,10 @@ app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.MapGet("/health", () => Results.Ok(new { status = "Healthy", timestamp = DateTime.UtcNow }))
-    .AllowAnonymous();
+    .AllowAnonymous()
+    .WithTags("Health"); // minimal APIs default to the assembly name as their Swagger tag
+                          // otherwise ("SocietyManagement.API") — invalid as a generated C#
+                          // identifier, which breaks NSwag client codegen for the Mobile app.
 
 // ---- Database migration + seed -------------------------------------------------
 // Requires EF Core migrations to already exist (this sandbox could not run

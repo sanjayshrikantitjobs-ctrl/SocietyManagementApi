@@ -14,6 +14,7 @@ public class VisitorVisitsController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Visitors.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<VisitorVisitDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int societyId, [FromQuery] VisitorVisitStatus? status, [FromQuery] int? gateId,
         [FromQuery] int? flatId, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate,
@@ -27,6 +28,7 @@ public class VisitorVisitsController : ApiControllerBase
 
     [HttpGet("pending")]
     [HasPermission(Permissions.Visitors.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<VisitorVisitDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPending()
     {
         var result = await Mediator.Send(new GetPendingApprovalsQuery());
@@ -35,6 +37,7 @@ public class VisitorVisitsController : ApiControllerBase
 
     [HttpGet("mine")]
     [HasPermission(Permissions.Visitors.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<VisitorVisitDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMine(
         [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null, [FromQuery] string? search = null,
         [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = true,
@@ -46,6 +49,7 @@ public class VisitorVisitsController : ApiControllerBase
 
     [HttpGet("currently-inside")]
     [HasPermission(Permissions.Visitors.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<VisitorVisitDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCurrentlyInside([FromQuery] int societyId)
     {
         var result = await Mediator.Send(new GetCurrentlyInsideQuery(societyId));
@@ -54,6 +58,7 @@ public class VisitorVisitsController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Visitors.Create)]
+    [ProducesResponseType(typeof(ApiResponse<VisitorVisitDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Create(CreateVisitCommand command)
     {
         var result = await Mediator.Send(command);
@@ -62,6 +67,7 @@ public class VisitorVisitsController : ApiControllerBase
 
     [HttpPost("{id:int}/approve")]
     [HasPermission(Permissions.Visitors.Approve)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Approve(int id)
     {
         await Mediator.Send(new ApproveVisitCommand(id));
@@ -70,6 +76,7 @@ public class VisitorVisitsController : ApiControllerBase
 
     [HttpPost("{id:int}/reject")]
     [HasPermission(Permissions.Visitors.Reject)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Reject(int id, [FromBody] RejectVisitRequest request)
     {
         await Mediator.Send(new RejectVisitCommand(id, request.Reason));
@@ -78,6 +85,7 @@ public class VisitorVisitsController : ApiControllerBase
 
     [HttpPost("{id:int}/check-in")]
     [HasPermission(Permissions.Visitors.CheckIn)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> CheckIn(int id)
     {
         await Mediator.Send(new CheckInVisitCommand(id));
@@ -86,6 +94,7 @@ public class VisitorVisitsController : ApiControllerBase
 
     [HttpPost("{id:int}/check-out")]
     [HasPermission(Permissions.Visitors.CheckOut)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> CheckOut(int id)
     {
         await Mediator.Send(new CheckOutVisitCommand(id));
@@ -94,6 +103,7 @@ public class VisitorVisitsController : ApiControllerBase
 
     [HttpPost("{id:int}/cancel")]
     [HasPermission(Permissions.Visitors.Create)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Cancel(int id)
     {
         await Mediator.Send(new CancelVisitCommand(id));

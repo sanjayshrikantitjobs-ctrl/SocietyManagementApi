@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:res="clr-namespace:SocietyManagement.Mobile.Features.Residents"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Residents.ResidentsListPage"
+             x:DataType="res:ResidentsListViewModel"
+             Title="Residents">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Entry Grid.Row="0" Margin="16,12" Text="{Binding SearchText}" Placeholder="Search by name, phone, email"
+               Completed="OnSearchCompleted" />
+
+        <Label Grid.Row="1" Margin="16,0" Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+        <RefreshView Grid.Row="2" Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+            <CollectionView ItemsSource="{Binding Members}">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="32" VerticalOptions="Center">
+                        <Label Text="No residents found." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:MemberDto">
+                        <Grid Padding="16,10" RowDefinitions="Auto,Auto">
+                            <Label Grid.Row="0" FontAttributes="Bold" FontSize="16">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding FirstName}" />
+                                        <Span Text=" " />
+                                        <Span Text="{Binding LastName}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                            <Label Grid.Row="1" Text="{Binding Phone}" FontSize="13" TextColor="{StaticResource Gray500}" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+
+</ContentPage>

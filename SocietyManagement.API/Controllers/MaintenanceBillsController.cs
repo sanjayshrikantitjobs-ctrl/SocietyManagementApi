@@ -14,6 +14,7 @@ public class MaintenanceBillsController : ApiControllerBase
 {
     [HttpGet("bills")]
     [HasPermission(Permissions.Maintenance.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<MaintenanceBillDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetBills(
         [FromQuery] int societyId, [FromQuery] int? flatId, [FromQuery] BillStatus? status, [FromQuery] DateTime? billMonth,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)

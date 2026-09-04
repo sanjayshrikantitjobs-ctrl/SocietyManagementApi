@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vs="clr-namespace:SocietyManagement.Mobile.Features.VehicleSecurity"
+             x:Class="SocietyManagement.Mobile.Features.VehicleSecurity.VehicleScanPage"
+             x:DataType="vs:VehicleScanViewModel"
+             Title="Scan Vehicle">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="14" MaximumWidthRequest="480" HorizontalOptions="Center">
+
+            <Label Text="Registration Number" FontSize="13" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding RegistrationNumber}" Placeholder="e.g. MH04AB1234" />
+
+            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Button Text="Search" Command="{Binding SearchCommand}" HeightRequest="48"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Center" />
+
+            <Border Stroke="{StaticResource Gray300}" StrokeShape="RoundRectangle 12" Padding="16"
+                    IsVisible="{Binding ScanResult, Converter={StaticResource IsNotNullConverter}}" Margin="0,12,0,0">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="{Binding ScanResult.RegistrationNumber}" FontSize="20" FontAttributes="Bold" />
+                    <Label Text="Registered" TextColor="#15803D" FontAttributes="Bold"
+                           IsVisible="{Binding ScanResult.VehicleId, Converter={StaticResource IsNotNullConverter}}" />
+                    <Label Text="Not Registered" TextColor="#DC2626" FontAttributes="Bold"
+                           IsVisible="{Binding ScanResult.VehicleId, Converter={StaticResource IsNullConverter}}" />
+                    <Label Text="{Binding ScanResult.FlatNumber, StringFormat='Flat: {0}'}"
+                           IsVisible="{Binding ScanResult.FlatNumber, Converter={StaticResource StringToBoolConverter}}" />
+                    <Label Text="{Binding ScanResult.OwnerName, StringFormat='Owner: {0}'}"
+                           IsVisible="{Binding ScanResult.OwnerName, Converter={StaticResource StringToBoolConverter}}" />
+                    <Label Text="{Binding ScanResult.OwnerPhone, StringFormat='Phone: {0}'}"
+                           IsVisible="{Binding ScanResult.OwnerPhone, Converter={StaticResource StringToBoolConverter}}" />
+                    <Label Text="{Binding ScanResult.ParkingSlotNumber, StringFormat='Parking: {0}'}"
+                           IsVisible="{Binding ScanResult.ParkingSlotNumber, Converter={StaticResource StringToBoolConverter}}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="Scan Another" Command="{Binding ResetCommand}"
+                    IsVisible="{Binding ScanResult, Converter={StaticResource IsNotNullConverter}}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

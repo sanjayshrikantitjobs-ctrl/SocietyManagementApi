@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="SocietyManagement.Mobile.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:authCore="clr-namespace:SocietyManagement.Mobile.Core.Auth"
+    xmlns:auth="clr-namespace:SocietyManagement.Mobile.Features.Auth"
+    xmlns:dash="clr-namespace:SocietyManagement.Mobile.Features.Dashboard"
+    xmlns:visitors="clr-namespace:SocietyManagement.Mobile.Features.Visitors"
+    xmlns:vs="clr-namespace:SocietyManagement.Mobile.Features.VehicleSecurity"
+    xmlns:pf="clr-namespace:SocietyManagement.Mobile.Features.ParkingFines"
+    xmlns:res="clr-namespace:SocietyManagement.Mobile.Features.Residents"
+    xmlns:maint="clr-namespace:SocietyManagement.Mobile.Features.Maintenance"
+    xmlns:fest="clr-namespace:SocietyManagement.Mobile.Features.Festivals"
+    x:DataType="authCore:AuthState"
+    FlyoutBehavior="Flyout"
+    Title="Society Management">
+
+    <ShellContent
+        Title="Login"
+        Shell.FlyoutBehavior="Disabled"
+        ContentTemplate="{DataTemplate auth:LoginPage}"
+        Route="LoginPage" />
+
+    <FlyoutItem Title="Dashboard">
+        <ShellContent ContentTemplate="{DataTemplate dash:DashboardPage}" Route="DashboardPage" />
+    </FlyoutItem>
+
+    <!-- Watchman destinations (Phase 1). Visible to Watchman and to
+         Admin/SuperAdmin too, since those roles hold every permission
+         Watchman does and may need to cover the gate. -->
+    <FlyoutItem Title="New Visitor" IsVisible="{Binding IsWatchman}">
+        <ShellContent ContentTemplate="{DataTemplate visitors:NewVisitorPage}" Route="NewVisitorPage" />
+    </FlyoutItem>
+    <FlyoutItem Title="Currently Inside" IsVisible="{Binding IsWatchman}">
+        <ShellContent ContentTemplate="{DataTemplate visitors:CurrentlyInsidePage}" Route="CurrentlyInsidePage" />
+    </FlyoutItem>
+    <FlyoutItem Title="Scan Vehicle" IsVisible="{Binding IsWatchman}">
+        <ShellContent ContentTemplate="{DataTemplate vs:VehicleScanPage}" Route="VehicleScanPage" />
+    </FlyoutItem>
+    <FlyoutItem Title="Scan History" IsVisible="{Binding IsWatchman}">
+        <ShellContent ContentTemplate="{DataTemplate vs:VehicleScanHistoryPage}" Route="VehicleScanHistoryPage" />
+    </FlyoutItem>
+    <FlyoutItem Title="Parking Fines" IsVisible="{Binding IsWatchman}">
+        <ShellContent ContentTemplate="{DataTemplate pf:ParkingFinesPage}" Route="ParkingFinesPage" />
+    </FlyoutItem>
+
+    <!-- Admin/SuperAdmin destinations. More land here phase by phase
+         (Society Setup, Occupancy, Staff, Services, Users, Roles, Finance,
+         Complaints, Events, Support) — matches roleGuard's coarse
+         Admin-or-SuperAdmin gate on the web (app.routes.ts), not a
+         per-permission check, since every Admin-visible module here is
+         already permission-checked server-side regardless. -->
+    <FlyoutItem Title="Residents" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate res:ResidentsListPage}" Route="ResidentsListPage" />
+    </FlyoutItem>
+    <FlyoutItem Title="Maintenance" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate maint:MaintenanceDashboardPage}" Route="MaintenanceDashboardPage" />
+    </FlyoutItem>
+    <FlyoutItem Title="Festivals" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate fest:FestivalsListPage}" Route="FestivalsListPage" />
+    </FlyoutItem>
+
+</Shell>

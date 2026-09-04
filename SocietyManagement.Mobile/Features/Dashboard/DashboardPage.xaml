@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:dash="clr-namespace:SocietyManagement.Mobile.Features.Dashboard"
+             x:Class="SocietyManagement.Mobile.Features.Dashboard.DashboardPage"
+             x:DataType="dash:DashboardViewModel"
+             Title="Dashboard">
+
+    <VerticalStackLayout Padding="24" Spacing="16" VerticalOptions="Center">
+
+        <Image Source="shrios_logo.png" HeightRequest="64" Aspect="AspectFit" HorizontalOptions="Center" />
+
+        <Label Text="Signed in" FontSize="14" TextColor="{StaticResource Gray500}" HorizontalOptions="Center" />
+
+        <Label Text="{Binding FullName}" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" />
+
+        <Label Text="{Binding RoleName}" FontSize="14" TextColor="{StaticResource Primary}" HorizontalOptions="Center" />
+
+        <Label Text="{Binding Email}" FontSize="13" TextColor="{StaticResource Gray500}" HorizontalOptions="Center" />
+
+        <Button Text="Log Out" Command="{Binding LogoutCommand}" Margin="0,24,0,0" />
+
+    </VerticalStackLayout>
+
+</ContentPage>

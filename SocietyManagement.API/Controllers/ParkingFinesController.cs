@@ -15,6 +15,7 @@ public class ParkingFinesController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.ParkingFines.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<ParkingFineDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int societyId, [FromQuery] int? vehicleId, [FromQuery] string? search,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
@@ -25,6 +26,7 @@ public class ParkingFinesController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.ParkingFines.Create)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Create(CreateParkingFineCommand command)
     {
         var id = await Mediator.Send(command);
@@ -33,6 +35,7 @@ public class ParkingFinesController : ApiControllerBase
 
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.ParkingFines.Delete)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id)
     {
         await Mediator.Send(new DeleteParkingFineCommand(id));

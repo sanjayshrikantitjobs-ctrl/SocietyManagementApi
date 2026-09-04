@@ -20,6 +20,7 @@ public class VehicleScansController : ApiControllerBase
 {
     [HttpPost("confirm")]
     [HasPermission(Permissions.Vehicles.Scan)]
+    [ProducesResponseType(typeof(ApiResponse<VehicleScanResultDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Confirm(ConfirmVehicleScanRequest request)
     {
         var result = await Mediator.Send(new ConfirmVehicleScanCommand(
@@ -30,6 +31,7 @@ public class VehicleScansController : ApiControllerBase
 
     [HttpGet("search")]
     [HasPermission(Permissions.Vehicles.Search)]
+    [ProducesResponseType(typeof(ApiResponse<List<VehicleSearchItemDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Search([FromQuery] int societyId, [FromQuery] string query)
     {
         var result = await Mediator.Send(new GetVehicleSearchQuery(societyId, query));
@@ -38,6 +40,7 @@ public class VehicleScansController : ApiControllerBase
 
     [HttpGet("history")]
     [HasPermission(Permissions.Vehicles.Scan)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<VehicleScanHistoryDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> History(
         [FromQuery] int societyId, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate,
         [FromQuery] VehicleScanResultStatus? result, [FromQuery] int pageNumber = 1,

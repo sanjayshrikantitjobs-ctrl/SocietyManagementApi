@@ -29,4 +29,15 @@
     <ProjectReference Include="..\SocietyManagement.Shared\SocietyManagement.Shared.csproj" />
   </ItemGroup>
 
+  <!-- Microsoft.EntityFrameworkCore.Design's IncludeAssets above deliberately
+       keeps "build" (needed locally for `dotnet ef migrations add`), but that
+       drags its design-time-only build-host folders into the publish output
+       too — dozens of MB that are never touched at runtime. Confirmed present
+       (and confirmed dead weight) on the live App Service deployment, which
+       is on a disk-quota-constrained tier where every MB matters. -->
+  <Target Name="TrimEfDesignTimeBuildHosts" AfterTargets="Publish">
+    <RemoveDir Directories="$(PublishDir)BuildHost-net472" Condition="Exists('$(PublishDir)BuildHost-net472')" />
+    <RemoveDir Directories="$(PublishDir)BuildHost-netcore" Condition="Exists('$(PublishDir)BuildHost-netcore')" />
+  </Target>
+
 </Project>

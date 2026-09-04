@@ -7,6 +7,7 @@ using SocietyManagement.Application.Features.Auth.Commands.Logout;
 using SocietyManagement.Application.Features.Auth.Commands.RefreshToken;
 using SocietyManagement.Application.Features.Auth.Commands.ResetPassword;
 using SocietyManagement.Application.Features.Auth.Commands.VerifyOtp;
+using SocietyManagement.Application.Features.Auth.Common;
 using SocietyManagement.Application.Features.Users.Queries.GetProfile;
 using SocietyManagement.Shared.Wrappers;
 
@@ -20,6 +21,7 @@ public class AuthController : ApiControllerBase
 {
     [HttpPost("login")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponseDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Login(LoginCommand command)
     {
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -29,6 +31,7 @@ public class AuthController : ApiControllerBase
 
     [HttpPost("refresh-token")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponseDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Refresh(RefreshTokenCommand command)
     {
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -38,6 +41,7 @@ public class AuthController : ApiControllerBase
 
     [HttpPost("logout")]
     [Authorize]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Logout(LogoutCommand command)
     {
         await Mediator.Send(command);
@@ -46,6 +50,7 @@ public class AuthController : ApiControllerBase
 
     [HttpPost("forgot-password")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> ForgotPassword(ForgotPasswordCommand command)
     {
         await Mediator.Send(command);
@@ -54,6 +59,7 @@ public class AuthController : ApiControllerBase
 
     [HttpPost("verify-otp")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     public async Task<IActionResult> VerifyOtp(VerifyOtpCommand command)
     {
         var isValid = await Mediator.Send(command);
@@ -62,6 +68,7 @@ public class AuthController : ApiControllerBase
 
     [HttpPost("reset-password")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> ResetPassword(ResetPasswordCommand command)
     {
         await Mediator.Send(command);
@@ -70,6 +77,7 @@ public class AuthController : ApiControllerBase
 
     [HttpPost("change-password")]
     [Authorize]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> ChangePassword(ChangePasswordCommand command)
     {
         await Mediator.Send(command);
@@ -78,6 +86,7 @@ public class AuthController : ApiControllerBase
 
     [HttpGet("me")]
     [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<UserProfileDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Me()
     {
         var result = await Mediator.Send(new GetProfileQuery());

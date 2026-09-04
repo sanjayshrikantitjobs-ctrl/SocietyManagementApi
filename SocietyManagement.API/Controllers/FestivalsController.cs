@@ -13,6 +13,7 @@ public class FestivalsController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<FestivalDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int societyId, [FromQuery] FestivalStatus? status, [FromQuery] int? year,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
@@ -23,6 +24,7 @@ public class FestivalsController : ApiControllerBase
 
     [HttpGet("{id:int}")]
     [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(ApiResponse<FestivalDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await Mediator.Send(new GetFestivalByIdQuery(id));

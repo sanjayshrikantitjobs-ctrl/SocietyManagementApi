@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:visitors="clr-namespace:SocietyManagement.Mobile.Features.Visitors"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Visitors.CurrentlyInsidePage"
+             x:Name="RootPage"
+             x:DataType="visitors:CurrentlyInsideViewModel"
+             Title="Currently Inside">
+
+    <RefreshView Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+        <Grid>
+            <CollectionView ItemsSource="{Binding Visits}">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="32" VerticalOptions="Center">
+                        <Label Text="No visitors currently inside." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:VisitorVisitDto">
+                        <Grid Padding="16,12" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding VisitorName}" FontAttributes="Bold" FontSize="16" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding FlatNumber, StringFormat='Flat {0}'}" FontSize="13" TextColor="{StaticResource Gray500}" />
+                            <Label Grid.Row="2" Grid.Column="0" Text="{Binding PurposeName}" FontSize="13" TextColor="{StaticResource Gray500}" />
+                            <Button Grid.Row="0" Grid.RowSpan="3" Grid.Column="1" Text="Check Out" VerticalOptions="Center"
+                                    Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.CheckOutCommand}"
+                                    CommandParameter="{Binding .}" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+    </RefreshView>
+
+</ContentPage>

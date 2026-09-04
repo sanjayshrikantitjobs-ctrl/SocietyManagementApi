@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vs="clr-namespace:SocietyManagement.Mobile.Features.VehicleSecurity"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.VehicleSecurity.VehicleScanHistoryPage"
+             x:DataType="vs:VehicleScanHistoryViewModel"
+             Title="Scan History">
+
+    <RefreshView Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+        <CollectionView ItemsSource="{Binding History}">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="32" VerticalOptions="Center">
+                    <Label Text="No scans logged yet." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="gen:VehicleScanHistoryDto">
+                    <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                        <Label Grid.Row="0" Grid.Column="0" Text="{Binding NormalizedRegistrationNumber}" FontAttributes="Bold" FontSize="16" />
+                        <Label Grid.Row="1" Grid.Column="0" Text="{Binding ScannedAt, StringFormat='{0:g}'}" FontSize="12" TextColor="{StaticResource Gray500}" />
+                        <Label Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Text="{Binding Result}" VerticalOptions="Center" FontAttributes="Bold" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </RefreshView>
+
+</ContentPage>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:visitors="clr-namespace:SocietyManagement.Mobile.Features.Visitors"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Visitors.NewVisitorPage"
+             x:DataType="visitors:NewVisitorViewModel"
+             Title="New Visitor">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="14">
+
+            <Label Text="Flat" FontSize="13" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding FlatSearchText}" Placeholder="Search flat number" TextChanged="OnFlatSearchTextChanged" />
+            <CollectionView x:Name="FlatResultsView"
+                             ItemsSource="{Binding FlatSearchResults}"
+                             SelectionMode="Single"
+                             SelectionChanged="OnFlatSelected"
+                             IsVisible="{Binding FlatSearchResults.Count, Converter={StaticResource CountToBoolConverter}}"
+                             HeightRequest="140">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FlatDto">
+                        <Grid Padding="8">
+                            <Label Text="{Binding FlatNumber}" FontAttributes="Bold" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <Label Text="{Binding SelectedFlat.FlatNumber, StringFormat='Selected: {0}'}"
+                   IsVisible="{Binding SelectedFlat, Converter={StaticResource IsNotNullConverter}}"
+                   TextColor="{StaticResource Primary}" FontSize="13" />
+
+            <Label Text="Purpose" FontSize="13" TextColor="{StaticResource Gray500}" />
+            <Picker ItemsSource="{Binding Purposes}" SelectedItem="{Binding SelectedPurpose}" ItemDisplayBinding="{Binding Name}" Title="Select purpose" />
+
+            <Label Text="Gate" FontSize="13" TextColor="{StaticResource Gray500}" />
+            <Picker ItemsSource="{Binding Gates}" SelectedItem="{Binding SelectedGate}" ItemDisplayBinding="{Binding Name}" Title="Select gate" />
+
+            <Label Text="Visitor Name" FontSize="13" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding VisitorName}" Placeholder="Full name" />
+
+            <Label Text="Visitor Mobile" FontSize="13" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding VisitorMobile}" Placeholder="10-digit mobile number" Keyboard="Telephone" />
+
+            <Label Text="Vehicle Number (optional)" FontSize="13" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding VisitorVehicleNumber}" Placeholder="e.g. MH04AB1234" />
+
+            <Label Text="Number of Visitors" FontSize="13" TextColor="{StaticResource Gray500}" />
+            <Stepper Value="{Binding NumberOfVisitors}" Minimum="1" Maximum="20" />
+            <Label Text="{Binding NumberOfVisitors}" HorizontalOptions="Center" />
+
+            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Label Text="{Binding SuccessMessage}" TextColor="#15803D" FontSize="13"
+                   IsVisible="{Binding SuccessMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Button Text="Submit Request" Command="{Binding SubmitCommand}" HeightRequest="48" Margin="0,8,0,0"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

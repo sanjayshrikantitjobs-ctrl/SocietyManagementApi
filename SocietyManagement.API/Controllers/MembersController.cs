@@ -14,6 +14,7 @@ public class MembersController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Members.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<MemberDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int societyId, [FromQuery] string? search,
         [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,
@@ -25,6 +26,7 @@ public class MembersController : ApiControllerBase
 
     [HttpGet("{id:int}")]
     [HasPermission(Permissions.Members.View)]
+    [ProducesResponseType(typeof(ApiResponse<MemberDetailDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await Mediator.Send(new GetMemberByIdQuery(id));

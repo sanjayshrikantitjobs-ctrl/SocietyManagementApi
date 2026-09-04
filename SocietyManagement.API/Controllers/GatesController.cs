@@ -13,6 +13,7 @@ public class GatesController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Visitors.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<GateDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] int societyId, [FromQuery] bool? isActive)
     {
         var result = await Mediator.Send(new GetGatesQuery(societyId, isActive));
@@ -21,6 +22,7 @@ public class GatesController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Visitors.ManageGates)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create(CreateGateCommand command)
     {
         var id = await Mediator.Send(command);
@@ -29,6 +31,7 @@ public class GatesController : ApiControllerBase
 
     [HttpPut("{id:int}")]
     [HasPermission(Permissions.Visitors.ManageGates)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(int id, UpdateGateCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
@@ -38,6 +41,7 @@ public class GatesController : ApiControllerBase
 
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.Visitors.ManageGates)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id)
     {
         await Mediator.Send(new DeleteGateCommand(id));

@@ -32,6 +32,8 @@ public static class SwaggerServiceExtensions
             options.AddSecurityDefinition("Bearer", securityScheme);
             options.AddSecurityRequirement(new OpenApiSecurityRequirement { { securityScheme, Array.Empty<string>() } });
 
+            options.SchemaFilter<EnumSchemaFilter>();
+
             var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
             var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
             if (File.Exists(xmlPath))

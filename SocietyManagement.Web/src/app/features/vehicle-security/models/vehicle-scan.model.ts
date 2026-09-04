@@ -45,8 +45,9 @@ export interface VehicleSearchItemDto {
   flatNumber?: string | null;
 }
 
-/** Ephemeral OCR-assist result for the drag-to-crop step — never persisted
- * by itself. NormalizedText is a prefill suggestion, always left editable. */
+/** Ephemeral OCR-assist result from the client-side live scan
+ * (VehicleLiveScanComponent, Tesseract.js) — never persisted by itself.
+ * NormalizedText is a prefill suggestion, always left editable. */
 export interface PlateOcrResultDto {
   recognizedText: string;
   normalizedText: string;

@@ -14,14 +14,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Tesseract's English trained-data model, used by VehiclePlateOcrService
-         (SocietyManagement.Infrastructure) — resolved relative to
-         AppContext.BaseDirectory at runtime, so it must publish alongside the
-         API host regardless of which project the OCR code lives in. -->
-    <Content Include="tessdata\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
     <PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
@@ -36,23 +28,5 @@
     <ProjectReference Include="..\SocietyManagement.Infrastructure\SocietyManagement.Infrastructure.csproj" />
     <ProjectReference Include="..\SocietyManagement.Shared\SocietyManagement.Shared.csproj" />
   </ItemGroup>
-
-  <!-- Trims dead weight from the OCR native dependencies — the Azure App
-       Service Plan is on the Free (F1) tier with a 1GB quota shared by
-       another app, and every MB here counts. Neither exclusion touches
-       anything VehiclePlateOcrService actually uses:
-       - TesseractOCR's own .targets unconditionally copies both x86 and x64
-         native binaries; this app only ever runs x64.
-       - opencv_videoio_ffmpeg*.dll is OpenCV's lazily-loaded VideoCapture/
-         VideoWriter backend — VehiclePlateOcrService only ever decodes
-         static JPEG/PNG via Cv2.ImDecode/ImEncode (the imgcodecs module),
-         never touches video I/O. -->
-  <Target Name="TrimUnneededNativeAssets" AfterTargets="Publish">
-    <ItemGroup>
-      <_UnneededNativeFiles Include="$(PublishDir)**\opencv_videoio_ffmpeg*.dll" />
-    </ItemGroup>
-    <Delete Files="@(_UnneededNativeFiles)" />
-    <RemoveDir Directories="$(PublishDir)x86" Condition="Exists('$(PublishDir)x86')" />
-  </Target>
 
 </Project>

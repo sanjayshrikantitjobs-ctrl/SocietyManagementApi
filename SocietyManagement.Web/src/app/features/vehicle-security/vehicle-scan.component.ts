@@ -13,7 +13,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { SocietyService } from '../society-setup/services/society.service';
 import { PlateOcrResultDto, VehicleScanResultDto } from './models/vehicle-scan.model';
-import { PlateCropComponent } from './plate-crop.component';
+import { LiveScanAcceptedEvent, VehicleLiveScanComponent } from './vehicle-live-scan.component';
 import { VehicleScanResultComponent } from './vehicle-scan-result.component';
 import { VehicleScanResultDialogComponent } from './vehicle-scan-result-dialog.component';
 import { VehicleScanService } from './services/vehicle-scan.service';
@@ -28,35 +28,32 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-/** Mirrors the backend's VehicleNumberNormalizer.Normalize — strips
+/** Mirrors VehicleLiveScanComponent's own normalizePlate — strips
  * everything but letters/digits and uppercases, so a stored "MH 04 AB 1234"
  * can be compared directly against an OCR/search-term "MH04AB1234". */
 function normalizePlate(text: string): string {
   return text.toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
-/** Manual plate entry -> match flow. OCR was tried across several engines
- * this session (Tesseract, PaddleOCR, Aspose.OCR) and dropped — unreliable
- * reads, and PaddleOCR alone added ~540MB to the deployment package — so the
- * feature shipped as manual-entry-only, with an attached photo kept purely
- * as an audit record.
+/** Manual plate entry -> match flow, with an optional OCR assist.
  *
- * OCR is back as an ASSIST, not a replacement: attaching a photo now shows a
- * drag-to-crop overlay (PlateCropComponent) so the guard/resident boxes the
- * plate region themselves — the earlier Tesseract attempt failed because it
- * guessed a fixed image region instead. The crop is sent to
- * /vehicle-scans/ocr-preview (VehiclePlateOcrService, OpenCvSharp + the
- * TesseractOCR package) purely to PREFILL registrationNumber; the field
- * stays fully editable and manual entry remains authoritative — a bad OCR
- * guess can never block a scan. See tryAutoMatch() for the one case that
- * skips the manual Search click: an exact match on the non-persisting
- * /search endpoint auto-opens the details popup directly. */
+ * OCR history in this codebase: several server-side engines were tried
+ * (Tesseract, PaddleOCR, Aspose.OCR) and a photo-capture+drag-to-crop+
+ * server-OCR flow (OpenCvSharp + TesseractOCR) shipped and worked locally —
+ * but silently failed once deployed, because ~180MB of native OCR binaries
+ * didn't survive intact onto a 1GB-quota shared App Service tier. OCR now
+ * runs entirely client-side via Tesseract.js (VehicleLiveScanComponent): a
+ * continuous camera feed, no server round-trip, no native binaries to
+ * deploy. It's still purely an ASSIST — the registration field stays fully
+ * editable and manual entry remains authoritative; see tryAutoMatch() for
+ * the one case that skips the manual Search click: an exact match on the
+ * non-persisting /search endpoint auto-opens the details popup directly. */
 @Component({
   selector: 'app-vehicle-scan',
   standalone: true,
   imports: [
     CommonModule, FormsModule, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule,
-    MatProgressSpinnerModule, PageHeaderComponent, PlateCropComponent, VehicleScanResultComponent
+    MatProgressSpinnerModule, PageHeaderComponent, VehicleLiveScanComponent, VehicleScanResultComponent
   ],
   template: `
     <div class="app-page scan-page">
@@ -64,22 +61,21 @@ function normalizePlate(text: string): string {
 
       @if (!scanResult()) {
         <div class="app-card capture-card">
-          @if (showCrop()) {
-            <app-plate-crop [imageUrl]="photoPreviewUrl()!" (cropped)="onCropped($event)" (skip)="onCropSkipped()" />
+          @if (liveScanActive()) {
+            <app-vehicle-live-scan (accepted)="onLiveScanAccepted($event)" (cancelled)="liveScanActive.set(false)" />
           } @else {
             @if (photoPreviewUrl()) {
               <img [src]="photoPreviewUrl()" alt="" class="photo-preview" />
               <button mat-stroked-button type="button" (click)="photoInput.click()">Retake Photo</button>
-              @if (analyzingOcr()) {
-                <div class="ocr-status"><mat-spinner diameter="16" /> Reading plate…</div>
-              } @else if (checkingMatch()) {
+              @if (checkingMatch()) {
                 <div class="ocr-status"><mat-spinner diameter="16" /> Checking records…</div>
-              } @else if (ocrResult() && !ocrResult()!.normalizedText) {
-                <div class="ocr-status muted">Couldn't read the plate — enter it manually.</div>
               }
             } @else {
+              <button mat-flat-button color="primary" type="button" class="capture-btn" (click)="liveScanActive.set(true)">
+                <mat-icon>videocam</mat-icon> Live Scan Plate
+              </button>
               <button mat-stroked-button type="button" class="capture-btn" (click)="photoInput.click()">
-                <mat-icon>photo_camera</mat-icon> Attach a Photo (optional)
+                <mat-icon>photo_camera</mat-icon> Attach a Photo (optional, for the record)
               </button>
             }
             <input #photoInput type="file" accept="image/*" capture="environment" hidden (change)="onPhotoSelected($event)" />
@@ -127,10 +123,13 @@ export class VehicleScanComponent implements OnInit {
   readonly scanResult = signal<VehicleScanResultDto | null>(null);
   registrationNumber = signal('');
 
-  readonly showCrop = signal(false);
-  readonly analyzingOcr = signal(false);
+  readonly liveScanActive = signal(false);
   readonly checkingMatch = signal(false);
   readonly ocrResult = signal<PlateOcrResultDto | null>(null);
+  /** Snapshot captured by VehicleLiveScanComponent at the moment it accepted
+   * a plate — kept as the audit photo for /confirm, same role photoFile
+   * plays for the manual-attach path. */
+  private liveScanImageBase64: string | null = null;
 
   private societyId = 0;
 
@@ -148,28 +147,18 @@ export class VehicleScanComponent implements OnInit {
     if (!file) return;
     this.photoFile.set(file);
     this.photoPreviewUrl.set(URL.createObjectURL(file));
+    this.liveScanImageBase64 = null;
     this.ocrResult.set(null);
-    this.showCrop.set(true);
   }
 
-  async onCropped(corners: { x: number; y: number }[]): Promise<void> {
-    this.showCrop.set(false);
-    const file = this.photoFile();
-    if (!file) return;
-
-    this.analyzingOcr.set(true);
-    const imageBase64 = await fileToBase64(file);
-    this.vehicleScanService.recognizePlate(imageBase64, corners).subscribe({
-      next: (result) => {
-        this.analyzingOcr.set(false);
-        this.ocrResult.set(result);
-        if (result.normalizedText) {
-          this.registrationNumber.set(result.normalizedText);
-          this.tryAutoMatch(result.normalizedText);
-        }
-      },
-      error: () => this.analyzingOcr.set(false)
-    });
+  onLiveScanAccepted(event: LiveScanAcceptedEvent): void {
+    this.liveScanActive.set(false);
+    this.photoFile.set(null);
+    this.liveScanImageBase64 = event.imageBase64;
+    this.photoPreviewUrl.set(`data:image/jpeg;base64,${event.imageBase64}`);
+    this.ocrResult.set({ recognizedText: event.recognizedText, normalizedText: event.normalizedText, confidence: event.confidence });
+    this.registrationNumber.set(event.normalizedText);
+    this.tryAutoMatch(event.normalizedText);
   }
 
   /** OCR-assist convenience: if the guess exactly matches a registered
@@ -198,17 +187,13 @@ export class VehicleScanComponent implements OnInit {
     });
   }
 
-  onCropSkipped(): void {
-    this.showCrop.set(false);
-  }
-
   async confirmAndSearch(): Promise<void> {
     const number = this.registrationNumber().trim();
     if (!number) return;
 
     this.confirming.set(true);
     const file = this.photoFile();
-    const imageBytes = file ? await fileToBase64(file) : null;
+    const imageBytes = this.liveScanImageBase64 ?? (file ? await fileToBase64(file) : null);
     const ocr = this.ocrResult();
 
     this.vehicleScanService.confirm({
@@ -256,8 +241,8 @@ export class VehicleScanComponent implements OnInit {
     this.photoPreviewUrl.set(null);
     this.scanResult.set(null);
     this.registrationNumber.set('');
-    this.showCrop.set(false);
-    this.analyzingOcr.set(false);
+    this.liveScanActive.set(false);
+    this.liveScanImageBase64 = null;
     this.checkingMatch.set(false);
     this.ocrResult.set(null);
   }

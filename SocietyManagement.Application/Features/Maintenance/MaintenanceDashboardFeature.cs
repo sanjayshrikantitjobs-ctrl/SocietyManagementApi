@@ -14,6 +14,11 @@ public class MaintenanceKpisDto
     public int Overdue { get; set; }
     public decimal TotalCollection { get; set; }
     public decimal Outstanding { get; set; }
+    /// <summary>What the society actually paid tanker providers this
+    /// scope (WaterTankerLog.NumberOfTankers * PricePerTanker) — the
+    /// expense side, distinct from WaterTankerCollection's resident-facing
+    /// charge/collection side.</summary>
+    public decimal TankerExpense { get; set; }
 }
 
 public class MonthlyCollectionPointDto
@@ -85,13 +90,18 @@ public class MaintenanceDashboardQueryHandler : IRequestHandler<GetMaintenanceDa
             ? new DateTime(request.Month.Value.Year, request.Month.Value.Month, 1)
             : currentMonth;
         var selectedYear = request.Year;
+        var scopeStart = selectedYear.HasValue ? new DateTime(selectedYear.Value, 1, 1) : selectedMonth;
+        var scopeEndExclusive = selectedYear.HasValue ? scopeStart.AddYears(1) : scopeStart.AddMonths(1);
 
         var totalFlats = await _context.Flats
             .CountAsync(f => !f.IsDeleted && f.Floor.Wing.Building.SocietyId == request.SocietyId, ct);
 
         var allBills = await _context.MaintenanceBills
             .Where(b => !b.IsDeleted && b.Flat.Floor.Wing.Building.SocietyId == request.SocietyId)
-            .Select(b => new { b.Id, b.FlatId, b.Status, b.DueDate, b.TotalAmount, b.AmountPaid, b.PreviousBalance, b.BillMonth, b.InvoiceNumber })
+            .Select(b => new {
+                b.Id, b.FlatId, b.Status, b.DueDate, b.TotalAmount, b.AmountPaid, b.PreviousBalance, b.BillMonth, b.InvoiceNumber,
+                WingName = b.Flat.Floor.Wing.Name
+            })
             .ToListAsync(ct);
 
         // Year, when given, scopes every KPI card to the whole calendar year
@@ -100,8 +110,13 @@ public class MaintenanceDashboardQueryHandler : IRequestHandler<GetMaintenanceDa
             ? allBills.Where(b => b.BillMonth.Year == selectedYear.Value).ToList()
             : allBills.Where(b => b.BillMonth == selectedMonth).ToList();
 
-        var unpaidBills = currentMonthBills.Where(b => b.Status != BillStatus.Paid).ToList();
-        var overdueBills = unpaidBills.Where(b => b.DueDate < today).ToList();
+        // Display status (Paid/Pending/PartiallyPaid/Overdue) is derived from
+        // amounts, not the stored field or DueDate — see BillStatusDisplay's
+        // doc comment. Computed once per bill here so the KPI counts below
+        // agree with what the Bills list itself would show for these bills.
+        var displayStatusById = currentMonthBills.ToDictionary(
+            b => b.Id, b => BillStatusDisplay.Compute(b.TotalAmount, b.PreviousBalance, b.AmountPaid));
+        var overdueBills = currentMonthBills.Where(b => displayStatusById[b.Id] == BillStatus.Overdue).ToList();
 
         // TotalAmount/AmountPaid are running cumulative figures (see
         // GenerateMonthlyBillsCommand's doc comment), so neither "money collected
@@ -124,15 +139,21 @@ public class MaintenanceDashboardQueryHandler : IRequestHandler<GetMaintenanceDa
         var outstandingThisMonth = currentMonthBills.Sum(b =>
             Math.Max(0, (b.TotalAmount - b.PreviousBalance) - paidByBillThisMonth.GetValueOrDefault(b.Id, 0)));
 
+        var tankerExpense = await _context.WaterTankerLogs
+            .Where(w => !w.IsDeleted && w.SocietyId == request.SocietyId && w.Date >= scopeStart && w.Date < scopeEndExclusive)
+            .SumAsync(w => (decimal?)(w.NumberOfTankers * w.PricePerTanker), ct) ?? 0;
+
         var kpis = new MaintenanceKpisDto
         {
             TotalFlats = totalFlats,
             BillsGenerated = currentMonthBills.Count,
-            Paid = currentMonthBills.Count(b => b.Status == BillStatus.Paid),
-            Pending = currentMonthBills.Count(b => b.Status != BillStatus.Paid && b.DueDate >= today),
+            Paid = currentMonthBills.Count(b => displayStatusById[b.Id] == BillStatus.Paid),
+            Pending = currentMonthBills.Count(b => displayStatusById[b.Id] == BillStatus.Pending
+                || displayStatusById[b.Id] == BillStatus.PartiallyPaid),
             Overdue = overdueBills.Count,
             TotalCollection = totalCollectionThisMonth,
-            Outstanding = outstandingThisMonth
+            Outstanding = outstandingThisMonth,
+            TankerExpense = tankerExpense
         };
 
         // Year mode shows the full Jan–Dec trend for that year; month mode
@@ -164,12 +185,18 @@ public class MaintenanceDashboardQueryHandler : IRequestHandler<GetMaintenanceDa
             OutstandingAmount = kpis.Outstanding
         };
 
-        var outstandingByWing = await _context.MaintenanceBills
-            .Where(b => !b.IsDeleted && !b.IsRolledForward && b.Status != BillStatus.Paid && b.Flat.Floor.Wing.Building.SocietyId == request.SocietyId)
-            .GroupBy(b => b.Flat.Floor.Wing.Name)
-            .Select(g => new OutstandingByWingPointDto { WingName = g.Key, Outstanding = g.Sum(b => b.TotalAmount - b.AmountPaid) })
+        // Scoped to the same month/year as every other KPI on this page (was
+        // previously an all-time, all-bills snapshot regardless of the
+        // selected scope — inconsistent with "Outstanding" right above it).
+        var outstandingByWing = currentMonthBills
+            .GroupBy(b => b.WingName)
+            .Select(g => new OutstandingByWingPointDto
+            {
+                WingName = g.Key,
+                Outstanding = g.Sum(b => Math.Max(0, (b.TotalAmount - b.PreviousBalance) - paidByBillThisMonth.GetValueOrDefault(b.Id, 0)))
+            })
             .OrderByDescending(x => x.Outstanding)
-            .ToListAsync(ct);
+            .ToList();
 
         var recentPayments = await _context.MaintenancePayments
             .Where(p => !p.IsDeleted && p.MaintenanceBill.Flat.Floor.Wing.Building.SocietyId == request.SocietyId)

@@ -12,7 +12,10 @@ import {
 function toHttpParams(params: Record<string, unknown>): HttpParams {
   let httpParams = new HttpParams();
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
+    if (value === undefined || value === null || value === '') return;
+    if (Array.isArray(value)) {
+      value.forEach((v) => { httpParams = httpParams.append(key, String(v)); });
+    } else {
       httpParams = httpParams.set(key, String(value));
     }
   });
@@ -100,10 +103,10 @@ export class MaintenanceService {
   downloadBillPdf(id: number): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/maintenance/bills/${id}/pdf`, { responseType: 'blob' });
   }
-  exportBillsPdf(params: { societyId: number; status?: number; billMonth?: string }): Observable<Blob> {
+  exportBillsPdf(params: { societyId: number; statuses?: number[]; billMonth?: string }): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/maintenance/bills/export/pdf`, { params: toHttpParams(params), responseType: 'blob' });
   }
-  exportBillsExcel(params: { societyId: number; status?: number; billMonth?: string }): Observable<Blob> {
+  exportBillsExcel(params: { societyId: number; statuses?: number[]; billMonth?: string }): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/maintenance/bills/export/excel`, { params: toHttpParams(params), responseType: 'blob' });
   }
   generateBills(societyId: number, billMonth?: string): Observable<number> {

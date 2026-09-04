@@ -63,6 +63,7 @@ import { MaintenanceService } from '../services/maintenance.service';
           <app-stat-card label="Overdue" [value]="d.kpis.overdue" icon="warning" iconColor="#dc2626" iconBg="#fef2f2" />
           <app-stat-card label="Total Collection" [value]="'₹' + (d.kpis.totalCollection | number)" icon="payments" />
           <app-stat-card label="Outstanding" [value]="'₹' + (d.kpis.outstanding | number)" icon="account_balance_wallet" iconColor="#dc2626" iconBg="#fef2f2" />
+          <app-stat-card label="Tanker Expense" [value]="'₹' + (d.kpis.tankerExpense | number)" icon="local_shipping" iconColor="#0369a1" iconBg="#e0f2fe" />
         </div>
 
         <div class="charts-grid">

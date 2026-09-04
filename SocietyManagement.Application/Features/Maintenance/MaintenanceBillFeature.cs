@@ -66,15 +66,31 @@ public class MaintenanceBillDetailDto : MaintenanceBillDto
     public List<MaintenancePaymentDto> Payments { get; set; } = new();
 }
 
-/// <summary>Stored Status only ever tracks payment progress
-/// (Pending/PartiallyPaid/Paid) — "Overdue" is derived at read time from
-/// DueDate so it can never go stale across a day boundary without a sweep job.</summary>
+/// <summary>Status is derived at read time from the amounts themselves,
+/// not the stored payment-progress field — comparing this bill's
+/// outstanding Balance against its own month's charge (TotalAmount minus
+/// PreviousBalance, i.e. excluding whatever was carried in from earlier
+/// months):
+///   Balance &lt;= 0            → Paid (nothing owed at all)
+///   Balance == own charge    → Pending (only this month's own charge is
+///                               outstanding; nothing paid toward it yet)
+///   0 &lt; Balance &lt; own charge → PartiallyPaid (some of this month's own
+///                               charge has been paid)
+///   Balance &gt; own charge     → Overdue (carrying unpaid debt from an
+///                               earlier month on top of this one)
+/// Deliberately independent of DueDate — "Overdue" here means "arrears
+/// from a prior month", not "past its due date".</summary>
 internal static class BillStatusDisplay
 {
-    public static BillStatus Compute(BillStatus storedStatus, DateTime dueDate) =>
-        storedStatus == BillStatus.Paid
-            ? BillStatus.Paid
-            : dueDate.Date < DateTime.UtcNow.Date ? BillStatus.Overdue : storedStatus;
+    public static BillStatus Compute(decimal totalAmount, decimal previousBalance, decimal amountPaid)
+    {
+        var balance = totalAmount - amountPaid;
+        var ownCharge = totalAmount - previousBalance;
+        if (balance <= 0) return BillStatus.Paid;
+        if (balance > ownCharge) return BillStatus.Overdue;
+        if (balance == ownCharge) return BillStatus.Pending;
+        return BillStatus.PartiallyPaid;
+    }
 }
 
 // ---- Commands ----------------------------------------------------------------
@@ -627,10 +643,12 @@ public record GetBillByIdQuery(int Id) : IRequest<MaintenanceBillDetailDto>;
 public record GetBillPdfQuery(int Id) : IRequest<byte[]>;
 
 /// <summary>Same filters as GetBillsQuery, unpaginated — every matching bill
-/// is exported, not just the current page.</summary>
-public record GetBillsExportPdfQuery(int SocietyId, BillStatus? Status, DateTime? BillMonth) : IRequest<byte[]>;
+/// is exported, not just the current page. Statuses is a list (unlike the
+/// list screen's single Status) so an export can cover e.g. "Pending +
+/// Overdue" in one file; null/empty means no status filter.</summary>
+public record GetBillsExportPdfQuery(int SocietyId, List<BillStatus>? Statuses, DateTime? BillMonth) : IRequest<byte[]>;
 
-public record GetBillsExportExcelQuery(int SocietyId, BillStatus? Status, DateTime? BillMonth) : IRequest<byte[]>;
+public record GetBillsExportExcelQuery(int SocietyId, List<BillStatus>? Statuses, DateTime? BillMonth) : IRequest<byte[]>;
 
 public class MaintenanceBillQueryHandlers :
     IRequestHandler<GetBillsQuery, PaginatedResult<MaintenanceBillDto>>,
@@ -656,7 +674,7 @@ public class MaintenanceBillQueryHandlers :
         Id = b.Id, FlatId = b.FlatId, FlatNumber = b.Flat.FlatNumber, BuildingName = b.Flat.Floor.Wing.Building.Name,
         WingName = b.Flat.Floor.Wing.Name, BillMonth = b.BillMonth, InvoiceNumber = b.InvoiceNumber,
         PreviousBalance = b.PreviousBalance, FineAmount = b.FineAmount, TotalAmount = b.TotalAmount,
-        AmountPaid = b.AmountPaid, DueDate = b.DueDate, Status = BillStatusDisplay.Compute(b.Status, b.DueDate),
+        AmountPaid = b.AmountPaid, DueDate = b.DueDate, Status = BillStatusDisplay.Compute(b.TotalAmount, b.PreviousBalance, b.AmountPaid),
         IsRolledForward = b.IsRolledForward, PdfUrl = b.PdfUrl, OwnerNameSnapshot = b.OwnerNameSnapshot
     };
 
@@ -665,7 +683,7 @@ public class MaintenanceBillQueryHandlers :
     /// export always matches exactly what the list screen would show for
     /// the same filters, just without a page cut.</summary>
     private async Task<(List<MaintenanceBillDto> Items, int TotalCount)> GetFilteredDtosAsync(
-        int societyId, int? flatId, BillStatus? status, DateTime? billMonth, int? skip, int? take, CancellationToken ct)
+        int societyId, int? flatId, List<BillStatus>? statuses, DateTime? billMonth, int? skip, int? take, CancellationToken ct)
     {
         var query = _context.MaintenanceBills
             .Where(b => !b.IsDeleted && b.SocietyId == societyId);
@@ -680,16 +698,23 @@ public class MaintenanceBillQueryHandlers :
         // Status is filtered here as SQL-translatable predicates equivalent to
         // BillStatusDisplay.Compute, so pagination/totalCount stay correct —
         // filtering the *computed* display status in memory after Skip/Take
-        // would desync the count and the page contents.
-        var today = DateTime.UtcNow.Date;
-        query = status switch
+        // would desync the count and the page contents. See that method's
+        // doc comment for what each status means here. Multiple statuses are
+        // OR'd together (e.g. "Pending or Overdue") — the four booleans are
+        // plain locals, not a query against `statuses`, so this stays a
+        // single SQL-translatable predicate regardless of how many are picked.
+        if (statuses is { Count: > 0 })
         {
-            BillStatus.Overdue => query.Where(b => b.Status != BillStatus.Paid && b.DueDate < today),
-            BillStatus.Paid => query.Where(b => b.Status == BillStatus.Paid),
-            BillStatus.Pending or BillStatus.PartiallyPaid =>
-                query.Where(b => b.Status == status && b.DueDate >= today),
-            _ => query
-        };
+            var wantPaid = statuses.Contains(BillStatus.Paid);
+            var wantOverdue = statuses.Contains(BillStatus.Overdue);
+            var wantPending = statuses.Contains(BillStatus.Pending);
+            var wantPartial = statuses.Contains(BillStatus.PartiallyPaid);
+            query = query.Where(b =>
+                (wantPaid && b.AmountPaid >= b.TotalAmount) ||
+                (wantOverdue && b.AmountPaid < b.TotalAmount && b.PreviousBalance > b.AmountPaid) ||
+                (wantPending && b.AmountPaid < b.TotalAmount && b.AmountPaid == b.PreviousBalance) ||
+                (wantPartial && b.AmountPaid < b.TotalAmount && b.AmountPaid > b.PreviousBalance));
+        }
 
         var totalCount = await query.CountAsync(ct);
 
@@ -725,20 +750,20 @@ public class MaintenanceBillQueryHandlers :
         var pageNumber = Math.Max(request.PageNumber, 1);
 
         var (dtos, totalCount) = await GetFilteredDtosAsync(
-            request.SocietyId, request.FlatId, request.Status, request.BillMonth,
+            request.SocietyId, request.FlatId, request.Status.HasValue ? [request.Status.Value] : null, request.BillMonth,
             (pageNumber - 1) * pageSize, pageSize, ct);
 
         return new PaginatedResult<MaintenanceBillDto>(dtos, totalCount, pageNumber, pageSize);
     }
 
     private async Task<MaintenanceBillsExportData> BuildExportDataAsync(
-        int societyId, BillStatus? status, DateTime? billMonth, CancellationToken ct)
+        int societyId, List<BillStatus>? statuses, DateTime? billMonth, CancellationToken ct)
     {
-        var (dtos, _) = await GetFilteredDtosAsync(societyId, null, status, billMonth, null, null, ct);
+        var (dtos, _) = await GetFilteredDtosAsync(societyId, null, statuses, billMonth, null, null, ct);
 
         var society = await _context.Societies.FirstOrDefaultAsync(s => s.Id == societyId, ct);
         var monthLabel = billMonth.HasValue ? billMonth.Value.ToString("MMMM yyyy") : "All Months";
-        var statusLabel = status.HasValue ? status.Value.ToString() : "All Statuses";
+        var statusLabel = statuses is { Count: > 0 } ? string.Join(" + ", statuses) : "All Statuses";
 
         return new MaintenanceBillsExportData
         {
@@ -756,13 +781,13 @@ public class MaintenanceBillQueryHandlers :
 
     public async Task<byte[]> Handle(GetBillsExportPdfQuery request, CancellationToken ct)
     {
-        var data = await BuildExportDataAsync(request.SocietyId, request.Status, request.BillMonth, ct);
+        var data = await BuildExportDataAsync(request.SocietyId, request.Statuses, request.BillMonth, ct);
         return _exportService.GeneratePdf(data);
     }
 
     public async Task<byte[]> Handle(GetBillsExportExcelQuery request, CancellationToken ct)
     {
-        var data = await BuildExportDataAsync(request.SocietyId, request.Status, request.BillMonth, ct);
+        var data = await BuildExportDataAsync(request.SocietyId, request.Statuses, request.BillMonth, ct);
         return _exportService.GenerateExcel(data);
     }
 

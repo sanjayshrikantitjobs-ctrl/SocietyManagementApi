@@ -57,9 +57,19 @@ import { MaintenanceService } from '../services/maintenance.service';
         </div>
         <div class="toolbar-actions">
           <button mat-stroked-button [matMenuTriggerFor]="exportMenu"><mat-icon>download</mat-icon> Export</button>
-          <mat-menu #exportMenu="matMenu">
-            <button mat-menu-item (click)="exportPdf()"><mat-icon>picture_as_pdf</mat-icon><span>Export as PDF</span></button>
-            <button mat-menu-item (click)="exportExcel()"><mat-icon>grid_on</mat-icon><span>Export as Excel</span></button>
+          <mat-menu #exportMenu="matMenu" xPosition="before">
+            <div class="export-panel" (click)="$event.stopPropagation()">
+              <div class="export-panel-title">Status (leave blank for all)</div>
+              @for (s of statusOptions; track s.value) {
+                <mat-checkbox
+                  [checked]="exportStatuses().has(s.value)"
+                  (change)="toggleExportStatus(s.value)">{{ s.label }}</mat-checkbox>
+              }
+              <div class="export-panel-actions">
+                <button mat-stroked-button (click)="exportPdf()"><mat-icon>picture_as_pdf</mat-icon> PDF</button>
+                <button mat-stroked-button (click)="exportExcel()"><mat-icon>grid_on</mat-icon> Excel</button>
+              </div>
+            </div>
           </mat-menu>
           <button mat-flat-button color="primary" (click)="generateNow()"><mat-icon>bolt</mat-icon> Generate Bills</button>
         </div>
@@ -147,7 +157,7 @@ import { MaintenanceService } from '../services/maintenance.service';
                 @if (b.status !== 3 && !b.isRolledForward) {
                   <button mat-menu-item (click)="recordPayment(b)"><mat-icon>payments</mat-icon><span>Record Payment</span></button>
                 }
-                @if (b.status === 2 || b.status === 3) {
+                @if (b.status !== 1) {
                   <button mat-menu-item (click)="markUnpaid(b)"><mat-icon>undo</mat-icon><span>Mark as Unpaid</span></button>
                 }
                 <button mat-menu-item (click)="resendWhatsApp(b)"><mat-icon>send</mat-icon><span>Resend WhatsApp</span></button>
@@ -170,6 +180,9 @@ import { MaintenanceService } from '../services/maintenance.service';
     .bulk-toolbar span { font-size: 13px; font-weight: 600; color: var(--app-primary); }
     .month-field { width: 200px; }
     .status-select { width: 200px; }
+    .export-panel { display: flex; flex-direction: column; gap: 6px; padding: 10px 16px; min-width: 220px; }
+    .export-panel-title { font-size: 12px; font-weight: 600; color: var(--app-text-muted); margin-bottom: 2px; }
+    .export-panel-actions { display: flex; gap: 8px; margin-top: 10px; }
     .muted { color: var(--app-text-muted); font-size: 12px; }
     .credit { color: #15803d; font-weight: 600; }
     .badge { padding: 2px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; }
@@ -198,6 +211,7 @@ export class MaintenanceBillsListComponent implements OnInit {
   readonly statusLabels: Record<number, string> = BILL_STATUS_LABELS;
   readonly statusOptions = Object.entries(BILL_STATUS_LABELS).map(([value, label]) => ({ value: Number(value), label }));
   readonly selection = new SelectionModel<number>(true, []);
+  readonly exportStatuses = signal<Set<number>>(new Set());
 
   private societyId = 0;
 
@@ -254,7 +268,7 @@ export class MaintenanceBillsListComponent implements OnInit {
   /** Whether the current selection includes any bill "Mark as Unpaid" can
    * act on — mirrors the per-row menu's own `b.status === 2 || b.status === 3` gate. */
   hasReversibleSelection(): boolean {
-    return this.bills().some((b) => this.selection.isSelected(b.id) && (b.status === 2 || b.status === 3));
+    return this.bills().some((b) => this.selection.isSelected(b.id) && b.status !== 1);
   }
 
   bulkMarkPaid(): void {
@@ -375,11 +389,22 @@ export class MaintenanceBillsListComponent implements OnInit {
     window.URL.revokeObjectURL(url);
   }
 
-  /** Exports whatever the current Month/Status filters show — every
-   * matching bill, not just the current page. */
+  toggleExportStatus(value: number): void {
+    this.exportStatuses.update((current) => {
+      const next = new Set(current);
+      if (next.has(value)) next.delete(value); else next.add(value);
+      return next;
+    });
+  }
+
+  /** Exports whatever the current Month filter and export-panel Status
+   * selection cover — every matching bill, not just the current page.
+   * Status selection here is independent of (and can differ from) the
+   * single-value list filter above, since an export can cover multiple
+   * statuses at once (e.g. "Pending + Overdue"). */
   private exportParams() {
     return {
-      societyId: this.societyId, status: this.statusFilter() ?? undefined,
+      societyId: this.societyId, statuses: [...this.exportStatuses()],
       billMonth: this.monthFilterAsString()
     };
   }

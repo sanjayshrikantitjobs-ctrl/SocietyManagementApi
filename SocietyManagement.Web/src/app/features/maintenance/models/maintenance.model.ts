@@ -144,6 +144,7 @@ export interface MaintenanceKpisDto {
   overdue: number;
   totalCollection: number;
   outstanding: number;
+  tankerExpense: number;
 }
 
 export interface MonthlyCollectionPointDto {

@@ -40,17 +40,17 @@ public class MaintenanceBillsController : ApiControllerBase
 
     [HttpGet("bills/export/pdf")]
     [HasPermission(Permissions.Maintenance.View)]
-    public async Task<IActionResult> ExportBillsPdf([FromQuery] int societyId, [FromQuery] BillStatus? status, [FromQuery] DateTime? billMonth)
+    public async Task<IActionResult> ExportBillsPdf([FromQuery] int societyId, [FromQuery] List<BillStatus>? statuses, [FromQuery] DateTime? billMonth)
     {
-        var pdfBytes = await Mediator.Send(new GetBillsExportPdfQuery(societyId, status, billMonth));
+        var pdfBytes = await Mediator.Send(new GetBillsExportPdfQuery(societyId, statuses, billMonth));
         return File(pdfBytes, "application/pdf", "maintenance-bills.pdf");
     }
 
     [HttpGet("bills/export/excel")]
     [HasPermission(Permissions.Maintenance.View)]
-    public async Task<IActionResult> ExportBillsExcel([FromQuery] int societyId, [FromQuery] BillStatus? status, [FromQuery] DateTime? billMonth)
+    public async Task<IActionResult> ExportBillsExcel([FromQuery] int societyId, [FromQuery] List<BillStatus>? statuses, [FromQuery] DateTime? billMonth)
     {
-        var excelBytes = await Mediator.Send(new GetBillsExportExcelQuery(societyId, status, billMonth));
+        var excelBytes = await Mediator.Send(new GetBillsExportExcelQuery(societyId, statuses, billMonth));
         return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "maintenance-bills.xlsx");
     }
 

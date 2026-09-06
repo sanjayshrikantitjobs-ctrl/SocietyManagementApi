@@ -17,14 +17,15 @@ public class MaintenanceBillsController : ApiControllerBase
     [ProducesResponseType(typeof(ApiResponse<PaginatedResult<MaintenanceBillDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetBills(
         [FromQuery] int societyId, [FromQuery] int? flatId, [FromQuery] BillStatus? status, [FromQuery] DateTime? billMonth,
-        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
+        [FromQuery] string? search = null, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
-        var result = await Mediator.Send(new GetBillsQuery(societyId, flatId, status, billMonth, pageNumber, pageSize));
+        var result = await Mediator.Send(new GetBillsQuery(societyId, flatId, status, billMonth, search, pageNumber, pageSize));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
     [HttpGet("bills/{id:int}")]
     [HasPermission(Permissions.Maintenance.View)]
+    [ProducesResponseType(typeof(ApiResponse<MaintenanceBillDetailDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetBillById(int id)
     {
         var result = await Mediator.Send(new GetBillByIdQuery(id));
@@ -33,6 +34,7 @@ public class MaintenanceBillsController : ApiControllerBase
 
     [HttpGet("bills/{id:int}/pdf")]
     [HasPermission(Permissions.Maintenance.View)]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetBillPdf(int id)
     {
         var pdfBytes = await Mediator.Send(new GetBillPdfQuery(id));
@@ -41,6 +43,7 @@ public class MaintenanceBillsController : ApiControllerBase
 
     [HttpGet("bills/export/pdf")]
     [HasPermission(Permissions.Maintenance.View)]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> ExportBillsPdf([FromQuery] int societyId, [FromQuery] List<BillStatus>? statuses, [FromQuery] DateTime? billMonth)
     {
         var pdfBytes = await Mediator.Send(new GetBillsExportPdfQuery(societyId, statuses, billMonth));
@@ -49,6 +52,7 @@ public class MaintenanceBillsController : ApiControllerBase
 
     [HttpGet("bills/export/excel")]
     [HasPermission(Permissions.Maintenance.View)]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> ExportBillsExcel([FromQuery] int societyId, [FromQuery] List<BillStatus>? statuses, [FromQuery] DateTime? billMonth)
     {
         var excelBytes = await Mediator.Send(new GetBillsExportExcelQuery(societyId, statuses, billMonth));
@@ -57,6 +61,7 @@ public class MaintenanceBillsController : ApiControllerBase
 
     [HttpPost("generate")]
     [HasPermission(Permissions.Maintenance.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Generate([FromBody] GenerateBillsRequest request)
     {
         var count = await Mediator.Send(new GenerateMonthlyBillsCommand(request.SocietyId, request.BillMonth));
@@ -65,6 +70,7 @@ public class MaintenanceBillsController : ApiControllerBase
 
     [HttpPost("payment")]
     [HasPermission(Permissions.Maintenance.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
     public async Task<IActionResult> RecordPayment(RecordPaymentCommand command)
     {
         var id = await Mediator.Send(command);
@@ -73,6 +79,7 @@ public class MaintenanceBillsController : ApiControllerBase
 
     [HttpPost("bulk-payment")]
     [HasPermission(Permissions.Maintenance.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<List<BulkRecordPaymentResultDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> BulkRecordPayment(BulkRecordPaymentCommand command)
     {
         var results = await Mediator.Send(command);
@@ -82,6 +89,7 @@ public class MaintenanceBillsController : ApiControllerBase
 
     [HttpPost("bills/{id:int}/mark-unpaid")]
     [HasPermission(Permissions.Maintenance.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> MarkUnpaid(int id)
     {
         await Mediator.Send(new SetBillUnpaidCommand(id));
@@ -90,6 +98,7 @@ public class MaintenanceBillsController : ApiControllerBase
 
     [HttpPost("bulk-mark-unpaid")]
     [HasPermission(Permissions.Maintenance.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<List<BulkSetBillsUnpaidResultDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> BulkMarkUnpaid(BulkSetBillsUnpaidCommand command)
     {
         var results = await Mediator.Send(command);
@@ -99,6 +108,7 @@ public class MaintenanceBillsController : ApiControllerBase
 
     [HttpPost("bills/{id:int}/resend-whatsapp")]
     [HasPermission(Permissions.Maintenance.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> ResendWhatsApp(int id)
     {
         await Mediator.Send(new ResendBillWhatsAppCommand(id));

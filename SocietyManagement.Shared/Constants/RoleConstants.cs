@@ -69,6 +69,8 @@ public static class Permissions
         public const string Manage = "festivals.manage"; // festival/budget/sponsor/vendor CRUD
         public const string Contribute = "festivals.contribute"; // member records own donation
         public const string ApproveExpense = "festivals.expense.approve"; // committee approval workflow
+        public const string ManageDistribution = "festivals.distribution.manage"; // configure/generate/mark-distributed
+        public const string SelectDistribution = "festivals.distribution.select"; // resident picks their own item/variant
     }
 
     public static class Expenses

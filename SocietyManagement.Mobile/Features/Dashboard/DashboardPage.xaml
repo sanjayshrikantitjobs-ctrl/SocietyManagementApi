@@ -4,22 +4,189 @@
              xmlns:dash="clr-namespace:SocietyManagement.Mobile.Features.Dashboard"
              x:Class="SocietyManagement.Mobile.Features.Dashboard.DashboardPage"
              x:DataType="dash:DashboardViewModel"
-             Title="Dashboard">
+             Title="Home">
 
-    <VerticalStackLayout Padding="24" Spacing="16" VerticalOptions="Center">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="18">
 
-        <Image Source="shrios_logo.png" HeightRequest="64" Aspect="AspectFit" HorizontalOptions="Center" />
+            <Border StrokeShape="RoundRectangle 16" StrokeThickness="0" Padding="16,14"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="{Binding FullName, StringFormat='Welcome, {0}'}" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource White}" />
+                    <Label Text="{Binding Auth.RoleName}" FontSize="12" TextColor="{StaticResource White}" Opacity="0.85" />
+                </VerticalStackLayout>
+            </Border>
 
-        <Label Text="Signed in" FontSize="14" TextColor="{StaticResource Gray500}" HorizontalOptions="Center" />
+            <Label Text="Quick Access" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Gray500}" Margin="4,0,0,-6" />
 
-        <Label Text="{Binding FullName}" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" />
+            <FlexLayout Wrap="Wrap" JustifyContent="Start" Direction="Row">
 
-        <Label Text="{Binding RoleName}" FontSize="14" TextColor="{StaticResource Primary}" HorizontalOptions="Center" />
+                <Border StyleClass="tile" IsVisible="{Binding Auth.IsAdmin}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Residents" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Border StyleClass="tileIconBadge" BackgroundColor="#4F6EF7">
+                            <Label Text="👥" StyleClass="tileIconGlyph" />
+                        </Border>
+                        <Label Text="Residents" StyleClass="tileLabel" />
+                    </VerticalStackLayout>
+                </Border>
 
-        <Label Text="{Binding Email}" FontSize="13" TextColor="{StaticResource Gray500}" HorizontalOptions="Center" />
+                <Border StyleClass="tile" IsVisible="{Binding Auth.IsAdmin}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Maintenance" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Border StyleClass="tileIconBadge" BackgroundColor="#F59E0B">
+                            <Label Text="🛠️" StyleClass="tileIconGlyph" />
+                        </Border>
+                        <Label Text="Maintenance" StyleClass="tileLabel" />
+                    </VerticalStackLayout>
+                </Border>
 
-        <Button Text="Log Out" Command="{Binding LogoutCommand}" Margin="0,24,0,0" />
+                <Border StyleClass="tile">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Visitors" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Border StyleClass="tileIconBadge" BackgroundColor="#10B981">
+                            <Label Text="🚶" StyleClass="tileIconGlyph" />
+                        </Border>
+                        <Label Text="Visitors" StyleClass="tileLabel" />
+                    </VerticalStackLayout>
+                </Border>
 
-    </VerticalStackLayout>
+                <Border StyleClass="tile">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Vehicles" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Border StyleClass="tileIconBadge" BackgroundColor="#6366F1">
+                            <Label Text="🚗" StyleClass="tileIconGlyph" />
+                        </Border>
+                        <Label Text="Vehicles" StyleClass="tileLabel" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border StyleClass="tile" IsVisible="{Binding Auth.IsAdmin}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Staff" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Border StyleClass="tileIconBadge" BackgroundColor="#EC4899">
+                            <Label Text="👷" StyleClass="tileIconGlyph" />
+                        </Border>
+                        <Label Text="Staffs" StyleClass="tileLabel" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border StyleClass="tile" IsVisible="{Binding Auth.IsAdmin}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Services" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Border StyleClass="tileIconBadge" BackgroundColor="#14B8A6">
+                            <Label Text="🧰" StyleClass="tileIconGlyph" />
+                        </Border>
+                        <Label Text="Service" StyleClass="tileLabel" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border StyleClass="tile" IsVisible="{Binding Auth.IsAdmin}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Finance" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Border StyleClass="tileIconBadge" BackgroundColor="#22C55E">
+                            <Label Text="💰" StyleClass="tileIconGlyph" />
+                        </Border>
+                        <Label Text="Finance" StyleClass="tileLabel" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border StyleClass="tile" IsVisible="{Binding Auth.IsAdmin}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Complaints" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Border StyleClass="tileIconBadge" BackgroundColor="#EF4444">
+                            <Label Text="📢" StyleClass="tileIconGlyph" />
+                        </Border>
+                        <Label Text="Complaints" StyleClass="tileLabel" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border StyleClass="tile" IsVisible="{Binding Auth.IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Committee" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Border StyleClass="tileIconBadge" BackgroundColor="#8B5CF6">
+                            <Label Text="🏛️" StyleClass="tileIconGlyph" />
+                        </Border>
+                        <Label Text="Committee" StyleClass="tileLabel" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border StyleClass="tile" IsVisible="{Binding Auth.IsAdmin}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Societies" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Border StyleClass="tileIconBadge" BackgroundColor="#0EA5E9">
+                            <Label Text="🏢" StyleClass="tileIconGlyph" />
+                        </Border>
+                        <Label Text="Societies" StyleClass="tileLabel" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border StyleClass="tile" IsVisible="{Binding Auth.IsAdmin}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Users" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Border StyleClass="tileIconBadge" BackgroundColor="#F97316">
+                            <Label Text="👤" StyleClass="tileIconGlyph" />
+                        </Border>
+                        <Label Text="Users" StyleClass="tileLabel" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border StyleClass="tile" IsVisible="{Binding Auth.IsAdmin}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Roles &amp; Permissions" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Border StyleClass="tileIconBadge" BackgroundColor="#64748B">
+                            <Label Text="🔐" StyleClass="tileIconGlyph" />
+                        </Border>
+                        <Label Text="Roles &amp; Permissions" StyleClass="tileLabel" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border StyleClass="tile">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Contact Us" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Border StyleClass="tileIconBadge" BackgroundColor="#06B6D4">
+                            <Label Text="☎️" StyleClass="tileIconGlyph" />
+                        </Border>
+                        <Label Text="Contact Us" StyleClass="tileLabel" />
+                    </VerticalStackLayout>
+                </Border>
+
+            </FlexLayout>
+
+            <!-- Logout now lives in the top bar's user menu (TopBarView),
+                 matching the web app's avatar dropdown — no separate button
+                 needed here. -->
+
+            <Label Text="© 2026 Shrios Software Technologies. All rights reserved."
+                   FontSize="11" TextColor="{StaticResource Gray400}" HorizontalOptions="Center" Margin="0,24,0,8" />
+
+        </VerticalStackLayout>
+    </ScrollView>
 
 </ContentPage>

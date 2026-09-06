@@ -27,6 +27,10 @@ public partial class AuthState : ObservableObject
 
     public bool IsMember => RoleName == "Member";
 
+    /// <summary>Mirrors NAV_ITEMS' "Help &amp; Support" entry on the web:
+    /// hideForWatchman AND hideForSuperAdmin — visible to Admin and Member only.</summary>
+    public bool ShowHelpAndSupport => !IsWatchman && !IsSuperAdmin;
+
     /// <summary>Null only for SuperAdmin — every other role belongs to
     /// exactly one society (see JwtService.cs's society_id claim).</summary>
     public int? SocietyId => CurrentUser?.SocietyId;
@@ -43,6 +47,7 @@ public partial class AuthState : ObservableObject
         OnPropertyChanged(nameof(IsAdmin));
         OnPropertyChanged(nameof(IsWatchman));
         OnPropertyChanged(nameof(IsMember));
+        OnPropertyChanged(nameof(ShowHelpAndSupport));
     }
 
     public void Clear()
@@ -54,5 +59,6 @@ public partial class AuthState : ObservableObject
         OnPropertyChanged(nameof(IsAdmin));
         OnPropertyChanged(nameof(IsWatchman));
         OnPropertyChanged(nameof(IsMember));
+        OnPropertyChanged(nameof(ShowHelpAndSupport));
     }
 }

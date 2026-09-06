@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:fest="clr-namespace:SocietyManagement.Mobile.Features.Festivals"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Festivals.FestivalDetailPage"
+             x:DataType="fest:FestivalDetailViewModel"
+             x:Name="Root"
+             Title="{Binding Festival.Name}">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
+
+        <!-- Header: status + menu -->
+        <VerticalStackLayout Grid.Row="0" Padding="16,12,16,0" Spacing="10">
+            <HorizontalStackLayout Spacing="10">
+                <Border StrokeShape="RoundRectangle 20" BackgroundColor="{StaticResource Secondary}" Padding="10,4">
+                    <Label Text="{Binding Festival.Status}" FontSize="12" TextColor="{StaticResource Primary}" />
+                </Border>
+                <Border StrokeShape="RoundRectangle 20" BackgroundColor="#EDE9FE" Padding="10,4" IsVisible="{Binding Festival.ContributionPoolFestivalName, Converter={StaticResource StringToBoolConverter}}">
+                    <Label Text="{Binding Festival.ContributionPoolFestivalName, StringFormat='Child of {0}'}" FontSize="12" TextColor="#6D28D9" />
+                </Border>
+                <Button Text="Status ▾" Command="{Binding ToggleStatusMenuCommand}" HeightRequest="34" Padding="10,0" />
+            </HorizontalStackLayout>
+
+            <VerticalStackLayout IsVisible="{Binding IsStatusMenuOpen}" Spacing="4"
+                                 BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}">
+                <Button Text="Mark Planning" Command="{Binding SetStatusCommand}" CommandParameter="{x:Static gen:FestivalStatus.Planning}" />
+                <Button Text="Mark Ongoing" Command="{Binding SetStatusCommand}" CommandParameter="{x:Static gen:FestivalStatus.Ongoing}" />
+                <Button Text="Close Festival (Completed)" Command="{Binding SetStatusCommand}" CommandParameter="{x:Static gen:FestivalStatus.Completed}" />
+                <Button Text="Delete" TextColor="#DC2626" BackgroundColor="Transparent" Command="{Binding DeleteCommand}" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+
+        <!-- Tab bar -->
+        <ScrollView Grid.Row="1" Orientation="Horizontal">
+            <HorizontalStackLayout Spacing="6" Padding="12,10">
+                <Button Text="Dashboard" Command="{Binding SelectTabCommand}" CommandParameter="Dashboard" FontSize="12" />
+                <Button Text="Child Festivals &amp; Events" Command="{Binding SelectTabCommand}" CommandParameter="ChildFestivals" FontSize="12" IsVisible="{Binding ShowChildFestivalsTab}" />
+                <Button Text="Contribution" Command="{Binding SelectTabCommand}" CommandParameter="Contribution" FontSize="12" IsVisible="{Binding ShowContributionTab}" />
+                <Button Text="Budget" Command="{Binding SelectTabCommand}" CommandParameter="Budget" FontSize="12" IsVisible="{Binding ShowStandardTabs}" />
+                <Button Text="Sponsors" Command="{Binding SelectTabCommand}" CommandParameter="Sponsors" FontSize="12" IsVisible="{Binding ShowStandardTabs}" />
+                <Button Text="Expenses" Command="{Binding SelectTabCommand}" CommandParameter="Expenses" FontSize="12" IsVisible="{Binding ShowStandardTabs}" />
+                <Button Text="Vendors" Command="{Binding SelectTabCommand}" CommandParameter="Vendors" FontSize="12" IsVisible="{Binding ShowStandardTabs}" />
+                <Button Text="Volunteers" Command="{Binding SelectTabCommand}" CommandParameter="Volunteers" FontSize="12" IsVisible="{Binding ShowStandardTabs}" />
+                <Button Text="Tasks" Command="{Binding SelectTabCommand}" CommandParameter="Tasks" FontSize="12" IsVisible="{Binding ShowStandardTabs}" />
+            </HorizontalStackLayout>
+        </ScrollView>
+
+        <Label Grid.Row="2" Margin="16,0" Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <ActivityIndicator Grid.Row="2" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+        <!-- Dashboard panel -->
+        <ScrollView Grid.Row="4" IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Dashboard}">
+            <VerticalStackLayout Padding="16" Spacing="14">
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="12"
+                      IsVisible="{Binding Kpis, Converter={StaticResource IsNotNullConverter}}">
+                    <Border Grid.Row="0" Grid.Column="0" StrokeShape="RoundRectangle 12" Padding="14">
+                        <VerticalStackLayout>
+                            <Label Text="Budget" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Text="{Binding Kpis.Budget, StringFormat='₹{0:N0}'}" FontSize="20" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="0" Grid.Column="1" StrokeShape="RoundRectangle 12" Padding="14">
+                        <VerticalStackLayout>
+                            <Label Text="Collected" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Text="{Binding Kpis.Collected, StringFormat='₹{0:N0}'}" FontSize="20" FontAttributes="Bold" TextColor="#15803D" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="0" StrokeShape="RoundRectangle 12" Padding="14">
+                        <VerticalStackLayout>
+                            <Label Text="Spent" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Text="{Binding Kpis.Spent, StringFormat='₹{0:N0}'}" FontSize="20" FontAttributes="Bold" TextColor="#B45309" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="1" StrokeShape="RoundRectangle 12" Padding="14">
+                        <VerticalStackLayout>
+                            <Label Text="Remaining" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Text="{Binding Kpis.Remaining, StringFormat='₹{0:N0}'}" FontSize="20" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="2" Grid.Column="0" StrokeShape="RoundRectangle 12" Padding="14">
+                        <VerticalStackLayout>
+                            <Label Text="Sponsors" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Text="{Binding Kpis.SponsorsCount}" FontSize="20" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="2" Grid.Column="1" StrokeShape="RoundRectangle 12" Padding="14">
+                        <VerticalStackLayout>
+                            <Label Text="Pending Expenses" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Text="{Binding Kpis.PendingExpensesCount}" FontSize="20" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Child Festivals panel -->
+        <VerticalStackLayout Grid.Row="4" Padding="16" Spacing="10"
+                             IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=ChildFestivals}">
+            <CollectionView ItemsSource="{Binding ChildFestivals}">
+                <CollectionView.EmptyView>
+                    <Label Text="No child festivals yet. Add Ganpati, Navratri, or any other festival that should draw from this shared pool."
+                           TextColor="{StaticResource Gray500}" HorizontalOptions="Center" HorizontalTextAlignment="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:PoolChildSummaryDto">
+                        <Grid Padding="0,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenChildFestivalCommand}" CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontAttributes="Bold" TextColor="{StaticResource Primary}" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding Status}" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding Budget, StringFormat='₹{0:N0} budget'}" HorizontalOptions="End" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding Spent, StringFormat='₹{0:N0} spent'}" FontSize="12" TextColor="{StaticResource Gray500}" HorizontalOptions="End" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+
+        <!-- Contribution panel -->
+        <Grid Grid.Row="4" RowDefinitions="Auto,Auto,Auto,Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Contribution}">
+
+            <Grid Grid.Row="0" Padding="16,10" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="10"
+                  IsVisible="{Binding ContributionKpis, Converter={StaticResource IsNotNullConverter}}">
+                <Border Grid.Row="0" Grid.Column="0" StrokeShape="RoundRectangle 12" Padding="12">
+                    <VerticalStackLayout>
+                        <Label Text="Target (All Flats)" FontSize="11" TextColor="{StaticResource Gray500}" />
+                        <Label Text="{Binding ContributionKpis.TotalTargetAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Row="0" Grid.Column="1" StrokeShape="RoundRectangle 12" Padding="12">
+                    <VerticalStackLayout>
+                        <Label Text="Collected" FontSize="11" TextColor="{StaticResource Gray500}" />
+                        <Label Text="{Binding ContributionKpis.TotalPaidAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" TextColor="#15803D" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="0" StrokeShape="RoundRectangle 12" Padding="12">
+                    <VerticalStackLayout>
+                        <Label Text="Outstanding" FontSize="11" TextColor="{StaticResource Gray500}" />
+                        <Label Text="{Binding ContributionKpis.TotalOutstandingAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" TextColor="#DC2626" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="1" StrokeShape="RoundRectangle 12" Padding="12">
+                    <VerticalStackLayout>
+                        <Label Text="Flats Fully Paid" FontSize="11" TextColor="{StaticResource Gray500}" />
+                        <Label FontAttributes="Bold">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="{Binding ContributionKpis.FlatsPaidCount}" />
+                                    <Span Text=" / " />
+                                    <Span Text="{Binding ContributionKpis.TotalFlats}" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Grid Grid.Row="1" Padding="16,4" ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Button Grid.Column="0" Text="By Flat" FontSize="12"
+                        Command="{Binding SwitchContributionViewCommand}" CommandParameter="Flats" />
+                <Button Grid.Column="1" Text="All Contributions" FontSize="12"
+                        Command="{Binding SwitchContributionViewCommand}" CommandParameter="All" />
+            </Grid>
+
+            <Grid Grid.Row="2" Padding="16,4" ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Button Grid.Column="0" Text="Set Target for All Flats" FontSize="12" Command="{Binding SetTargetForAllCommand}" />
+                <Button Grid.Column="1" Text="Record Contribution" FontSize="12" Command="{Binding RecordContributionCommand}" />
+            </Grid>
+
+            <Grid Grid.Row="3" Padding="8,0" ColumnDefinitions="2*,2*" ColumnSpacing="8">
+                <SearchBar Grid.Column="0" Placeholder="Search flat / donor..."
+                           Text="{Binding ContributionSearch}" SearchCommand="{Binding LoadContributionCommand}" />
+                <Picker Grid.Column="1" ItemsSource="{Binding ContributionStatusOptions}" ItemDisplayBinding="{Binding Label}"
+                        SelectedItem="{Binding SelectedContributionStatus}" FontSize="13"
+                        IsVisible="{Binding ContributionView, Converter={StaticResource EqualsConverter}, ConverterParameter=Flats}" />
+            </Grid>
+
+            <CollectionView Grid.Row="4" ItemsSource="{Binding FlatContributions}"
+                            IsVisible="{Binding ContributionView, Converter={StaticResource EqualsConverter}, ConverterParameter=Flats}">
+                <CollectionView.EmptyView>
+                    <Label Text="No flats found." TextColor="{StaticResource Gray500}" HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FlatContributionDto">
+                        <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenFlatDetailCommand}" CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding FlatNumber, StringFormat='Flat {0}'}" FontAttributes="Bold" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding Status}" FontSize="12" TextColor="{StaticResource Primary}" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding OutstandingAmount, StringFormat='₹{0:N0} due'}" FontAttributes="Bold" HorizontalOptions="End" TextColor="#DC2626" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding PaidAmount, StringFormat='₹{0:N0} paid'}" FontSize="12" TextColor="{StaticResource Gray500}" HorizontalOptions="End" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <CollectionView Grid.Row="4" ItemsSource="{Binding AllContributions}"
+                            IsVisible="{Binding ContributionView, Converter={StaticResource EqualsConverter}, ConverterParameter=All}">
+                <CollectionView.EmptyView>
+                    <Label Text="No contributions recorded yet." TextColor="{StaticResource Gray500}" HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FestivalContributionDto">
+                        <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowContributionActionsCommand}" CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding MemberName}" FontAttributes="Bold" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding ReceiptNumber}" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding PaymentDate, StringFormat='{0:MMM d, yyyy}'}" FontSize="12" TextColor="{StaticResource Gray500}" HorizontalOptions="End" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Budget panel -->
+        <Grid Grid.Row="4" RowDefinitions="Auto,Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Budget}">
+            <Grid Grid.Row="0" Padding="16,10" ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <VerticalStackLayout Grid.Column="0">
+                    <Label Text="Estimated" FontSize="11" TextColor="{StaticResource Gray500}" />
+                    <Label Text="{Binding TotalEstimated, StringFormat='₹{0:N0}'}" FontAttributes="Bold" FontSize="14" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1">
+                    <Label Text="Approved" FontSize="11" TextColor="{StaticResource Gray500}" />
+                    <Label Text="{Binding TotalApproved, StringFormat='₹{0:N0}'}" FontAttributes="Bold" FontSize="14" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="2">
+                    <Label Text="Actual" FontSize="11" TextColor="{StaticResource Gray500}" />
+                    <Label Text="{Binding TotalActual, StringFormat='₹{0:N0}'}" FontAttributes="Bold" FontSize="14" />
+                </VerticalStackLayout>
+            </Grid>
+            <Button Grid.Row="1" Margin="16,0" Text="Add Category" Command="{Binding AddBudgetCategoryCommand}" HorizontalOptions="Start" FontSize="12" />
+            <CollectionView Grid.Row="2" ItemsSource="{Binding BudgetCategories}">
+                <CollectionView.EmptyView>
+                    <Label Text="No budget categories yet." TextColor="{StaticResource Gray500}" HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FestivalBudgetCategoryDto">
+                        <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowBudgetCategoryActionsCommand}" CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding Category}" FontAttributes="Bold" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding Remaining, StringFormat='₹{0:N0} remaining'}" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding ApprovedAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding ActualAmount, StringFormat='₹{0:N0} spent'}" FontSize="12" TextColor="{StaticResource Gray500}" HorizontalOptions="End" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Sponsors panel -->
+        <Grid Grid.Row="4" RowDefinitions="Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Sponsors}">
+            <Button Grid.Row="0" Margin="16,10" Text="Add Sponsor" Command="{Binding AddSponsorCommand}" HorizontalOptions="Start" FontSize="12" />
+            <CollectionView Grid.Row="1" ItemsSource="{Binding Sponsors}">
+                <CollectionView.EmptyView>
+                    <Label Text="No sponsors yet." TextColor="{StaticResource Gray500}" HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FestivalSponsorDto">
+                        <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowSponsorActionsCommand}" CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding CompanyName}" FontAttributes="Bold" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding ContactPerson}" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding PromisedAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding PendingAmount, StringFormat='₹{0:N0} pending'}" FontSize="12" TextColor="{StaticResource Gray500}" HorizontalOptions="End" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Expenses panel -->
+        <Grid Grid.Row="4" RowDefinitions="Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Expenses}">
+            <Button Grid.Row="0" Margin="16,10" Text="Record Expense" Command="{Binding AddExpenseCommand}" HorizontalOptions="Start" FontSize="12" />
+            <CollectionView Grid.Row="1" ItemsSource="{Binding Expenses}">
+                <CollectionView.EmptyView>
+                    <Label Text="No expenses recorded yet." TextColor="{StaticResource Gray500}" HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FestivalExpenseDto">
+                        <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowExpenseActionsCommand}" CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding Category}" FontAttributes="Bold" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding VendorName}" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Grid.Row="2" Grid.Column="0" Text="{Binding RejectionReason}" FontSize="11" TextColor="#DC2626"
+                                   IsVisible="{Binding RejectionReason, Converter={StaticResource StringToBoolConverter}}" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding ApprovalStatus}" FontSize="12" TextColor="{StaticResource Primary}" HorizontalOptions="End" />
+                            <Label Grid.Row="2" Grid.Column="1" Text="{Binding ExpenseDate, StringFormat='{0:MMM d}'}" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="End" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Vendors panel -->
+        <Grid Grid.Row="4" RowDefinitions="Auto,Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Vendors}">
+            <SearchBar Grid.Row="0" Margin="8,4" Placeholder="Search vendors" Text="{Binding VendorSearch}" SearchCommand="{Binding LoadVendorsCommand}" />
+            <Button Grid.Row="1" Margin="16,0,16,10" Text="Add Vendor" Command="{Binding AddVendorCommand}" HorizontalOptions="Start" FontSize="12" />
+            <CollectionView Grid.Row="2" ItemsSource="{Binding Vendors}">
+                <CollectionView.EmptyView>
+                    <Label Text="No vendors in the directory yet." TextColor="{StaticResource Gray500}" HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FestivalVendorDto">
+                        <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowVendorActionsCommand}" CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontAttributes="Bold" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding Category}" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding Rating, StringFormat='★ {0}/5'}" HorizontalOptions="End" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding OutstandingAmount, StringFormat='₹{0:N0} due'}" FontSize="12" TextColor="{StaticResource Gray500}" HorizontalOptions="End" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Volunteers panel -->
+        <Grid Grid.Row="4" RowDefinitions="Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Volunteers}">
+            <Button Grid.Row="0" Margin="16,10" Text="Add Volunteer" Command="{Binding AddVolunteerCommand}" HorizontalOptions="Start" FontSize="12" />
+            <CollectionView Grid.Row="1" ItemsSource="{Binding Volunteers}">
+                <CollectionView.EmptyView>
+                    <Label Text="No volunteers added yet." TextColor="{StaticResource Gray500}" HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FestivalVolunteerDto">
+                        <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowVolunteerActionsCommand}" CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontAttributes="Bold" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding Phone}" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding Email}" HorizontalOptions="End" FontSize="12" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Tasks panel -->
+        <Grid Grid.Row="4" RowDefinitions="Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Tasks}">
+            <Button Grid.Row="0" Margin="16,10" Text="Add Task" Command="{Binding AddTaskCommand}" HorizontalOptions="Start" FontSize="12" />
+            <CollectionView Grid.Row="1" ItemsSource="{Binding Tasks}">
+                <CollectionView.EmptyView>
+                    <Label Text="No tasks added yet." TextColor="{StaticResource Gray500}" HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FestivalTaskDto">
+                        <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowTaskActionsCommand}" CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding Title}" FontAttributes="Bold" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding AssignedVolunteerName, StringFormat='Assigned: {0}'}" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding Status}" TextColor="{StaticResource Primary}" HorizontalOptions="End" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding DueDate, StringFormat='Due {0:MMM d}'}" FontSize="12" TextColor="{StaticResource Gray500}" HorizontalOptions="End"
+                                   IsVisible="{Binding DueDate, Converter={StaticResource IsNotNullConverter}}" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+    </Grid>
+
+</ContentPage>

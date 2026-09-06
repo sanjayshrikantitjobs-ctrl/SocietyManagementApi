@@ -56,6 +56,15 @@
 
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Center" />
 
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="6" Margin="0,16,0,0">
+                <Label Text="Need help signing in?" FontSize="12" TextColor="{StaticResource Gray500}" VerticalOptions="Center" />
+                <Label Text="Contact Us" FontSize="12" TextColor="{StaticResource Primary}" FontAttributes="Bold" VerticalOptions="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnContactUsTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </HorizontalStackLayout>
+
         </VerticalStackLayout>
     </ScrollView>
 

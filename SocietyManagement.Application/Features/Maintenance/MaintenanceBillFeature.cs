@@ -635,7 +635,7 @@ public class MaintenanceBillCommandHandlers :
 
 // ---- Queries -------------------------------------------------------------------
 public record GetBillsQuery(
-    int SocietyId, int? FlatId, BillStatus? Status, DateTime? BillMonth,
+    int SocietyId, int? FlatId, BillStatus? Status, DateTime? BillMonth, string? Search = null,
     int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<MaintenanceBillDto>>;
 
 public record GetBillByIdQuery(int Id) : IRequest<MaintenanceBillDetailDto>;
@@ -683,7 +683,7 @@ public class MaintenanceBillQueryHandlers :
     /// export always matches exactly what the list screen would show for
     /// the same filters, just without a page cut.</summary>
     private async Task<(List<MaintenanceBillDto> Items, int TotalCount)> GetFilteredDtosAsync(
-        int societyId, int? flatId, List<BillStatus>? statuses, DateTime? billMonth, int? skip, int? take, CancellationToken ct)
+        int societyId, int? flatId, List<BillStatus>? statuses, DateTime? billMonth, string? search, int? skip, int? take, CancellationToken ct)
     {
         var query = _context.MaintenanceBills
             .Where(b => !b.IsDeleted && b.SocietyId == societyId);
@@ -693,6 +693,21 @@ public class MaintenanceBillQueryHandlers :
         {
             var month = new DateTime(billMonth.Value.Year, billMonth.Value.Month, 1);
             query = query.Where(b => b.BillMonth == month);
+        }
+
+        // Matches on flat number or the flat's current primary owner/tenant
+        // name — applied before pagination (via a correlated subquery on
+        // FlatResidencies/Member) so totalCount/page contents stay in sync,
+        // same reasoning as the status predicate below.
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLower();
+            query = query.Where(b =>
+                b.Flat.FlatNumber.ToLower().Contains(term) ||
+                _context.FlatResidencies.Any(r =>
+                    !r.IsDeleted && r.MoveOutDate == null && r.IsPrimaryContact && r.FlatId == b.FlatId &&
+                    (r.MemberType == MemberType.Owner || r.MemberType == MemberType.Tenant) &&
+                    (r.Member.FirstName + " " + r.Member.LastName).ToLower().Contains(term)));
         }
 
         // Status is filtered here as SQL-translatable predicates equivalent to
@@ -750,7 +765,7 @@ public class MaintenanceBillQueryHandlers :
         var pageNumber = Math.Max(request.PageNumber, 1);
 
         var (dtos, totalCount) = await GetFilteredDtosAsync(
-            request.SocietyId, request.FlatId, request.Status.HasValue ? [request.Status.Value] : null, request.BillMonth,
+            request.SocietyId, request.FlatId, request.Status.HasValue ? [request.Status.Value] : null, request.BillMonth, request.Search,
             (pageNumber - 1) * pageSize, pageSize, ct);
 
         return new PaginatedResult<MaintenanceBillDto>(dtos, totalCount, pageNumber, pageSize);
@@ -759,7 +774,7 @@ public class MaintenanceBillQueryHandlers :
     private async Task<MaintenanceBillsExportData> BuildExportDataAsync(
         int societyId, List<BillStatus>? statuses, DateTime? billMonth, CancellationToken ct)
     {
-        var (dtos, _) = await GetFilteredDtosAsync(societyId, null, statuses, billMonth, null, null, ct);
+        var (dtos, _) = await GetFilteredDtosAsync(societyId, null, statuses, billMonth, null, null, null, ct);
 
         var society = await _context.Societies.FirstOrDefaultAsync(s => s.Id == societyId, ct);
         var monthLabel = billMonth.HasValue ? billMonth.Value.ToString("MMMM yyyy") : "All Months";
@@ -801,13 +816,27 @@ public class MaintenanceBillQueryHandlers :
             ?? throw new NotFoundException(nameof(MaintenanceBill), request.Id);
 
         var dto = Project(bill);
+
+        // OwnerNameSnapshot is frozen at generation time (correct for the
+        // PDF/WhatsApp invoice text, which should keep saying who was
+        // billed back then) — but the on-screen detail view should reflect
+        // who actually lives there *now*, same live FlatResidencies/Member
+        // lookup the bills list already uses for its OwnerName column.
+        var primaryContact = await _context.FlatResidencies
+            .Where(r => !r.IsDeleted && r.MoveOutDate == null && r.IsPrimaryContact && r.FlatId == bill.FlatId &&
+                (r.MemberType == MemberType.Owner || r.MemberType == MemberType.Tenant))
+            .Select(r => new { r.MemberType, Name = r.Member.FirstName + " " + r.Member.LastName })
+            .ToListAsync(ct);
+        dto.OwnerName = primaryContact.FirstOrDefault(r => r.MemberType == MemberType.Owner)?.Name;
+        dto.TenantName = primaryContact.FirstOrDefault(r => r.MemberType == MemberType.Tenant)?.Name;
+
         return new MaintenanceBillDetailDto
         {
             Id = dto.Id, FlatId = dto.FlatId, FlatNumber = dto.FlatNumber, BuildingName = dto.BuildingName,
             WingName = dto.WingName, BillMonth = dto.BillMonth, InvoiceNumber = dto.InvoiceNumber,
             PreviousBalance = dto.PreviousBalance, FineAmount = dto.FineAmount, TotalAmount = dto.TotalAmount,
             AmountPaid = dto.AmountPaid, DueDate = dto.DueDate, Status = dto.Status, IsRolledForward = dto.IsRolledForward, PdfUrl = dto.PdfUrl,
-            OwnerNameSnapshot = dto.OwnerNameSnapshot,
+            OwnerNameSnapshot = dto.OwnerNameSnapshot, OwnerName = dto.OwnerName, TenantName = dto.TenantName,
             Items = bill.Items.Where(i => !i.IsDeleted).Select(i => new MaintenanceBillItemDto
             {
                 Id = i.Id, Description = i.Description, Amount = i.Amount, ItemType = i.ItemType

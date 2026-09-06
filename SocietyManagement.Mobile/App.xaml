@@ -15,6 +15,7 @@
             <conv:CountToBoolConverter x:Key="CountToBoolConverter" />
             <conv:IsNotNullConverter x:Key="IsNotNullConverter" />
             <conv:IsNullConverter x:Key="IsNullConverter" />
+            <conv:EqualsConverter x:Key="EqualsConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -13,6 +13,7 @@ public class VisitorSettingsController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Visitors.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<VisitorSettingsDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Get([FromQuery] int societyId)
     {
         var result = await Mediator.Send(new GetVisitorSettingsQuery(societyId));
@@ -21,6 +22,7 @@ public class VisitorSettingsController : ApiControllerBase
 
     [HttpPut]
     [HasPermission(Permissions.Visitors.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Upsert(UpsertVisitorSettingsCommand command)
     {
         await Mediator.Send(command);

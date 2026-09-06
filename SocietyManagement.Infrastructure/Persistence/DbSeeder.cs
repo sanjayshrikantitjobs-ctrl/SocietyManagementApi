@@ -58,7 +58,7 @@ public class DbSeeder
         var memberPermissionCodes = new[]
         {
             Permissions.Members.View, Permissions.Society.View, Permissions.Maintenance.View,
-            Permissions.Festivals.View, Permissions.Festivals.Contribute, Permissions.Expenses.View,
+            Permissions.Festivals.View, Permissions.Festivals.Contribute, Permissions.Festivals.SelectDistribution, Permissions.Expenses.View,
             Permissions.Notices.View, Permissions.Complaints.View, Permissions.Complaints.Create,
             Permissions.Polls.View, Permissions.Polls.Vote, Permissions.Events.View, Permissions.Events.Rsvp,
             Permissions.Visitors.View, Permissions.Visitors.Approve, Permissions.Visitors.Reject,
@@ -285,6 +285,8 @@ public class DbSeeder
             ("Festivals", "Manage", Permissions.Festivals.Manage),
             ("Festivals", "Contribute", Permissions.Festivals.Contribute),
             ("Festivals", "ApproveExpense", Permissions.Festivals.ApproveExpense),
+            ("Festivals", "ManageDistribution", Permissions.Festivals.ManageDistribution),
+            ("Festivals", "SelectDistribution", Permissions.Festivals.SelectDistribution),
             ("Expenses", "View", Permissions.Expenses.View),
             ("Expenses", "Manage", Permissions.Expenses.Manage),
             ("Notices", "View", Permissions.Notices.View),

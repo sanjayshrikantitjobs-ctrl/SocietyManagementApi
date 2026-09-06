@@ -12,6 +12,7 @@
     xmlns:res="clr-namespace:SocietyManagement.Mobile.Features.Residents"
     xmlns:maint="clr-namespace:SocietyManagement.Mobile.Features.Maintenance"
     xmlns:fest="clr-namespace:SocietyManagement.Mobile.Features.Festivals"
+    xmlns:shared="clr-namespace:SocietyManagement.Mobile.Shared"
     x:DataType="authCore:AuthState"
     FlyoutBehavior="Flyout"
     Title="Society Management">
@@ -22,43 +23,110 @@
         ContentTemplate="{DataTemplate auth:LoginPage}"
         Route="LoginPage" />
 
-    <FlyoutItem Title="Dashboard">
+    <!-- Matches SocietyManagement.Web's main-layout.component.ts NAV_ITEMS
+         exactly, item for item and gate for gate (hideForWatchman/adminOnly/
+         superAdminOnly — via AuthState.IsAdmin/IsWatchman/IsSuperAdmin/
+         ShowHelpAndSupport). Modules without a built screen yet route to
+         ComingSoonPage (which reads its own title from the tapped
+         FlyoutItem — see ComingSoonPage.xaml.cs) rather than being omitted,
+         so the nav itself already matches the web app while each screen is
+         filled in phase by phase. Note: only FlyoutItem/ShellContent support
+         IsVisible in Shell — plain MenuItem does not — hence every
+         placeholder below is a FlyoutItem too, not a MenuItem. -->
+
+    <FlyoutItem Title="Home" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
         <ShellContent ContentTemplate="{DataTemplate dash:DashboardPage}" Route="DashboardPage" />
     </FlyoutItem>
 
-    <!-- Watchman destinations (Phase 1). Visible to Watchman and to
-         Admin/SuperAdmin too, since those roles hold every permission
-         Watchman does and may need to cover the gate. -->
-    <FlyoutItem Title="New Visitor" IsVisible="{Binding IsWatchman}">
-        <ShellContent ContentTemplate="{DataTemplate visitors:NewVisitorPage}" Route="NewVisitorPage" />
-    </FlyoutItem>
-    <FlyoutItem Title="Currently Inside" IsVisible="{Binding IsWatchman}">
-        <ShellContent ContentTemplate="{DataTemplate visitors:CurrentlyInsidePage}" Route="CurrentlyInsidePage" />
-    </FlyoutItem>
-    <FlyoutItem Title="Scan Vehicle" IsVisible="{Binding IsWatchman}">
-        <ShellContent ContentTemplate="{DataTemplate vs:VehicleScanPage}" Route="VehicleScanPage" />
-    </FlyoutItem>
-    <FlyoutItem Title="Scan History" IsVisible="{Binding IsWatchman}">
-        <ShellContent ContentTemplate="{DataTemplate vs:VehicleScanHistoryPage}" Route="VehicleScanHistoryPage" />
-    </FlyoutItem>
-    <FlyoutItem Title="Parking Fines" IsVisible="{Binding IsWatchman}">
-        <ShellContent ContentTemplate="{DataTemplate pf:ParkingFinesPage}" Route="ParkingFinesPage" />
+    <FlyoutItem Title="Festivals &amp; Events" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
+        <ShellContent ContentTemplate="{DataTemplate fest:FestivalsListPage}" Route="FestivalsListPage" />
     </FlyoutItem>
 
-    <!-- Admin/SuperAdmin destinations. More land here phase by phase
-         (Society Setup, Occupancy, Staff, Services, Users, Roles, Finance,
-         Complaints, Events, Support) — matches roleGuard's coarse
-         Admin-or-SuperAdmin gate on the web (app.routes.ts), not a
-         per-permission check, since every Admin-visible module here is
-         already permission-checked server-side regardless. -->
+    <FlyoutItem Title="Visitors">
+        <Tab Title="New Visitor">
+            <ShellContent ContentTemplate="{DataTemplate visitors:NewVisitorPage}" Route="NewVisitorPage" />
+        </Tab>
+        <Tab Title="Currently Inside">
+            <ShellContent ContentTemplate="{DataTemplate visitors:CurrentlyInsidePage}" Route="CurrentlyInsidePage" />
+        </Tab>
+        <!-- Admin-only on web (separate routed pages, not tabs) — kept as
+             tabs here for mobile nav simplicity; mutation buttons inside
+             each are still gated by Auth.IsAdmin. -->
+        <Tab Title="Gates">
+            <ShellContent ContentTemplate="{DataTemplate visitors:GatesPage}" Route="GatesPage" />
+        </Tab>
+        <Tab Title="Purposes">
+            <ShellContent ContentTemplate="{DataTemplate visitors:PurposesPage}" Route="PurposesPage" />
+        </Tab>
+        <Tab Title="Settings">
+            <ShellContent ContentTemplate="{DataTemplate visitors:VisitorSettingsPage}" Route="VisitorSettingsPage" />
+        </Tab>
+    </FlyoutItem>
+
+    <FlyoutItem Title="Vehicle Security">
+        <Tab Title="Scan Vehicle">
+            <ShellContent ContentTemplate="{DataTemplate vs:VehicleScanPage}" Route="VehicleScanPage" />
+        </Tab>
+        <Tab Title="Scan History">
+            <ShellContent ContentTemplate="{DataTemplate vs:VehicleScanHistoryPage}" Route="VehicleScanHistoryPage" />
+        </Tab>
+        <Tab Title="Parking Fines">
+            <ShellContent ContentTemplate="{DataTemplate pf:ParkingFinesPage}" Route="ParkingFinesPage" />
+        </Tab>
+    </FlyoutItem>
+
+    <FlyoutItem Title="Maintenance" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate maint:MaintenancePage}" Route="MaintenancePage" />
+    </FlyoutItem>
+
     <FlyoutItem Title="Residents" IsVisible="{Binding IsAdmin}">
         <ShellContent ContentTemplate="{DataTemplate res:ResidentsListPage}" Route="ResidentsListPage" />
     </FlyoutItem>
-    <FlyoutItem Title="Maintenance" IsVisible="{Binding IsAdmin}">
-        <ShellContent ContentTemplate="{DataTemplate maint:MaintenanceDashboardPage}" Route="MaintenanceDashboardPage" />
+
+    <FlyoutItem Title="Staff" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="StaffPage" />
     </FlyoutItem>
-    <FlyoutItem Title="Festivals" IsVisible="{Binding IsAdmin}">
-        <ShellContent ContentTemplate="{DataTemplate fest:FestivalsListPage}" Route="FestivalsListPage" />
+    <FlyoutItem Title="Services" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="ServicesPage" />
+    </FlyoutItem>
+    <FlyoutItem Title="Finance" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="FinancePage" />
+    </FlyoutItem>
+    <FlyoutItem Title="Complaints" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="ComplaintsPage" />
+    </FlyoutItem>
+    <FlyoutItem Title="Committee" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
+        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="CommitteePage" />
+    </FlyoutItem>
+
+    <!-- "My Society" group on the web (My Bills/My Complaints/My Family/Help
+         &amp; Support) is Member self-service — real screens land with the
+         Member-role phase; placeholders here keep the nav item count honest
+         in the meantime. -->
+    <FlyoutItem Title="My Bills" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
+        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="MyBillsPage" />
+    </FlyoutItem>
+    <FlyoutItem Title="My Complaints" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
+        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="MyComplaintsPage" />
+    </FlyoutItem>
+    <FlyoutItem Title="My Family" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
+        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="MyFamilyPage" />
+    </FlyoutItem>
+    <FlyoutItem Title="Help &amp; Support" IsVisible="{Binding ShowHelpAndSupport}">
+        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="HelpAndSupportPage" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Societies" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="SocietiesPage" />
+    </FlyoutItem>
+    <FlyoutItem Title="Users" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="UsersPage" />
+    </FlyoutItem>
+    <FlyoutItem Title="Roles &amp; Permissions" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="RolesPage" />
+    </FlyoutItem>
+    <FlyoutItem Title="Support Tickets" IsVisible="{Binding IsSuperAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="SupportTicketsPage" />
     </FlyoutItem>
 
 </Shell>

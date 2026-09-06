@@ -66,6 +66,7 @@ public class FestivalsController : ApiControllerBase
 
     [HttpGet("contribution-pools")]
     [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<ContributionPoolDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetContributionPools([FromQuery] int societyId)
     {
         var result = await Mediator.Send(new GetContributionPoolsQuery(societyId));
@@ -74,6 +75,7 @@ public class FestivalsController : ApiControllerBase
 
     [HttpGet("{id:int}/pool-summary")]
     [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(ApiResponse<PoolSummaryDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPoolSummary(int id)
     {
         var result = await Mediator.Send(new GetPoolSummaryQuery(id));
@@ -82,6 +84,7 @@ public class FestivalsController : ApiControllerBase
 
     [HttpGet("{id:int}/pool-status")]
     [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(ApiResponse<ChildPoolStatusDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetChildPoolStatus(int id)
     {
         var result = await Mediator.Send(new GetChildPoolStatusQuery(id));

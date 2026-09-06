@@ -14,6 +14,7 @@ public class FestivalVendorsController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<FestivalVendorDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int societyId, [FromQuery] VendorCategory? category, [FromQuery] string? search,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
@@ -24,6 +25,7 @@ public class FestivalVendorsController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Festivals.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create(CreateVendorCommand command)
     {
         var id = await Mediator.Send(command);
@@ -32,6 +34,7 @@ public class FestivalVendorsController : ApiControllerBase
 
     [HttpPut("{id:int}")]
     [HasPermission(Permissions.Festivals.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(int id, UpdateVendorCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
@@ -41,6 +44,7 @@ public class FestivalVendorsController : ApiControllerBase
 
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.Festivals.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id)
     {
         await Mediator.Send(new DeleteVendorCommand(id));

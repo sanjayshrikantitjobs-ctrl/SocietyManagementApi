@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:fest="clr-namespace:SocietyManagement.Mobile.Features.Festivals"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Festivals.FlatContributionDetailPage"
+             x:DataType="fest:FlatContributionDetailViewModel"
+             x:Name="Root"
+             Title="Flat Contribution">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+
+        <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+        <Label Grid.Row="0" Margin="16,4" Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+        <Grid Grid.Row="1" Padding="16,8" ColumnDefinitions="*,*,*" IsVisible="{Binding Summary, Converter={StaticResource IsNotNullConverter}}">
+            <VerticalStackLayout Grid.Column="0">
+                <Label Text="Target" FontSize="11" TextColor="{StaticResource Gray500}" />
+                <Label Text="{Binding Summary.TargetAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" />
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="1">
+                <Label Text="Paid" FontSize="11" TextColor="{StaticResource Gray500}" />
+                <Label Text="{Binding Summary.PaidAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" TextColor="#15803D" />
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="2">
+                <Label Text="Outstanding" FontSize="11" TextColor="{StaticResource Gray500}" />
+                <Label Text="{Binding Summary.OutstandingAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" TextColor="#DC2626" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <HorizontalStackLayout Grid.Row="2" Padding="16,4" Spacing="8">
+            <Button Text="Edit Target" Command="{Binding EditTargetCommand}" FontSize="12" />
+            <Button Text="Add Contribution" Command="{Binding AddContributionCommand}" FontSize="12" />
+        </HorizontalStackLayout>
+
+        <CollectionView Grid.Row="3" ItemsSource="{Binding Contributions}">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="32" VerticalOptions="Center">
+                    <Label Text="No contributions recorded yet for this flat." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="gen:FestivalContributionDto">
+                    <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowContributionActionsCommand}" CommandParameter="{Binding .}" />
+                        </Grid.GestureRecognizers>
+                        <Label Grid.Row="0" Grid.Column="0" Text="{Binding MemberName}" FontAttributes="Bold" />
+                        <Label Grid.Row="1" Grid.Column="0" Text="{Binding ReceiptNumber}" FontSize="12" TextColor="{StaticResource Gray500}" />
+                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
+                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding PaymentDate, StringFormat='{0:MMM d, yyyy}'}" FontSize="12" TextColor="{StaticResource Gray500}" HorizontalOptions="End" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+
+</ContentPage>

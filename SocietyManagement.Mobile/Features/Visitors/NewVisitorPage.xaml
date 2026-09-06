@@ -10,6 +10,12 @@
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="14">
 
+            <Label Text="Photo" FontSize="13" TextColor="{StaticResource Gray500}" />
+            <Image Source="{Binding PhotoPreviewSource}" HeightRequest="160" Aspect="AspectFit"
+                   IsVisible="{Binding LocalPhotoPath, Converter={StaticResource StringToBoolConverter}}" />
+            <Button Text="{Binding CapturePhotoButtonText}" Command="{Binding CapturePhotoCommand}" />
+            <ActivityIndicator IsRunning="{Binding IsUploadingPhoto}" IsVisible="{Binding IsUploadingPhoto}" HorizontalOptions="Center" />
+
             <Label Text="Flat" FontSize="13" TextColor="{StaticResource Gray500}" />
             <Entry Text="{Binding FlatSearchText}" Placeholder="Search flat number" TextChanged="OnFlatSearchTextChanged" />
             <CollectionView x:Name="FlatResultsView"

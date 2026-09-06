@@ -37,7 +37,7 @@ import { MaintenanceService } from '../services/maintenance.service';
 
       <div class="summary-grid">
         <div class="app-card summary-card"><span class="label">Flat</span><span class="value">{{ b.flatNumber }}</span><span class="muted">{{ b.buildingName }} / {{ b.wingName }}</span></div>
-        <div class="app-card summary-card"><span class="label">Owner</span><span class="value">{{ b.ownerNameSnapshot || '—' }}</span></div>
+        <div class="app-card summary-card"><span class="label">Owner</span><span class="value">{{ b.ownerName || b.tenantName || b.ownerNameSnapshot || '—' }}</span></div>
         <div class="app-card summary-card"><span class="label">Bill Month</span><span class="value">{{ b.billMonth | date: 'MMMM yyyy' }}</span></div>
         <div class="app-card summary-card"><span class="label">Due Date</span><span class="value">{{ b.dueDate | date: 'mediumDate' }}</span></div>
         <div class="app-card summary-card"><span class="label">Total</span><span class="value">₹{{ b.totalAmount | number }}</span></div>

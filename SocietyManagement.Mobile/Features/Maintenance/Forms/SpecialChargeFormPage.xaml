@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:forms="clr-namespace:SocietyManagement.Mobile.Features.Maintenance.Forms"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Maintenance.Forms.SpecialChargeFormPage"
+             x:DataType="forms:SpecialChargeFormViewModel"
+             x:Name="Root"
+             Title="Special Charge">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Label Text="{Binding ExistingFlatNumber, StringFormat='Flat {0}'}" FontSize="14" FontAttributes="Bold"
+                   IsVisible="{Binding IsEditMode}" />
+
+            <VerticalStackLayout IsVisible="{Binding IsEditMode, Converter={StaticResource InvertedBoolConverter}}" Spacing="8">
+                <Label Text="Flat" FontSize="12" TextColor="{StaticResource Gray500}" />
+                <SearchBar Placeholder="Search flat number..." Text="{Binding FlatSearchText}" />
+                <CollectionView ItemsSource="{Binding FlatSearchResults}" HeightRequest="120"
+                                IsVisible="{Binding FlatSearchResults.Count, Converter={StaticResource CountToBoolConverter}}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="gen:FlatDto">
+                            <Grid Padding="8">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.SelectFlatCommand}" CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+                                <Label Text="{Binding FlatNumber}" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <Label Text="Charge Name" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding ChargeName}" />
+
+            <Label Text="Amount" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding Amount}" Keyboard="Numeric" />
+
+            <Label Text="Frequency" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Picker ItemsSource="{Binding FrequencyOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedFrequency}" />
+
+            <Label Text="Start Date" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <DatePicker Date="{Binding StartDate}" />
+
+            <Label Text="End Date (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <DatePicker Date="{Binding EndDate}" />
+
+            <Label Text="Notes (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Editor Text="{Binding Notes}" AutoSize="TextChanges" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

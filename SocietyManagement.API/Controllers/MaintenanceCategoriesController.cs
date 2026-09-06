@@ -13,6 +13,7 @@ public class MaintenanceCategoriesController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Maintenance.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<MaintenanceCategoryDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] int societyId)
     {
         var result = await Mediator.Send(new GetMaintenanceCategoriesQuery(societyId));

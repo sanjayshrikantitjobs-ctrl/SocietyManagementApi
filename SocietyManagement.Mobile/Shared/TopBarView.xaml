@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SocietyManagement.Mobile.Shared.TopBarView"
+             x:Name="Root">
+
+    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="16" Padding="4,0" HorizontalOptions="Fill"
+          VerticalOptions="Center" BindingContext="{x:Reference Root}">
+
+        <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
+            <Label Text="{Binding SocietyName}" FontAttributes="Bold" FontSize="15"
+                   LineBreakMode="TailTruncation"
+                   TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+            <Label Text="{Binding SocietyAddress}" FontSize="10" TextColor="{StaticResource Gray500}"
+                   LineBreakMode="TailTruncation"
+                   IsVisible="{Binding SocietyAddress, Converter={StaticResource StringToBoolConverter}}" />
+        </VerticalStackLayout>
+
+        <Label Grid.Column="1" Text="&#128276;" FontSize="20" VerticalOptions="Center">
+            <Label.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnNotificationsTapped" />
+            </Label.GestureRecognizers>
+        </Label>
+
+        <Label Grid.Column="2" Text="{Binding ThemeIcon}" FontSize="20" VerticalOptions="Center">
+            <Label.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnThemeToggleTapped" />
+            </Label.GestureRecognizers>
+        </Label>
+
+        <Label Grid.Column="3" Text="&#128100;" FontSize="20" VerticalOptions="Center">
+            <Label.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnUserMenuTapped" />
+            </Label.GestureRecognizers>
+        </Label>
+
+    </Grid>
+
+</ContentView>

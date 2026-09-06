@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:forms="clr-namespace:SocietyManagement.Mobile.Features.Festivals.Forms"
+             x:Class="SocietyManagement.Mobile.Features.Festivals.Forms.BudgetCategoryFormPage"
+             x:DataType="forms:BudgetCategoryFormViewModel"
+             Title="Budget Category">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Label Text="Category" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Picker ItemsSource="{Binding CategoryOptions}" ItemDisplayBinding="{Binding Label}"
+                    SelectedItem="{Binding SelectedCategory}" IsEnabled="{Binding IsEditMode, Converter={StaticResource InvertedBoolConverter}}" />
+
+            <VerticalStackLayout IsVisible="{Binding ShowCustomName}" Spacing="14">
+                <Label Text="Custom Category Name" FontSize="12" TextColor="{StaticResource Gray500}" />
+                <Entry Text="{Binding CustomCategoryName}" />
+            </VerticalStackLayout>
+
+            <Label Text="Estimated Amount" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding EstimatedAmount}" Keyboard="Numeric" />
+
+            <Label Text="Approved Amount" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding ApprovedAmount}" Keyboard="Numeric" />
+
+            <Label Text="Notes (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Editor Text="{Binding Notes}" AutoSize="TextChanges" />
+
+            <VerticalStackLayout IsVisible="{Binding IsEditMode}" Spacing="14">
+                <Label Text="Reason for Change (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
+                <Entry Text="{Binding Reason}" />
+            </VerticalStackLayout>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

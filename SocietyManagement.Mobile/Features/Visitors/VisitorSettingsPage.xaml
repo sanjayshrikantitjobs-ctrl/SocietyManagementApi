@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:visitors="clr-namespace:SocietyManagement.Mobile.Features.Visitors"
+             x:Class="SocietyManagement.Mobile.Features.Visitors.VisitorSettingsPage"
+             x:DataType="visitors:VisitorSettingsViewModel"
+             Title="Visitor Settings">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Label Text="Approval Request Expiry (minutes)" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding ApprovalRequestExpiryMinutes}" Keyboard="Numeric" />
+
+            <Label Text="Keep Visitor History (days)" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding RetentionDays}" Keyboard="Numeric" />
+            <Label Text="Visitor gate-entry records and photos older than this are automatically deleted. Default 30 days."
+                   FontSize="11" TextColor="{StaticResource Gray400}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Button Text="Save Settings" Command="{Binding SaveCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

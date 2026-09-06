@@ -17,16 +17,18 @@ public partial class NewVisitorViewModel : ObservableObject
     private readonly VisitorPurposesClient _purposesClient;
     private readonly GatesClient _gatesClient;
     private readonly VisitorVisitsClient _visitsClient;
+    private readonly FilesClient _filesClient;
     private readonly CurrentSocietyService _currentSocietyService;
 
     public NewVisitorViewModel(
         FlatsClient flatsClient, VisitorPurposesClient purposesClient, GatesClient gatesClient,
-        VisitorVisitsClient visitsClient, CurrentSocietyService currentSocietyService)
+        VisitorVisitsClient visitsClient, FilesClient filesClient, CurrentSocietyService currentSocietyService)
     {
         _flatsClient = flatsClient;
         _purposesClient = purposesClient;
         _gatesClient = gatesClient;
         _visitsClient = visitsClient;
+        _filesClient = filesClient;
         _currentSocietyService = currentSocietyService;
         NumberOfVisitors = 1;
     }
@@ -46,10 +48,65 @@ public partial class NewVisitorViewModel : ObservableObject
     [ObservableProperty] private string visitorVehicleNumber = string.Empty;
     [ObservableProperty] private int numberOfVisitors;
 
+    [ObservableProperty] private string? localPhotoPath;
+    [ObservableProperty] private string? photoUrl;
+    [ObservableProperty] private bool isUploadingPhoto;
+
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private bool isSearchingFlats;
     [ObservableProperty] private string? errorMessage;
     [ObservableProperty] private string? successMessage;
+
+    public ImageSource? PhotoPreviewSource => string.IsNullOrEmpty(LocalPhotoPath) ? null : ImageSource.FromFile(LocalPhotoPath);
+    public string CapturePhotoButtonText => string.IsNullOrEmpty(LocalPhotoPath) ? "Capture Photo" : "Retake Photo";
+
+    partial void OnLocalPhotoPathChanged(string? value)
+    {
+        OnPropertyChanged(nameof(PhotoPreviewSource));
+        OnPropertyChanged(nameof(CapturePhotoButtonText));
+    }
+
+    /// <summary>Mirrors new-visitor.component.ts's photo picker: capture a
+    /// photo, then POST /api/files/upload (folder "visitors") the same way
+    /// the web does via its generic FileUploadService, storing only the
+    /// returned URL — the create-visit payload never carries raw bytes.</summary>
+    [RelayCommand]
+    private async Task CapturePhotoAsync()
+    {
+        ErrorMessage = null;
+        try
+        {
+            if (!MediaPicker.Default.IsCaptureSupported)
+            {
+                ErrorMessage = "Camera capture isn't supported on this device.";
+                return;
+            }
+
+            var photo = await MediaPicker.Default.CapturePhotoAsync();
+            if (photo is null) return;
+
+            var localPath = Path.Combine(FileSystem.CacheDirectory, photo.FileName);
+            await using (var sourceStream = await photo.OpenReadAsync())
+            await using (var localFileStream = File.Create(localPath))
+            {
+                await sourceStream.CopyToAsync(localFileStream);
+            }
+            LocalPhotoPath = localPath;
+
+            IsUploadingPhoto = true;
+            using var uploadStream = File.OpenRead(localPath);
+            var response = await _filesClient.UploadAsync(new FileParameter(uploadStream, photo.FileName, "image/jpeg"), "visitors");
+            PhotoUrl = response.Data;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Couldn't capture/upload the photo ({ex.Message}).";
+        }
+        finally
+        {
+            IsUploadingPhoto = false;
+        }
+    }
 
     public async Task LoadLookupsAsync()
     {
@@ -149,7 +206,7 @@ public partial class NewVisitorViewModel : ObservableObject
                 VisitorId = null,
                 NewVisitorName = VisitorName.Trim(),
                 NewVisitorMobile = VisitorMobile.Trim(),
-                NewVisitorPhotoUrl = null,
+                NewVisitorPhotoUrl = PhotoUrl,
                 NewVisitorVehicleNumber = string.IsNullOrWhiteSpace(VisitorVehicleNumber) ? null : VisitorVehicleNumber.Trim(),
                 NewVisitorVehicleType = null,
                 FlatId = flatId,
@@ -184,6 +241,8 @@ public partial class NewVisitorViewModel : ObservableObject
         VisitorMobile = string.Empty;
         VisitorVehicleNumber = string.Empty;
         NumberOfVisitors = 1;
+        LocalPhotoPath = null;
+        PhotoUrl = null;
         ErrorMessage = null;
         SuccessMessage = null;
     }

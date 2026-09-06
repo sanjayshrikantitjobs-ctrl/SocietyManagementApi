@@ -13,6 +13,7 @@ public class WaterTankerLogsController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Maintenance.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<WaterTankerLogDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int societyId, [FromQuery] DateTime month, [FromQuery] string? search,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
@@ -23,6 +24,7 @@ public class WaterTankerLogsController : ApiControllerBase
 
     [HttpGet("summary")]
     [HasPermission(Permissions.Maintenance.View)]
+    [ProducesResponseType(typeof(ApiResponse<WaterTankerLogMonthSummaryDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSummary([FromQuery] int societyId, [FromQuery] DateTime month)
     {
         var result = await Mediator.Send(new GetWaterTankerLogSummaryQuery(societyId, month));
@@ -31,6 +33,7 @@ public class WaterTankerLogsController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Maintenance.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Create(CreateWaterTankerLogCommand command)
     {
         var id = await Mediator.Send(command);
@@ -39,6 +42,7 @@ public class WaterTankerLogsController : ApiControllerBase
 
     [HttpPut("{id:int}")]
     [HasPermission(Permissions.Maintenance.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(int id, UpdateWaterTankerLogCommand command)
     {
         if (id != command.Id) return BadRequest();
@@ -48,6 +52,7 @@ public class WaterTankerLogsController : ApiControllerBase
 
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.Maintenance.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id)
     {
         await Mediator.Send(new DeleteWaterTankerLogCommand(id));

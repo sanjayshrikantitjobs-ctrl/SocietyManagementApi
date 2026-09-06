@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:forms="clr-namespace:SocietyManagement.Mobile.Features.Festivals.Forms"
+             x:Class="SocietyManagement.Mobile.Features.Festivals.Forms.ContributionFormPage"
+             x:DataType="forms:ContributionFormViewModel"
+             Title="Contribution">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Label Text="{Binding LockedFlatNumber, StringFormat='Flat {0}'}" FontSize="14" FontAttributes="Bold"
+                   IsVisible="{Binding ShowLockedFlat}" />
+
+            <VerticalStackLayout IsVisible="{Binding ShowFlatPicker}" Spacing="14">
+                <Label Text="Flat" FontSize="12" TextColor="{StaticResource Gray500}" />
+                <Picker ItemsSource="{Binding FlatOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedFlat}" />
+            </VerticalStackLayout>
+
+            <Label Text="Donor Name" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding MemberName}" />
+
+            <Label Text="Amount" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding Amount}" Keyboard="Numeric" />
+
+            <Label Text="Payment Mode" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Picker ItemsSource="{Binding PaymentModeOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedPaymentMode}" />
+
+            <Label Text="Payment Date" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <DatePicker Date="{Binding PaymentDate}" />
+
+            <Label Text="Transaction Reference (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding TransactionId}" />
+
+            <VerticalStackLayout IsVisible="{Binding ShowWhatsApp}" Spacing="14">
+                <Label Text="WhatsApp Number (optional — defaults to flat's number on file)" FontSize="12" TextColor="{StaticResource Gray500}" />
+                <Entry Text="{Binding WhatsAppNumber}" Keyboard="Telephone" />
+            </VerticalStackLayout>
+
+            <HorizontalStackLayout Spacing="8">
+                <CheckBox IsChecked="{Binding IsAnonymous}" />
+                <Label Text="Keep donor anonymous on public displays" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

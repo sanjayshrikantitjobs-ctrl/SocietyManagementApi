@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:forms="clr-namespace:SocietyManagement.Mobile.Features.Maintenance.Forms"
+             x:Class="SocietyManagement.Mobile.Features.Maintenance.Forms.WaterTankerLogFormPage"
+             x:DataType="forms:WaterTankerLogFormViewModel"
+             Title="Tanker Entry">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Label Text="Date" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <DatePicker Date="{Binding Date}" />
+
+            <Label Text="Tanker Provider Name" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding ProviderName}" />
+
+            <Label Text="Vehicle Number" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding VehicleNumber}" />
+
+            <Label Text="Number of Tankers" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding NumberOfTankers}" Keyboard="Numeric" />
+
+            <Label Text="Price per Tanker (₹)" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding PricePerTanker}" Keyboard="Numeric" />
+
+            <Label Text="Notes (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding Notes}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

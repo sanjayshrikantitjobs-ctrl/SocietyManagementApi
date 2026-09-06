@@ -226,6 +226,84 @@ export interface FestivalTaskDto {
   dueDate?: string | null;
 }
 
+// ---- Distributions (generic giveaway: Kurta, T-shirt, gift, prasad, coupon...) ----
+
+export type FestivalDistributionStatus = 1 | 2 | 3;
+
+export const DISTRIBUTION_STATUS_LABELS: Record<FestivalDistributionStatus, string> = {
+  1: 'Draft', 2: 'Open', 3: 'Closed'
+};
+
+export type DistributionEligibilityType = 1 | 2 | 3;
+
+export const DISTRIBUTION_ELIGIBILITY_TYPE_LABELS: Record<DistributionEligibilityType, string> = {
+  1: 'Every Flat', 2: 'Partially or Fully Paid Contribution', 3: 'Minimum Contribution Amount'
+};
+
+export type DistributionClaimStatus = 1 | 2 | 3;
+
+export const DISTRIBUTION_CLAIM_STATUS_LABELS: Record<DistributionClaimStatus, string> = {
+  1: 'Pending', 2: 'Confirmed', 3: 'Distributed'
+};
+
+export interface FestivalDistributionDto {
+  id: number;
+  festivalId: number;
+  itemName: string;
+  description?: string | null;
+  eligibilityType: DistributionEligibilityType;
+  eligibilityMinContribution?: number | null;
+  quantityPerFlat: number;
+  status: FestivalDistributionStatus;
+  eligibleFlatsCount: number;
+  totalQuantity: number;
+  pendingCount: number;
+  confirmedCount: number;
+  distributedCount: number;
+}
+
+export interface FestivalDistributionVariantDto {
+  id: number;
+  label: string;
+  sortOrder: number;
+}
+
+export interface DistributionVariantBreakdownDto {
+  variantId?: number | null;
+  variantLabel: string;
+  pendingCount: number;
+  confirmedCount: number;
+  distributedCount: number;
+  totalCount: number;
+}
+
+export interface FestivalDistributionDetailDto extends FestivalDistributionDto {
+  variants: FestivalDistributionVariantDto[];
+  variantBreakdown: DistributionVariantBreakdownDto[];
+}
+
+export interface DistributionClaimDto {
+  id: number;
+  festivalDistributionId: number;
+  flatId: number;
+  flatNumber: string;
+  slotNumber: number;
+  memberId?: number | null;
+  memberName?: string | null;
+  variantId?: number | null;
+  variantLabel?: string | null;
+  status: DistributionClaimStatus;
+  confirmedAt?: string | null;
+  distributedAt?: string | null;
+  amount?: number | null;
+  notes?: string | null;
+}
+
+export interface FlatMemberOptionDto {
+  memberId: number;
+  name: string;
+}
+
 export interface FestivalKpisDto {
   budget: number;
   collected: number;

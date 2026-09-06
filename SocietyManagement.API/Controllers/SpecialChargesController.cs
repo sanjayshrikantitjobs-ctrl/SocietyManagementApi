@@ -13,6 +13,7 @@ public class SpecialChargesController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Maintenance.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<SpecialChargeDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int societyId, [FromQuery] int? flatId, [FromQuery] string? search,
         [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,
@@ -24,6 +25,7 @@ public class SpecialChargesController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Maintenance.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create(CreateSpecialChargeCommand command)
     {
         var id = await Mediator.Send(command);
@@ -32,6 +34,7 @@ public class SpecialChargesController : ApiControllerBase
 
     [HttpPut("{id:int}")]
     [HasPermission(Permissions.Maintenance.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(int id, UpdateSpecialChargeCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
@@ -41,6 +44,7 @@ public class SpecialChargesController : ApiControllerBase
 
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.Maintenance.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id)
     {
         await Mediator.Send(new DeleteSpecialChargeCommand(id));

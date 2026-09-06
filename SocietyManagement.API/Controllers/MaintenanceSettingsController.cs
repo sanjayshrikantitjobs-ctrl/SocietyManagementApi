@@ -13,6 +13,7 @@ public class MaintenanceSettingsController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Maintenance.View)]
+    [ProducesResponseType(typeof(ApiResponse<MaintenanceSettingsDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Get([FromQuery] int societyId)
     {
         var result = await Mediator.Send(new GetMaintenanceSettingsQuery(societyId));
@@ -21,6 +22,7 @@ public class MaintenanceSettingsController : ApiControllerBase
 
     [HttpPut]
     [HasPermission(Permissions.Maintenance.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Upsert(UpsertMaintenanceSettingsCommand command)
     {
         await Mediator.Send(command);

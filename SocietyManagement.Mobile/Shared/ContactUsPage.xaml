@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SocietyManagement.Mobile.Shared.ContactUsPage"
+             Title="Contact Us">
+
+    <VerticalStackLayout Padding="24" Spacing="16" VerticalOptions="Center">
+
+        <Image Source="shrios_logo.png" HeightRequest="64" Aspect="AspectFit" HorizontalOptions="Center" />
+
+        <Label Text="Shrios Software Technologies" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" />
+        <Label Text="We're here to help." TextColor="{StaticResource Gray500}" HorizontalOptions="Center" />
+
+        <Border Stroke="{StaticResource Gray300}" StrokeShape="RoundRectangle 12" Padding="16" Margin="0,16,0,0">
+            <VerticalStackLayout Spacing="12">
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="&#128222;" FontSize="18" />
+                    <Label Text="+91 98673 43302" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="&#128172;" FontSize="18" />
+                    <Label Text="WhatsApp: +91 98673 43302" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="&#9993;" FontSize="18" />
+                    <Label Text="shriossoftware@gmail.com" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </Border>
+
+        <Label Text="© 2026 Shrios Software Technologies. All rights reserved."
+               FontSize="11" TextColor="{StaticResource Gray400}" HorizontalOptions="Center" Margin="0,24,0,0" />
+
+    </VerticalStackLayout>
+
+</ContentPage>

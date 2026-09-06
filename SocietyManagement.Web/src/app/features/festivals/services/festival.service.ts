@@ -3,12 +3,14 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../../../core/models/api-response.model';
+import { PersonRelationship } from '../../occupancy/models/occupancy.model';
 import {
-  BudgetVsActualPointDto, ChildPoolStatusDto, ContributableFlatDto, ContributionPoolDto, Festival,
-  FestivalBudgetCategoryDto, FestivalBudgetRevisionDto, FestivalContributionDto, FestivalDashboardDto,
+  BudgetVsActualPointDto, ChildPoolStatusDto, ContributableFlatDto, ContributionPoolDto, DistributionClaimDto,
+  DistributionClaimStatus, Festival, FestivalBudgetCategoryDto, FestivalBudgetRevisionDto, FestivalContributionDto,
+  FestivalDashboardDto, FestivalDistributionDetailDto, FestivalDistributionDto, FestivalDistributionVariantDto,
   FestivalExpenseDto, FestivalSponsorDto, FestivalTaskDto, FestivalVendorDto, FestivalVolunteerDto,
-  FlatContributionDto, FlatContributionKpisDto, FlatContributionStatus, PendingContributorDto, PoolSummaryDto,
-  TopContributorDto
+  FlatContributionDto, FlatContributionKpisDto, FlatContributionStatus, FlatMemberOptionDto, PendingContributorDto,
+  PoolSummaryDto, TopContributorDto
 } from '../models/festival.model';
 
 function toHttpParams(params: Record<string, unknown>): HttpParams {
@@ -233,5 +235,79 @@ export class FestivalService {
   getChildPoolStatus(festivalId: number): Observable<ChildPoolStatusDto | null> {
     return this.http.get<ApiResponse<ChildPoolStatusDto | null>>(`${this.baseUrl}/festivals/${festivalId}/pool-status`)
       .pipe(map((r) => r.data ?? null));
+  }
+
+  // ---- Distributions (generic giveaway: Kurta, T-shirt, gift, prasad...) ----------
+  getDistributions(festivalId: number): Observable<FestivalDistributionDto[]> {
+    return this.http.get<ApiResponse<FestivalDistributionDto[]>>(`${this.baseUrl}/festival-distributions`, { params: { festivalId } })
+      .pipe(map((r) => r.data!));
+  }
+  getDistribution(id: number): Observable<FestivalDistributionDetailDto> {
+    return this.http.get<ApiResponse<FestivalDistributionDetailDto>>(`${this.baseUrl}/festival-distributions/${id}`)
+      .pipe(map((r) => r.data!));
+  }
+  createDistribution(payload: Record<string, unknown>): Observable<number> {
+    return this.http.post<ApiResponse<number>>(`${this.baseUrl}/festival-distributions`, payload).pipe(map((r) => r.data!));
+  }
+  updateDistribution(id: number, payload: Record<string, unknown>): Observable<void> {
+    return this.http.put<ApiResponse<void>>(`${this.baseUrl}/festival-distributions/${id}`, { id, ...payload }).pipe(map(() => void 0));
+  }
+  deleteDistribution(id: number): Observable<void> {
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/festival-distributions/${id}`).pipe(map(() => void 0));
+  }
+  addDistributionVariant(distributionId: number, label: string): Observable<number> {
+    return this.http.post<ApiResponse<number>>(`${this.baseUrl}/festival-distributions/${distributionId}/variants`, { label })
+      .pipe(map((r) => r.data!));
+  }
+  deleteDistributionVariant(variantId: number): Observable<void> {
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/festival-distributions/variants/${variantId}`).pipe(map(() => void 0));
+  }
+  generateDistributionClaims(distributionId: number): Observable<number> {
+    return this.http.post<ApiResponse<number>>(`${this.baseUrl}/festival-distributions/${distributionId}/generate`, {})
+      .pipe(map((r) => r.data!));
+  }
+  addManualDistributionClaim(distributionId: number, flatId: number, quantity: number): Observable<number> {
+    return this.http.post<ApiResponse<number>>(`${this.baseUrl}/festival-distributions/${distributionId}/flats/${flatId}`, { quantity })
+      .pipe(map((r) => r.data!));
+  }
+  getDistributionClaims(distributionId: number, params?: { flatId?: number; status?: DistributionClaimStatus }): Observable<DistributionClaimDto[]> {
+    return this.http.get<ApiResponse<DistributionClaimDto[]>>(`${this.baseUrl}/festival-distributions/${distributionId}/claims`,
+      { params: toHttpParams({ flatId: params?.flatId, status: params?.status }) }).pipe(map((r) => r.data!));
+  }
+  getMyDistributionClaims(distributionId: number): Observable<DistributionClaimDto[]> {
+    return this.http.get<ApiResponse<DistributionClaimDto[]>>(`${this.baseUrl}/festival-distributions/${distributionId}/my-claims`)
+      .pipe(map((r) => r.data!));
+  }
+  getFlatMembersForDistribution(flatId: number): Observable<FlatMemberOptionDto[]> {
+    return this.http.get<ApiResponse<FlatMemberOptionDto[]>>(`${this.baseUrl}/festival-distributions/flats/${flatId}/members`)
+      .pipe(map((r) => r.data!));
+  }
+  assignClaimMember(claimId: number, memberId: number | null): Observable<void> {
+    return this.http.post<ApiResponse<void>>(`${this.baseUrl}/festival-distributions/claims/${claimId}/assign-member`, { memberId })
+      .pipe(map(() => void 0));
+  }
+  selectClaimVariant(claimId: number, variantId: number | null, memberId: number | null): Observable<void> {
+    return this.http.post<ApiResponse<void>>(`${this.baseUrl}/festival-distributions/claims/${claimId}/select`, { variantId, memberId })
+      .pipe(map(() => void 0));
+  }
+  markClaimDistributed(claimId: number): Observable<void> {
+    return this.http.post<ApiResponse<void>>(`${this.baseUrl}/festival-distributions/claims/${claimId}/distribute`, {})
+      .pipe(map(() => void 0));
+  }
+  markFlatDistributed(distributionId: number, flatId: number): Observable<number> {
+    return this.http.post<ApiResponse<number>>(`${this.baseUrl}/festival-distributions/${distributionId}/flats/${flatId}/distribute`, {})
+      .pipe(map((r) => r.data!));
+  }
+  removeDistributionFlat(distributionId: number, flatId: number): Observable<number> {
+    return this.http.delete<ApiResponse<number>>(`${this.baseUrl}/festival-distributions/${distributionId}/flats/${flatId}`)
+      .pipe(map((r) => r.data!));
+  }
+  addChargeableExtraClaim(distributionId: number, flatId: number, quantity: number, amountPerUnit: number, notes?: string | null): Observable<number> {
+    return this.http.post<ApiResponse<number>>(`${this.baseUrl}/festival-distributions/${distributionId}/flats/${flatId}/extra`,
+      { quantity, amountPerUnit, notes }).pipe(map((r) => r.data!));
+  }
+  addFlatResident(flatId: number, firstName: string, lastName: string, phone: string | null, relationship: PersonRelationship): Observable<FlatMemberOptionDto> {
+    return this.http.post<ApiResponse<FlatMemberOptionDto>>(`${this.baseUrl}/festival-distributions/flats/${flatId}/residents`,
+      { firstName, lastName, phone, relationship }).pipe(map((r) => r.data!));
   }
 }

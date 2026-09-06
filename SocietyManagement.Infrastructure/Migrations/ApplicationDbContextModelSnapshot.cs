@@ -859,6 +859,193 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.ToTable("FestivalContributions", (string)null);
                 });
 
+            modelBuilder.Entity("SocietyManagement.Domain.Entities.FestivalDistribution", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<decimal?>("EligibilityMinContribution")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<int>("EligibilityType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FestivalId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ItemName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("QuantityPerFlat")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FestivalId");
+
+                    b.ToTable("FestivalDistributions", (string)null);
+                });
+
+            modelBuilder.Entity("SocietyManagement.Domain.Entities.FestivalDistributionClaim", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<DateTime?>("ConfirmedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DistributedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DistributedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FestivalDistributionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FlatId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("PersonId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SlotNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("VariantId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DistributedByUserId");
+
+                    b.HasIndex("FlatId");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("VariantId");
+
+                    b.HasIndex("FestivalDistributionId", "FlatId");
+
+                    b.HasIndex("FestivalDistributionId", "Status");
+
+                    b.ToTable("FestivalDistributionClaims", (string)null);
+                });
+
+            modelBuilder.Entity("SocietyManagement.Domain.Entities.FestivalDistributionVariant", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("FestivalDistributionId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FestivalDistributionId");
+
+                    b.ToTable("FestivalDistributionVariants", (string)null);
+                });
+
             modelBuilder.Entity("SocietyManagement.Domain.Entities.FestivalExpense", b =>
                 {
                     b.Property<int>("Id")
@@ -4095,6 +4282,66 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.Navigation("Flat");
                 });
 
+            modelBuilder.Entity("SocietyManagement.Domain.Entities.FestivalDistribution", b =>
+                {
+                    b.HasOne("SocietyManagement.Domain.Entities.Festival", "Festival")
+                        .WithMany("Distributions")
+                        .HasForeignKey("FestivalId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Festival");
+                });
+
+            modelBuilder.Entity("SocietyManagement.Domain.Entities.FestivalDistributionClaim", b =>
+                {
+                    b.HasOne("SocietyManagement.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("DistributedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SocietyManagement.Domain.Entities.FestivalDistribution", "FestivalDistribution")
+                        .WithMany("Claims")
+                        .HasForeignKey("FestivalDistributionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SocietyManagement.Domain.Entities.Flat", "Flat")
+                        .WithMany()
+                        .HasForeignKey("FlatId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SocietyManagement.Domain.Entities.Person", "Person")
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SocietyManagement.Domain.Entities.FestivalDistributionVariant", "Variant")
+                        .WithMany()
+                        .HasForeignKey("VariantId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("FestivalDistribution");
+
+                    b.Navigation("Flat");
+
+                    b.Navigation("Person");
+
+                    b.Navigation("Variant");
+                });
+
+            modelBuilder.Entity("SocietyManagement.Domain.Entities.FestivalDistributionVariant", b =>
+                {
+                    b.HasOne("SocietyManagement.Domain.Entities.FestivalDistribution", "FestivalDistribution")
+                        .WithMany("Variants")
+                        .HasForeignKey("FestivalDistributionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FestivalDistribution");
+                });
+
             modelBuilder.Entity("SocietyManagement.Domain.Entities.FestivalExpense", b =>
                 {
                     b.HasOne("SocietyManagement.Domain.Entities.User", null)
@@ -4869,6 +5116,8 @@ namespace SocietyManagement.Infrastructure.Migrations
 
                     b.Navigation("Contributions");
 
+                    b.Navigation("Distributions");
+
                     b.Navigation("Expenses");
 
                     b.Navigation("FlatTargets");
@@ -4881,6 +5130,13 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.Navigation("Expenses");
 
                     b.Navigation("Revisions");
+                });
+
+            modelBuilder.Entity("SocietyManagement.Domain.Entities.FestivalDistribution", b =>
+                {
+                    b.Navigation("Claims");
+
+                    b.Navigation("Variants");
                 });
 
             modelBuilder.Entity("SocietyManagement.Domain.Entities.FestivalVendor", b =>

@@ -13,6 +13,7 @@ public class FestivalSponsorsController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<FestivalSponsorDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] int festivalId)
     {
         var result = await Mediator.Send(new GetSponsorsQuery(festivalId));
@@ -21,6 +22,7 @@ public class FestivalSponsorsController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Festivals.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create(CreateSponsorCommand command)
     {
         var id = await Mediator.Send(command);
@@ -29,6 +31,7 @@ public class FestivalSponsorsController : ApiControllerBase
 
     [HttpPut("{id:int}")]
     [HasPermission(Permissions.Festivals.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(int id, UpdateSponsorCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
@@ -38,6 +41,7 @@ public class FestivalSponsorsController : ApiControllerBase
 
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.Festivals.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id)
     {
         await Mediator.Send(new DeleteSponsorCommand(id));

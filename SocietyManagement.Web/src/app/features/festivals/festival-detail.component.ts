@@ -17,6 +17,7 @@ import { FestivalBudgetTabComponent } from './tabs/festival-budget-tab.component
 import { FestivalChildFestivalsTabComponent } from './tabs/festival-child-festivals-tab.component';
 import { FestivalContributionTabComponent } from './tabs/festival-contribution-tab.component';
 import { FestivalDashboardTabComponent } from './tabs/festival-dashboard-tab.component';
+import { FestivalDistributionsTabComponent } from './tabs/festival-distributions-tab.component';
 import { FestivalExpensesTabComponent } from './tabs/festival-expenses-tab.component';
 import { FestivalSponsorsTabComponent } from './tabs/festival-sponsors-tab.component';
 import { FestivalTasksTabComponent } from './tabs/festival-tasks-tab.component';
@@ -34,7 +35,7 @@ import { FestivalService } from './services/festival.service';
   imports: [
     CommonModule, MatButtonModule, MatIconModule, MatMenuModule, MatProgressSpinnerModule, MatTabsModule, AssetUrlPipe,
     PageHeaderComponent, FestivalDashboardTabComponent, FestivalBudgetTabComponent, FestivalContributionTabComponent,
-    FestivalSponsorsTabComponent, FestivalExpensesTabComponent,
+    FestivalSponsorsTabComponent, FestivalExpensesTabComponent, FestivalDistributionsTabComponent,
     FestivalVendorsTabComponent, FestivalChildFestivalsTabComponent, FestivalVolunteersTabComponent, FestivalTasksTabComponent
   ],
   template: `
@@ -88,6 +89,7 @@ import { FestivalService } from './services/festival.service';
             <mat-tab label="Vendors"><app-festival-vendors-tab [societyId]="f.societyId" [canManage]="canManage()" /></mat-tab>
             <mat-tab label="Volunteers"><app-festival-volunteers-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
             <mat-tab label="Tasks"><app-festival-tasks-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
+            <mat-tab label="🎁 Distributions"><app-festival-distributions-tab [festivalId]="f.id" [societyId]="f.societyId" [canManage]="canManageDistribution()" [canSelect]="canSelectDistribution()" /></mat-tab>
           } @else {
             <mat-tab label="Dashboard"><app-festival-dashboard-tab [festivalId]="f.id" [kind]="f.kind" /></mat-tab>
             <mat-tab label="Budget"><app-festival-budget-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
@@ -97,6 +99,7 @@ import { FestivalService } from './services/festival.service';
             <mat-tab label="Vendors"><app-festival-vendors-tab [societyId]="f.societyId" [canManage]="canManage()" /></mat-tab>
             <mat-tab label="Volunteers"><app-festival-volunteers-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
             <mat-tab label="Tasks"><app-festival-tasks-tab [festivalId]="f.id" [canManage]="canManage()" /></mat-tab>
+            <mat-tab label="🎁 Distributions"><app-festival-distributions-tab [festivalId]="f.id" [societyId]="f.societyId" [canManage]="canManageDistribution()" [canSelect]="canSelectDistribution()" /></mat-tab>
           }
         </mat-tab-group>
       </div>
@@ -153,6 +156,14 @@ export class FestivalDetailComponent {
 
   canContribute(): boolean {
     return this.auth.hasPermission('festivals.contribute');
+  }
+
+  canManageDistribution(): boolean {
+    return this.auth.hasPermission('festivals.distribution.manage');
+  }
+
+  canSelectDistribution(): boolean {
+    return this.auth.hasPermission('festivals.distribution.select');
   }
 
   onTabChange(event: MatTabChangeEvent): void {

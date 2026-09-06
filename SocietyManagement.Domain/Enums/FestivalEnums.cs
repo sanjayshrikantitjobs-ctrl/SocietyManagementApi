@@ -102,3 +102,38 @@ public enum FlatContributionStatus
     PartiallyPaid = 2,
     Paid = 3
 }
+
+/// <summary>Draft = still being configured, no claims generated yet.
+/// Open = claims generated, residents can select their item/variant.
+/// Closed = no further self-service selection (distribution wrapped up).</summary>
+public enum FestivalDistributionStatus
+{
+    Draft = 1,
+    Open = 2,
+    Closed = 3
+}
+
+/// <summary>How "Generate Eligibility" decides which flats qualify.
+/// AllFlats needs no contribution data at all. ContributionPaid reuses the
+/// same paid-vs-target computation the Contribution tab already shows
+/// (PartiallyPaid or Paid — i.e. the flat has paid something toward its
+/// target, whether or not it's fully met). MinimumAmount is the narrower
+/// "paid at least ₹X in total" rule for distributions that key off a flat
+/// total rather than its assigned target.</summary>
+public enum DistributionEligibilityType
+{
+    AllFlats = 1,
+    ContributionPaid = 2,
+    MinimumAmount = 3
+}
+
+/// <summary>Pending = generated, awaiting the resident's selection.
+/// Confirmed = a resident picked a variant (their selection IS their
+/// confirmation — no separate admin approval step). Distributed =
+/// admin has physically handed the item over.</summary>
+public enum DistributionClaimStatus
+{
+    Pending = 1,
+    Confirmed = 2,
+    Distributed = 3
+}

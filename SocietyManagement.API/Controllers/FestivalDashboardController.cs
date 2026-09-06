@@ -13,6 +13,7 @@ public class FestivalDashboardController : ApiControllerBase
 {
     [HttpGet("{festivalId:int}")]
     [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(ApiResponse<FestivalDashboardDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSummary(int festivalId)
     {
         var result = await Mediator.Send(new GetFestivalDashboardQuery(festivalId));

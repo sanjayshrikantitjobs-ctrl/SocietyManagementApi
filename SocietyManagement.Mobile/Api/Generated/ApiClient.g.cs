@@ -5635,27 +5635,27 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalBudgetCategoriesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalBudgetCategoriesGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FestivalBudgetCategoryDtoListApiResponse> FestivalBudgetCategoriesGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Created</returns>
+        /// <exception cref="FestivalBudgetCategoriesApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<Int32ApiResponse> FestivalBudgetCategoriesPOSTAsync(CreateBudgetCategoryCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalBudgetCategoriesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalBudgetCategoriesPOSTAsync(CreateBudgetCategoryCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FestivalBudgetRevisionDtoListApiResponse> RevisionsAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalBudgetCategoriesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task RevisionsAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> FestivalBudgetCategoriesPUTAsync(int id, UpdateBudgetCategoryCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalBudgetCategoriesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalBudgetCategoriesPUTAsync(int id, UpdateBudgetCategoryCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
-
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
-        /// <exception cref="FestivalBudgetCategoriesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalBudgetCategoriesDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> FestivalBudgetCategoriesDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -5694,7 +5694,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalBudgetCategoriesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalBudgetCategoriesGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FestivalBudgetCategoryDtoListApiResponse> FestivalBudgetCategoriesGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -5703,6 +5703,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -5740,7 +5741,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<FestivalBudgetCategoryDtoListApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalBudgetCategoriesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -5763,9 +5769,9 @@ namespace SocietyManagement.Mobile.Api.Generated
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <returns>Created</returns>
         /// <exception cref="FestivalBudgetCategoriesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalBudgetCategoriesPOSTAsync(CreateBudgetCategoryCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<Int32ApiResponse> FestivalBudgetCategoriesPOSTAsync(CreateBudgetCategoryCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -5778,6 +5784,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -5807,9 +5814,14 @@ namespace SocietyManagement.Mobile.Api.Generated
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
+                        if (status_ == 201)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<Int32ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalBudgetCategoriesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -5834,7 +5846,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalBudgetCategoriesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task RevisionsAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FestivalBudgetRevisionDtoListApiResponse> RevisionsAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -5846,6 +5858,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -5879,7 +5892,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<FestivalBudgetRevisionDtoListApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalBudgetCategoriesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -5904,7 +5922,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalBudgetCategoriesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalBudgetCategoriesPUTAsync(int id, UpdateBudgetCategoryCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> FestivalBudgetCategoriesPUTAsync(int id, UpdateBudgetCategoryCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -5920,6 +5938,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("PUT");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -5952,7 +5971,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalBudgetCategoriesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -5977,7 +6001,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalBudgetCategoriesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalBudgetCategoriesDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> FestivalBudgetCategoriesDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -5989,6 +6013,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("DELETE");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -6021,7 +6046,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalBudgetCategoriesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -6179,62 +6209,62 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalContributionsGETAsync(int? festivalId = null, int? flatId = null, string? search = null, ContributionPaymentMethod? paymentMethod = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FestivalContributionDtoPaginatedResultApiResponse> FestivalContributionsGETAsync(int? festivalId = null, int? flatId = null, string? search = null, ContributionPaymentMethod? paymentMethod = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Created</returns>
+        /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<Int32ApiResponse> FestivalContributionsPOSTAsync(CreateContributionCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalContributionsPOSTAsync(CreateContributionCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<TopContributorDtoListApiResponse> TopContributorsAsync(int? festivalId = null, int? top = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task TopContributorsAsync(int? festivalId = null, int? top = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<PendingContributorDtoListApiResponse> PendingContributorsAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task PendingContributorsAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FileResponse> ReceiptAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task ReceiptAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> FestivalContributionsPUTAsync(int id, UpdateContributionCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalContributionsPUTAsync(int id, UpdateContributionCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> ResendWhatsappAsync(int id, ResendWhatsAppRequest? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task ResendWhatsappAsync(int id, ResendWhatsAppRequest? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FlatContributionDtoPaginatedResultApiResponse> FlatSummaryAsync(int? festivalId = null, string? search = null, FlatContributionStatus? status = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FlatSummaryAsync(int? festivalId = null, string? search = null, FlatContributionStatus? status = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ContributableFlatDtoListApiResponse> ContributableFlatsAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task ContributableFlatsAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FlatContributionKpisDtoApiResponse> Kpis2Async(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task Kpis2Async(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<Int32ApiResponse> TargetsPOSTAsync(SetContributionTargetsCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task TargetsPOSTAsync(SetContributionTargetsCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
-
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
-        /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task TargetsPUTAsync(UpdateFlatContributionTargetCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> TargetsPUTAsync(UpdateFlatContributionTargetCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -6273,7 +6303,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalContributionsGETAsync(int? festivalId = null, int? flatId = null, string? search = null, ContributionPaymentMethod? paymentMethod = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FestivalContributionDtoPaginatedResultApiResponse> FestivalContributionsGETAsync(int? festivalId = null, int? flatId = null, string? search = null, ContributionPaymentMethod? paymentMethod = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -6282,6 +6312,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -6347,7 +6378,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<FestivalContributionDtoPaginatedResultApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalContributionsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -6370,9 +6406,9 @@ namespace SocietyManagement.Mobile.Api.Generated
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <returns>Created</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalContributionsPOSTAsync(CreateContributionCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<Int32ApiResponse> FestivalContributionsPOSTAsync(CreateContributionCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -6385,6 +6421,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -6414,9 +6451,14 @@ namespace SocietyManagement.Mobile.Api.Generated
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
+                        if (status_ == 201)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<Int32ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalContributionsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -6441,7 +6483,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task TopContributorsAsync(int? festivalId = null, int? top = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<TopContributorDtoListApiResponse> TopContributorsAsync(int? festivalId = null, int? top = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -6450,6 +6492,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -6491,7 +6534,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<TopContributorDtoListApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalContributionsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -6516,7 +6564,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task PendingContributorsAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<PendingContributorDtoListApiResponse> PendingContributorsAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -6525,6 +6573,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -6562,7 +6611,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<PendingContributorDtoListApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalContributionsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -6587,7 +6641,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task ReceiptAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FileResponse> ReceiptAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -6599,6 +6653,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -6630,9 +6685,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
+                        if (status_ == 200 || status_ == 206)
                         {
-                            return;
+                            var responseStream_ = response_.Content == null ? System.IO.Stream.Null : await ReadAsStreamAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            var fileResponse_ = new FileResponse(status_, headers_, responseStream_, null, response_);
+                            disposeClient_ = false; disposeResponse_ = false; // response and client are disposed by FileResponse
+                            return fileResponse_;
                         }
                         else
                         {
@@ -6657,7 +6715,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalContributionsPUTAsync(int id, UpdateContributionCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> FestivalContributionsPUTAsync(int id, UpdateContributionCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -6673,6 +6731,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("PUT");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -6705,7 +6764,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalContributionsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -6730,7 +6794,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task ResendWhatsappAsync(int id, ResendWhatsAppRequest? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> ResendWhatsappAsync(int id, ResendWhatsAppRequest? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -6746,6 +6810,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -6779,7 +6844,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalContributionsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -6804,7 +6874,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FlatSummaryAsync(int? festivalId = null, string? search = null, FlatContributionStatus? status = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FlatContributionDtoPaginatedResultApiResponse> FlatSummaryAsync(int? festivalId = null, string? search = null, FlatContributionStatus? status = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -6813,6 +6883,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -6874,7 +6945,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<FlatContributionDtoPaginatedResultApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalContributionsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -6899,7 +6975,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task ContributableFlatsAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ContributableFlatDtoListApiResponse> ContributableFlatsAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -6908,6 +6984,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -6945,7 +7022,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ContributableFlatDtoListApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalContributionsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -6970,7 +7052,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task Kpis2Async(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FlatContributionKpisDtoApiResponse> Kpis2Async(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -6979,6 +7061,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -7016,7 +7099,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<FlatContributionKpisDtoApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalContributionsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -7041,7 +7129,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task TargetsPOSTAsync(SetContributionTargetsCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<Int32ApiResponse> TargetsPOSTAsync(SetContributionTargetsCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -7054,6 +7142,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -7085,7 +7174,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<Int32ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalContributionsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -7110,7 +7204,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task TargetsPUTAsync(UpdateFlatContributionTargetCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> TargetsPUTAsync(UpdateFlatContributionTargetCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -7123,6 +7217,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("PUT");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -7154,7 +7249,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalContributionsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -7312,7 +7412,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalDashboardApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalDashboardAsync(int festivalId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FestivalDashboardDtoApiResponse> FestivalDashboardAsync(int festivalId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -7351,7 +7451,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalDashboardApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalDashboardAsync(int festivalId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FestivalDashboardDtoApiResponse> FestivalDashboardAsync(int festivalId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (festivalId == null)
                 throw new System.ArgumentNullException("festivalId");
@@ -7363,6 +7463,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -7395,7 +7496,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<FestivalDashboardDtoApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalDashboardApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -7553,42 +7659,42 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalExpensesGETAsync(int? festivalId = null, ExpenseApprovalStatus? status = null, int? festivalBudgetCategoryId = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FestivalExpenseDtoPaginatedResultApiResponse> FestivalExpensesGETAsync(int? festivalId = null, ExpenseApprovalStatus? status = null, int? festivalBudgetCategoryId = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Created</returns>
+        /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<Int32ApiResponse> FestivalExpensesPOSTAsync(CreateExpenseCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalExpensesPOSTAsync(CreateExpenseCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> FestivalExpensesPUTAsync(int id, UpdateExpenseCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalExpensesPUTAsync(int id, UpdateExpenseCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> FestivalExpensesDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalExpensesDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> SubmitAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task SubmitAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> ApprovePOSTAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task ApprovePOSTAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> RejectPOSTAsync(int id, RejectExpenseRequest? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task RejectPOSTAsync(int id, RejectExpenseRequest? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
-
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
-        /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task MarkPaidAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> MarkPaidAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -7627,7 +7733,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalExpensesGETAsync(int? festivalId = null, ExpenseApprovalStatus? status = null, int? festivalBudgetCategoryId = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FestivalExpenseDtoPaginatedResultApiResponse> FestivalExpensesGETAsync(int? festivalId = null, ExpenseApprovalStatus? status = null, int? festivalBudgetCategoryId = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -7636,6 +7742,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -7689,7 +7796,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<FestivalExpenseDtoPaginatedResultApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalExpensesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -7712,9 +7824,9 @@ namespace SocietyManagement.Mobile.Api.Generated
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <returns>Created</returns>
         /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalExpensesPOSTAsync(CreateExpenseCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<Int32ApiResponse> FestivalExpensesPOSTAsync(CreateExpenseCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -7727,6 +7839,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -7756,9 +7869,14 @@ namespace SocietyManagement.Mobile.Api.Generated
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
+                        if (status_ == 201)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<Int32ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalExpensesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -7783,7 +7901,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalExpensesPUTAsync(int id, UpdateExpenseCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> FestivalExpensesPUTAsync(int id, UpdateExpenseCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -7799,6 +7917,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("PUT");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -7831,7 +7950,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalExpensesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -7856,7 +7980,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalExpensesDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> FestivalExpensesDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -7868,6 +7992,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("DELETE");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -7900,7 +8025,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalExpensesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -7925,7 +8055,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task SubmitAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> SubmitAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -7938,6 +8068,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 {
                     request_.Content = new System.Net.Http.StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -7971,7 +8102,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalExpensesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -7996,7 +8132,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task ApprovePOSTAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> ApprovePOSTAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -8009,6 +8145,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 {
                     request_.Content = new System.Net.Http.StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -8042,7 +8179,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalExpensesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -8067,7 +8209,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task RejectPOSTAsync(int id, RejectExpenseRequest? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> RejectPOSTAsync(int id, RejectExpenseRequest? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -8083,6 +8225,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -8116,7 +8259,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalExpensesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -8141,7 +8289,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalExpensesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task MarkPaidAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> MarkPaidAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -8154,6 +8302,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 {
                     request_.Content = new System.Net.Http.StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -8187,7 +8336,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalExpensesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -8375,17 +8529,17 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task ContributionPoolsAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ContributionPoolDtoListApiResponse> ContributionPoolsAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task PoolSummaryAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<PoolSummaryDtoApiResponse> PoolSummaryAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task PoolStatusAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ChildPoolStatusDtoApiResponse> PoolStatusAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -8877,7 +9031,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task ContributionPoolsAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ContributionPoolDtoListApiResponse> ContributionPoolsAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -8886,6 +9040,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -8923,7 +9078,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ContributionPoolDtoListApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -8948,7 +9108,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task PoolSummaryAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<PoolSummaryDtoApiResponse> PoolSummaryAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -8960,6 +9120,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -8993,7 +9154,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<PoolSummaryDtoApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -9018,7 +9184,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task PoolStatusAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ChildPoolStatusDtoApiResponse> PoolStatusAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -9030,6 +9196,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -9063,7 +9230,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ChildPoolStatusDtoApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -9221,22 +9393,22 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalSponsorsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalSponsorsGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FestivalSponsorDtoListApiResponse> FestivalSponsorsGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Created</returns>
+        /// <exception cref="FestivalSponsorsApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<Int32ApiResponse> FestivalSponsorsPOSTAsync(CreateSponsorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalSponsorsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalSponsorsPOSTAsync(CreateSponsorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> FestivalSponsorsPUTAsync(int id, UpdateSponsorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalSponsorsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalSponsorsPUTAsync(int id, UpdateSponsorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
-
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
-        /// <exception cref="FestivalSponsorsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalSponsorsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> FestivalSponsorsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -9275,7 +9447,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalSponsorsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalSponsorsGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FestivalSponsorDtoListApiResponse> FestivalSponsorsGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -9284,6 +9456,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -9321,7 +9494,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<FestivalSponsorDtoListApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalSponsorsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -9344,9 +9522,9 @@ namespace SocietyManagement.Mobile.Api.Generated
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <returns>Created</returns>
         /// <exception cref="FestivalSponsorsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalSponsorsPOSTAsync(CreateSponsorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<Int32ApiResponse> FestivalSponsorsPOSTAsync(CreateSponsorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -9359,6 +9537,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -9388,9 +9567,14 @@ namespace SocietyManagement.Mobile.Api.Generated
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
+                        if (status_ == 201)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<Int32ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalSponsorsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -9415,7 +9599,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalSponsorsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalSponsorsPUTAsync(int id, UpdateSponsorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> FestivalSponsorsPUTAsync(int id, UpdateSponsorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -9431,6 +9615,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("PUT");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -9463,7 +9648,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalSponsorsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -9488,7 +9678,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalSponsorsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalSponsorsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> FestivalSponsorsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -9500,6 +9690,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("DELETE");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -9532,7 +9723,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalSponsorsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -9690,22 +9886,22 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalTasksApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalTasksGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FestivalTaskDtoListApiResponse> FestivalTasksGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Created</returns>
+        /// <exception cref="FestivalTasksApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<Int32ApiResponse> FestivalTasksPOSTAsync(CreateTaskCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalTasksApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalTasksPOSTAsync(CreateTaskCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> FestivalTasksPUTAsync(int id, UpdateTaskCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalTasksApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalTasksPUTAsync(int id, UpdateTaskCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
-
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
-        /// <exception cref="FestivalTasksApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalTasksDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> FestivalTasksDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -9744,7 +9940,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalTasksApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalTasksGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FestivalTaskDtoListApiResponse> FestivalTasksGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -9753,6 +9949,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -9790,7 +9987,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<FestivalTaskDtoListApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalTasksApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -9813,9 +10015,9 @@ namespace SocietyManagement.Mobile.Api.Generated
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <returns>Created</returns>
         /// <exception cref="FestivalTasksApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalTasksPOSTAsync(CreateTaskCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<Int32ApiResponse> FestivalTasksPOSTAsync(CreateTaskCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -9828,6 +10030,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -9857,9 +10060,14 @@ namespace SocietyManagement.Mobile.Api.Generated
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
+                        if (status_ == 201)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<Int32ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalTasksApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -9884,7 +10092,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalTasksApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalTasksPUTAsync(int id, UpdateTaskCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> FestivalTasksPUTAsync(int id, UpdateTaskCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -9900,6 +10108,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("PUT");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -9932,7 +10141,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalTasksApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -9957,7 +10171,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalTasksApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalTasksDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> FestivalTasksDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -9969,6 +10183,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("DELETE");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -10001,7 +10216,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalTasksApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -10159,22 +10379,22 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalVendorsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalVendorsGETAsync(int? societyId = null, VendorCategory? category = null, string? search = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FestivalVendorDtoPaginatedResultApiResponse> FestivalVendorsGETAsync(int? societyId = null, VendorCategory? category = null, string? search = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Created</returns>
+        /// <exception cref="FestivalVendorsApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<Int32ApiResponse> FestivalVendorsPOSTAsync(CreateVendorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalVendorsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalVendorsPOSTAsync(CreateVendorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> FestivalVendorsPUTAsync(int id, UpdateVendorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalVendorsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalVendorsPUTAsync(int id, UpdateVendorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
-
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
-        /// <exception cref="FestivalVendorsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalVendorsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> FestivalVendorsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -10213,7 +10433,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalVendorsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalVendorsGETAsync(int? societyId = null, VendorCategory? category = null, string? search = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FestivalVendorDtoPaginatedResultApiResponse> FestivalVendorsGETAsync(int? societyId = null, VendorCategory? category = null, string? search = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -10222,6 +10442,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -10275,7 +10496,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<FestivalVendorDtoPaginatedResultApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalVendorsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -10298,9 +10524,9 @@ namespace SocietyManagement.Mobile.Api.Generated
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <returns>Created</returns>
         /// <exception cref="FestivalVendorsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalVendorsPOSTAsync(CreateVendorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<Int32ApiResponse> FestivalVendorsPOSTAsync(CreateVendorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -10313,6 +10539,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -10342,9 +10569,14 @@ namespace SocietyManagement.Mobile.Api.Generated
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
+                        if (status_ == 201)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<Int32ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalVendorsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -10369,7 +10601,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalVendorsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalVendorsPUTAsync(int id, UpdateVendorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> FestivalVendorsPUTAsync(int id, UpdateVendorCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -10385,6 +10617,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("PUT");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -10417,7 +10650,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalVendorsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -10442,7 +10680,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalVendorsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalVendorsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> FestivalVendorsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -10454,6 +10692,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("DELETE");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -10486,7 +10725,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalVendorsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -10644,22 +10888,22 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalVolunteersApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalVolunteersGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FestivalVolunteerDtoListApiResponse> FestivalVolunteersGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Created</returns>
+        /// <exception cref="FestivalVolunteersApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<Int32ApiResponse> FestivalVolunteersPOSTAsync(CreateVolunteerCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalVolunteersApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalVolunteersPOSTAsync(CreateVolunteerCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> FestivalVolunteersPUTAsync(int id, UpdateVolunteerCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalVolunteersApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalVolunteersPUTAsync(int id, UpdateVolunteerCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
-
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
-        /// <exception cref="FestivalVolunteersApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FestivalVolunteersDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> FestivalVolunteersDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -10698,7 +10942,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalVolunteersApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalVolunteersGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FestivalVolunteerDtoListApiResponse> FestivalVolunteersGETAsync(int? festivalId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -10707,6 +10951,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -10744,7 +10989,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<FestivalVolunteerDtoListApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalVolunteersApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -10767,9 +11017,9 @@ namespace SocietyManagement.Mobile.Api.Generated
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <returns>Created</returns>
         /// <exception cref="FestivalVolunteersApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalVolunteersPOSTAsync(CreateVolunteerCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<Int32ApiResponse> FestivalVolunteersPOSTAsync(CreateVolunteerCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -10782,6 +11032,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -10811,9 +11062,14 @@ namespace SocietyManagement.Mobile.Api.Generated
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
+                        if (status_ == 201)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<Int32ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalVolunteersApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -10838,7 +11094,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalVolunteersApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalVolunteersPUTAsync(int id, UpdateVolunteerCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> FestivalVolunteersPUTAsync(int id, UpdateVolunteerCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -10854,6 +11110,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("PUT");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -10886,7 +11143,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalVolunteersApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -10911,7 +11173,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalVolunteersApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FestivalVolunteersDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> FestivalVolunteersDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -10923,6 +11185,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("DELETE");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -10955,7 +11218,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FestivalVolunteersApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -11113,7 +11381,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FilesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task UploadAsync(FileParameter file = null, string? folder = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<StringApiResponse> UploadAsync(FileParameter file = null, string? folder = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -11152,7 +11420,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FilesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task UploadAsync(FileParameter file = null, string? folder = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<StringApiResponse> UploadAsync(FileParameter file = null, string? folder = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -11183,6 +11451,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     }
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -11214,7 +11483,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<StringApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FilesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -12635,22 +12909,22 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FineRecordsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FineRecordsGETAsync(int? societyId = null, int? flatId = null, FineStatus? status = null, string? search = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FineRecordDtoPaginatedResultApiResponse> FineRecordsGETAsync(int? societyId = null, int? flatId = null, FineStatus? status = null, string? search = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Created</returns>
+        /// <exception cref="FineRecordsApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<Int32ApiResponse> FineRecordsPOSTAsync(CreateFineRecordCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FineRecordsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FineRecordsPOSTAsync(CreateFineRecordCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> WaiveAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FineRecordsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task WaiveAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
-
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
-        /// <exception cref="FineRecordsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task FineRecordsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> FineRecordsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -12689,7 +12963,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FineRecordsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FineRecordsGETAsync(int? societyId = null, int? flatId = null, FineStatus? status = null, string? search = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FineRecordDtoPaginatedResultApiResponse> FineRecordsGETAsync(int? societyId = null, int? flatId = null, FineStatus? status = null, string? search = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -12698,6 +12972,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -12763,7 +13038,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<FineRecordDtoPaginatedResultApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FineRecordsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -12786,9 +13066,9 @@ namespace SocietyManagement.Mobile.Api.Generated
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <returns>Created</returns>
         /// <exception cref="FineRecordsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FineRecordsPOSTAsync(CreateFineRecordCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<Int32ApiResponse> FineRecordsPOSTAsync(CreateFineRecordCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -12801,6 +13081,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -12830,9 +13111,14 @@ namespace SocietyManagement.Mobile.Api.Generated
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
+                        if (status_ == 201)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<Int32ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FineRecordsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -12857,7 +13143,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FineRecordsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task WaiveAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> WaiveAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -12870,6 +13156,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 {
                     request_.Content = new System.Net.Http.StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -12903,7 +13190,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FineRecordsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -12928,7 +13220,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FineRecordsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task FineRecordsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> FineRecordsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -12940,6 +13232,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("DELETE");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -12972,7 +13265,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new FineRecordsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -17727,57 +18025,57 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<MaintenanceBillDtoPaginatedResultApiResponse> BillsAsync(int? societyId = null, int? flatId = null, BillStatus? status = null, System.DateTimeOffset? billMonth = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<MaintenanceBillDtoPaginatedResultApiResponse> BillsAsync(int? societyId = null, int? flatId = null, BillStatus? status = null, System.DateTimeOffset? billMonth = null, string? search = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task Bills2Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<MaintenanceBillDetailDtoApiResponse> Bills2Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task Pdf3Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FileResponse> Pdf3Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task Pdf4Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FileResponse> Pdf4Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task Excel2Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FileResponse> Excel2Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task GenerateAsync(GenerateBillsRequest? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<Int32ApiResponse> GenerateAsync(GenerateBillsRequest? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task PaymentAsync(RecordPaymentCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<Int32ApiResponse> PaymentAsync(RecordPaymentCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task BulkPaymentAsync(BulkRecordPaymentCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<BulkRecordPaymentResultDtoListApiResponse> BulkPaymentAsync(BulkRecordPaymentCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task MarkUnpaidAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> MarkUnpaidAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task BulkMarkUnpaidAsync(BulkSetBillsUnpaidCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<BulkSetBillsUnpaidResultDtoListApiResponse> BulkMarkUnpaidAsync(BulkSetBillsUnpaidCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task ResendWhatsapp2Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> ResendWhatsapp2Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -17816,7 +18114,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<MaintenanceBillDtoPaginatedResultApiResponse> BillsAsync(int? societyId = null, int? flatId = null, BillStatus? status = null, System.DateTimeOffset? billMonth = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<MaintenanceBillDtoPaginatedResultApiResponse> BillsAsync(int? societyId = null, int? flatId = null, BillStatus? status = null, System.DateTimeOffset? billMonth = null, string? search = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -17847,6 +18145,10 @@ namespace SocietyManagement.Mobile.Api.Generated
                     if (billMonth != null)
                     {
                         urlBuilder_.Append(System.Uri.EscapeDataString("billMonth")).Append('=').Append(System.Uri.EscapeDataString(billMonth.Value.ToString("s", System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (search != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("search")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(search, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
                     }
                     if (pageNumber != null)
                     {
@@ -17913,7 +18215,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task Bills2Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<MaintenanceBillDetailDtoApiResponse> Bills2Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -17925,6 +18227,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -17957,7 +18260,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<MaintenanceBillDetailDtoApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new MaintenanceBillsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -17982,7 +18290,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task Pdf3Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FileResponse> Pdf3Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -17994,6 +18302,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -18025,9 +18334,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
+                        if (status_ == 200 || status_ == 206)
                         {
-                            return;
+                            var responseStream_ = response_.Content == null ? System.IO.Stream.Null : await ReadAsStreamAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            var fileResponse_ = new FileResponse(status_, headers_, responseStream_, null, response_);
+                            disposeClient_ = false; disposeResponse_ = false; // response and client are disposed by FileResponse
+                            return fileResponse_;
                         }
                         else
                         {
@@ -18052,7 +18364,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task Pdf4Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FileResponse> Pdf4Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -18061,6 +18373,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -18104,9 +18417,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
+                        if (status_ == 200 || status_ == 206)
                         {
-                            return;
+                            var responseStream_ = response_.Content == null ? System.IO.Stream.Null : await ReadAsStreamAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            var fileResponse_ = new FileResponse(status_, headers_, responseStream_, null, response_);
+                            disposeClient_ = false; disposeResponse_ = false; // response and client are disposed by FileResponse
+                            return fileResponse_;
                         }
                         else
                         {
@@ -18131,7 +18447,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task Excel2Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FileResponse> Excel2Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -18140,6 +18456,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -18183,9 +18500,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
+                        if (status_ == 200 || status_ == 206)
                         {
-                            return;
+                            var responseStream_ = response_.Content == null ? System.IO.Stream.Null : await ReadAsStreamAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            var fileResponse_ = new FileResponse(status_, headers_, responseStream_, null, response_);
+                            disposeClient_ = false; disposeResponse_ = false; // response and client are disposed by FileResponse
+                            return fileResponse_;
                         }
                         else
                         {
@@ -18210,7 +18530,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task GenerateAsync(GenerateBillsRequest? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<Int32ApiResponse> GenerateAsync(GenerateBillsRequest? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -18223,6 +18543,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -18254,7 +18575,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<Int32ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new MaintenanceBillsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -18279,7 +18605,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task PaymentAsync(RecordPaymentCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<Int32ApiResponse> PaymentAsync(RecordPaymentCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -18292,6 +18618,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -18323,7 +18650,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<Int32ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new MaintenanceBillsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -18348,7 +18680,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task BulkPaymentAsync(BulkRecordPaymentCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<BulkRecordPaymentResultDtoListApiResponse> BulkPaymentAsync(BulkRecordPaymentCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -18361,6 +18693,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -18392,7 +18725,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<BulkRecordPaymentResultDtoListApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new MaintenanceBillsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -18417,7 +18755,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task MarkUnpaidAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> MarkUnpaidAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -18430,6 +18768,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 {
                     request_.Content = new System.Net.Http.StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -18463,7 +18802,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new MaintenanceBillsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -18488,7 +18832,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task BulkMarkUnpaidAsync(BulkSetBillsUnpaidCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<BulkSetBillsUnpaidResultDtoListApiResponse> BulkMarkUnpaidAsync(BulkSetBillsUnpaidCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -18501,6 +18845,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -18532,7 +18877,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<BulkSetBillsUnpaidResultDtoListApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new MaintenanceBillsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -18557,7 +18907,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task ResendWhatsapp2Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> ResendWhatsapp2Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -18570,6 +18920,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 {
                     request_.Content = new System.Net.Http.StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -18603,7 +18954,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new MaintenanceBillsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -18761,7 +19117,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceCategoriesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task MaintenanceCategoriesGETAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<MaintenanceCategoryDtoListApiResponse> MaintenanceCategoriesGETAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
@@ -18815,7 +19171,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceCategoriesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task MaintenanceCategoriesGETAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<MaintenanceCategoryDtoListApiResponse> MaintenanceCategoriesGETAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -18824,6 +19180,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -18861,7 +19218,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<MaintenanceCategoryDtoListApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new MaintenanceCategoriesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -19487,12 +19849,12 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceSettingsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task MaintenanceSettingsGETAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<MaintenanceSettingsDtoApiResponse> MaintenanceSettingsGETAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceSettingsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task MaintenanceSettingsPUTAsync(UpsertMaintenanceSettingsCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> MaintenanceSettingsPUTAsync(UpsertMaintenanceSettingsCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -19531,7 +19893,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceSettingsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task MaintenanceSettingsGETAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<MaintenanceSettingsDtoApiResponse> MaintenanceSettingsGETAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -19540,6 +19902,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -19577,7 +19940,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<MaintenanceSettingsDtoApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new MaintenanceSettingsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -19602,7 +19970,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceSettingsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task MaintenanceSettingsPUTAsync(UpsertMaintenanceSettingsCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> MaintenanceSettingsPUTAsync(UpsertMaintenanceSettingsCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -19615,6 +19983,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("PUT");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -19646,7 +20015,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new MaintenanceSettingsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -25950,22 +26324,22 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="SpecialChargesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task SpecialChargesGETAsync(int? societyId = null, int? flatId = null, string? search = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<SpecialChargeDtoPaginatedResultApiResponse> SpecialChargesGETAsync(int? societyId = null, int? flatId = null, string? search = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Created</returns>
+        /// <exception cref="SpecialChargesApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<Int32ApiResponse> SpecialChargesPOSTAsync(CreateSpecialChargeCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="SpecialChargesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task SpecialChargesPOSTAsync(CreateSpecialChargeCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> SpecialChargesPUTAsync(int id, UpdateSpecialChargeCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="SpecialChargesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task SpecialChargesPUTAsync(int id, UpdateSpecialChargeCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
-
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
-        /// <exception cref="SpecialChargesApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task SpecialChargesDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> SpecialChargesDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -26004,7 +26378,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="SpecialChargesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task SpecialChargesGETAsync(int? societyId = null, int? flatId = null, string? search = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<SpecialChargeDtoPaginatedResultApiResponse> SpecialChargesGETAsync(int? societyId = null, int? flatId = null, string? search = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -26013,6 +26387,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -26074,7 +26449,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<SpecialChargeDtoPaginatedResultApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new SpecialChargesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -26097,9 +26477,9 @@ namespace SocietyManagement.Mobile.Api.Generated
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <returns>Created</returns>
         /// <exception cref="SpecialChargesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task SpecialChargesPOSTAsync(CreateSpecialChargeCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<Int32ApiResponse> SpecialChargesPOSTAsync(CreateSpecialChargeCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -26112,6 +26492,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -26141,9 +26522,14 @@ namespace SocietyManagement.Mobile.Api.Generated
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
+                        if (status_ == 201)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<Int32ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new SpecialChargesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -26168,7 +26554,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="SpecialChargesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task SpecialChargesPUTAsync(int id, UpdateSpecialChargeCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> SpecialChargesPUTAsync(int id, UpdateSpecialChargeCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -26184,6 +26570,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("PUT");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -26216,7 +26603,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new SpecialChargesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -26241,7 +26633,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="SpecialChargesApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task SpecialChargesDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> SpecialChargesDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -26253,6 +26645,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("DELETE");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -26285,7 +26678,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new SpecialChargesApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -30588,12 +30986,12 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="VisitorSettingsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task VisitorSettingsGETAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<VisitorSettingsDtoApiResponse> VisitorSettingsGETAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="VisitorSettingsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task VisitorSettingsPUTAsync(UpsertVisitorSettingsCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> VisitorSettingsPUTAsync(UpsertVisitorSettingsCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -30632,7 +31030,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="VisitorSettingsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task VisitorSettingsGETAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<VisitorSettingsDtoApiResponse> VisitorSettingsGETAsync(int? societyId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -30641,6 +31039,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -30678,7 +31077,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<VisitorSettingsDtoApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new VisitorSettingsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -30703,7 +31107,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="VisitorSettingsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task VisitorSettingsPUTAsync(UpsertVisitorSettingsCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> VisitorSettingsPUTAsync(UpsertVisitorSettingsCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -30716,6 +31120,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("PUT");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -30747,7 +31152,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new VisitorSettingsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -32593,27 +33003,27 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="WaterTankerLogsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task WaterTankerLogsGETAsync(int? societyId = null, System.DateTimeOffset? month = null, string? search = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<WaterTankerLogDtoPaginatedResultApiResponse> WaterTankerLogsGETAsync(int? societyId = null, System.DateTimeOffset? month = null, string? search = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="WaterTankerLogsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task WaterTankerLogsPOSTAsync(CreateWaterTankerLogCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<Int32ApiResponse> WaterTankerLogsPOSTAsync(CreateWaterTankerLogCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="WaterTankerLogsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task Summary4Async(int? societyId = null, System.DateTimeOffset? month = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<WaterTankerLogMonthSummaryDtoApiResponse> Summary4Async(int? societyId = null, System.DateTimeOffset? month = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="WaterTankerLogsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task WaterTankerLogsPUTAsync(int id, UpdateWaterTankerLogCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> WaterTankerLogsPUTAsync(int id, UpdateWaterTankerLogCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="WaterTankerLogsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task WaterTankerLogsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<ApiResponse> WaterTankerLogsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -32652,7 +33062,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="WaterTankerLogsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task WaterTankerLogsGETAsync(int? societyId = null, System.DateTimeOffset? month = null, string? search = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<WaterTankerLogDtoPaginatedResultApiResponse> WaterTankerLogsGETAsync(int? societyId = null, System.DateTimeOffset? month = null, string? search = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -32661,6 +33071,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -32714,7 +33125,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<WaterTankerLogDtoPaginatedResultApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new WaterTankerLogsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -32739,7 +33155,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="WaterTankerLogsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task WaterTankerLogsPOSTAsync(CreateWaterTankerLogCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<Int32ApiResponse> WaterTankerLogsPOSTAsync(CreateWaterTankerLogCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -32752,6 +33168,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -32783,7 +33200,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<Int32ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new WaterTankerLogsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -32808,7 +33230,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="WaterTankerLogsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task Summary4Async(int? societyId = null, System.DateTimeOffset? month = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<WaterTankerLogMonthSummaryDtoApiResponse> Summary4Async(int? societyId = null, System.DateTimeOffset? month = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -32817,6 +33239,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -32858,7 +33281,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<WaterTankerLogMonthSummaryDtoApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new WaterTankerLogsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -32883,7 +33311,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="WaterTankerLogsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task WaterTankerLogsPUTAsync(int id, UpdateWaterTankerLogCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> WaterTankerLogsPUTAsync(int id, UpdateWaterTankerLogCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -32899,6 +33327,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("PUT");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -32931,7 +33360,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new WaterTankerLogsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -32956,7 +33390,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="WaterTankerLogsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task WaterTankerLogsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<ApiResponse> WaterTankerLogsDELETEAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -32968,6 +33402,7 @@ namespace SocietyManagement.Mobile.Api.Generated
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
                     request_.Method = new System.Net.Http.HttpMethod("DELETE");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                 
@@ -33000,7 +33435,12 @@ namespace SocietyManagement.Mobile.Api.Generated
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            return;
+                            var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new WaterTankerLogsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
                         }
                         else
                         {
@@ -34230,6 +34670,18 @@ namespace SocietyManagement.Mobile.Api.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public enum BillItemType
+    {
+
+        Category = 1,
+
+        SpecialCharge = 2,
+
+        Fine = 3,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum BillStatus
     {
 
@@ -34258,6 +34710,24 @@ namespace SocietyManagement.Mobile.Api.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("errors")]
         public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class BudgetVsActualPointDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("categoryName")]
+        public string? CategoryName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("estimated")]
+        public double? Estimated { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("approved")]
+        public double? Approved { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("actual")]
+        public double? Actual { get; set; } = default!;
 
     }
 
@@ -34298,11 +34768,83 @@ namespace SocietyManagement.Mobile.Api.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class BulkRecordPaymentResultDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("maintenanceBillId")]
+        public int? MaintenanceBillId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("invoiceNumber")]
+        public string? InvoiceNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("recorded")]
+        public bool? Recorded { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("skipReason")]
+        public string? SkipReason { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class BulkRecordPaymentResultDtoListApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public System.Collections.ObjectModel.ObservableCollection<BulkRecordPaymentResultDto>? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class BulkSetBillsUnpaidCommand
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("maintenanceBillIds")]
         public System.Collections.ObjectModel.ObservableCollection<int>? MaintenanceBillIds { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class BulkSetBillsUnpaidResultDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("maintenanceBillId")]
+        public int? MaintenanceBillId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("invoiceNumber")]
+        public string? InvoiceNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("reversed")]
+        public bool? Reversed { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("skipReason")]
+        public string? SkipReason { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class BulkSetBillsUnpaidResultDtoListApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public System.Collections.ObjectModel.ObservableCollection<BulkSetBillsUnpaidResultDto>? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
 
     }
 
@@ -34349,6 +34891,39 @@ namespace SocietyManagement.Mobile.Api.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("actualHeadCount")]
         public int? ActualHeadCount { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ChildPoolStatusDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("poolFestivalId")]
+        public int? PoolFestivalId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("poolFestivalName")]
+        public string? PoolFestivalName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("poolRemaining")]
+        public double? PoolRemaining { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ChildPoolStatusDtoApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public ChildPoolStatusDto? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
 
     }
 
@@ -34423,6 +34998,36 @@ namespace SocietyManagement.Mobile.Api.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ContributableFlatDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatId")]
+        public int? FlatId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatNumber")]
+        public string? FlatNumber { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ContributableFlatDtoListApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public System.Collections.ObjectModel.ObservableCollection<ContributableFlatDto>? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum ContributionPaymentMethod
     {
 
@@ -34431,6 +35036,39 @@ namespace SocietyManagement.Mobile.Api.Generated
         UPI = 2,
 
         BankTransfer = 3,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ContributionPoolDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("name")]
+        public string? Name { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("year")]
+        public int? Year { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ContributionPoolDtoListApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public System.Collections.ObjectModel.ObservableCollection<ContributionPoolDto>? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
 
     }
 
@@ -35557,6 +36195,69 @@ namespace SocietyManagement.Mobile.Api.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ExpenseCategoryPointDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("categoryName")]
+        public string? CategoryName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("amount")]
+        public double? Amount { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalBudgetCategoryDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("festivalId")]
+        public int? FestivalId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("category")]
+        public FestivalBudgetCategoryType? Category { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("customCategoryName")]
+        public string? CustomCategoryName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("estimatedAmount")]
+        public double? EstimatedAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("approvedAmount")]
+        public double? ApprovedAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("actualAmount")]
+        public double? ActualAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("remaining")]
+        public double? Remaining { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("notes")]
+        public string? Notes { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalBudgetCategoryDtoListApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public System.Collections.ObjectModel.ObservableCollection<FestivalBudgetCategoryDto>? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum FestivalBudgetCategoryType
     {
 
@@ -35585,6 +36286,183 @@ namespace SocietyManagement.Mobile.Api.Generated
         Miscellaneous = 12,
 
         Custom = 13,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalBudgetRevisionDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("festivalBudgetCategoryId")]
+        public int? FestivalBudgetCategoryId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("previousEstimatedAmount")]
+        public double? PreviousEstimatedAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("newEstimatedAmount")]
+        public double? NewEstimatedAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("previousApprovedAmount")]
+        public double? PreviousApprovedAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("newApprovedAmount")]
+        public double? NewApprovedAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("reason")]
+        public string? Reason { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
+        public System.DateTimeOffset? CreatedAt { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("createdBy")]
+        public string? CreatedBy { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalBudgetRevisionDtoListApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public System.Collections.ObjectModel.ObservableCollection<FestivalBudgetRevisionDto>? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalContributionDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("festivalId")]
+        public int? FestivalId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatId")]
+        public int? FlatId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatNumber")]
+        public string? FlatNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("memberName")]
+        public string? MemberName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("amount")]
+        public double? Amount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("paymentMethod")]
+        public ContributionPaymentMethod? PaymentMethod { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("paymentDate")]
+        public System.DateTimeOffset? PaymentDate { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("transactionId")]
+        public string? TransactionId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("receiptNumber")]
+        public string? ReceiptNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("isAnonymous")]
+        public bool? IsAnonymous { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
+        public System.DateTimeOffset? CreatedAt { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("whatsAppNumber")]
+        public string? WhatsAppNumber { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalContributionDtoPaginatedResult
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("items")]
+        public System.Collections.ObjectModel.ObservableCollection<FestivalContributionDto>? Items { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pageNumber")]
+        public int? PageNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pageSize")]
+        public int? PageSize { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalCount")]
+        public int? TotalCount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalPages")]
+        public int? TotalPages { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("hasPreviousPage")]
+        public bool? HasPreviousPage { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("hasNextPage")]
+        public bool? HasNextPage { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalContributionDtoPaginatedResultApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public FestivalContributionDtoPaginatedResult? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalDashboardDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("kpis")]
+        public FestivalKpisDto? Kpis { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("budgetVsActual")]
+        public System.Collections.ObjectModel.ObservableCollection<BudgetVsActualPointDto>? BudgetVsActual { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("expenseByCategory")]
+        public System.Collections.ObjectModel.ObservableCollection<ExpenseCategoryPointDto>? ExpenseByCategory { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("sponsorContributions")]
+        public System.Collections.ObjectModel.ObservableCollection<SponsorContributionPointDto>? SponsorContributions { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalDashboardDtoApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public FestivalDashboardDto? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
 
     }
 
@@ -35727,6 +36605,105 @@ namespace SocietyManagement.Mobile.Api.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalExpenseDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("festivalId")]
+        public int? FestivalId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("festivalBudgetCategoryId")]
+        public int? FestivalBudgetCategoryId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("category")]
+        public FestivalBudgetCategoryType? Category { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("vendorId")]
+        public int? VendorId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("vendorName")]
+        public string? VendorName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("amount")]
+        public double? Amount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("expenseDate")]
+        public System.DateTimeOffset? ExpenseDate { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("description")]
+        public string? Description { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("paymentMethod")]
+        public ContributionPaymentMethod? PaymentMethod { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("billImageUrl")]
+        public string? BillImageUrl { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("invoiceNumber")]
+        public string? InvoiceNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("approvalStatus")]
+        public ExpenseApprovalStatus? ApprovalStatus { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("approvedByUserId")]
+        public int? ApprovedByUserId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("approvedAt")]
+        public System.DateTimeOffset? ApprovedAt { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("rejectionReason")]
+        public string? RejectionReason { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalExpenseDtoPaginatedResult
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("items")]
+        public System.Collections.ObjectModel.ObservableCollection<FestivalExpenseDto>? Items { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pageNumber")]
+        public int? PageNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pageSize")]
+        public int? PageSize { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalCount")]
+        public int? TotalCount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalPages")]
+        public int? TotalPages { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("hasPreviousPage")]
+        public bool? HasPreviousPage { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("hasNextPage")]
+        public bool? HasNextPage { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalExpenseDtoPaginatedResultApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public FestivalExpenseDtoPaginatedResult? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum FestivalKind
     {
 
@@ -35735,6 +36712,96 @@ namespace SocietyManagement.Mobile.Api.Generated
         Pool = 2,
 
         Child = 3,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalKpisDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("budget")]
+        public double? Budget { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("collected")]
+        public double? Collected { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("spent")]
+        public double? Spent { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("remaining")]
+        public double? Remaining { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("sponsorsCount")]
+        public int? SponsorsCount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pendingExpensesCount")]
+        public int? PendingExpensesCount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("volunteersCount")]
+        public int? VolunteersCount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("tasksPendingCount")]
+        public int? TasksPendingCount { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalSponsorDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("festivalId")]
+        public int? FestivalId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("companyName")]
+        public string? CompanyName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("contactPerson")]
+        public string? ContactPerson { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("phone")]
+        public string? Phone { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("email")]
+        public string? Email { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("sponsorshipType")]
+        public SponsorshipType? SponsorshipType { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("promisedAmount")]
+        public double? PromisedAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("receivedAmount")]
+        public double? ReceivedAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pendingAmount")]
+        public double? PendingAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("logoUrl")]
+        public string? LogoUrl { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("bannerUrl")]
+        public string? BannerUrl { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalSponsorDtoListApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public System.Collections.ObjectModel.ObservableCollection<FestivalSponsorDto>? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
 
     }
 
@@ -35751,6 +36818,54 @@ namespace SocietyManagement.Mobile.Api.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalTaskDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("festivalId")]
+        public int? FestivalId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("title")]
+        public string? Title { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("description")]
+        public string? Description { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("assignedVolunteerId")]
+        public int? AssignedVolunteerId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("assignedVolunteerName")]
+        public string? AssignedVolunteerName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public FestivalTaskStatus? Status { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("dueDate")]
+        public System.DateTimeOffset? DueDate { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalTaskDtoListApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public System.Collections.ObjectModel.ObservableCollection<FestivalTaskDto>? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum FestivalTaskStatus
     {
 
@@ -35763,12 +36878,141 @@ namespace SocietyManagement.Mobile.Api.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalVendorDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("societyId")]
+        public int? SocietyId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("name")]
+        public string? Name { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("category")]
+        public VendorCategory? Category { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("phone")]
+        public string? Phone { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("email")]
+        public string? Email { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("gstNumber")]
+        public string? GstNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("address")]
+        public string? Address { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("rating")]
+        public double? Rating { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalPayments")]
+        public double? TotalPayments { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("outstandingAmount")]
+        public double? OutstandingAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("previousFestivalsCount")]
+        public int? PreviousFestivalsCount { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalVendorDtoPaginatedResult
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("items")]
+        public System.Collections.ObjectModel.ObservableCollection<FestivalVendorDto>? Items { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pageNumber")]
+        public int? PageNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pageSize")]
+        public int? PageSize { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalCount")]
+        public int? TotalCount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalPages")]
+        public int? TotalPages { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("hasPreviousPage")]
+        public bool? HasPreviousPage { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("hasNextPage")]
+        public bool? HasNextPage { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalVendorDtoPaginatedResultApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public FestivalVendorDtoPaginatedResult? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum FestivalVisibility
     {
 
         Public = 1,
 
         MembersOnly = 2,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalVolunteerDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("festivalId")]
+        public int? FestivalId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("name")]
+        public string? Name { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("phone")]
+        public string? Phone { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("email")]
+        public string? Email { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("notes")]
+        public string? Notes { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FestivalVolunteerDtoListApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public System.Collections.ObjectModel.ObservableCollection<FestivalVolunteerDto>? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
 
     }
 
@@ -35787,6 +37031,78 @@ namespace SocietyManagement.Mobile.Api.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FineRecordDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatId")]
+        public int? FlatId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatNumber")]
+        public string? FlatNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("reason")]
+        public string? Reason { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("amount")]
+        public double? Amount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("fineDate")]
+        public System.DateTimeOffset? FineDate { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public FineStatus? Status { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FineRecordDtoPaginatedResult
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("items")]
+        public System.Collections.ObjectModel.ObservableCollection<FineRecordDto>? Items { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pageNumber")]
+        public int? PageNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pageSize")]
+        public int? PageSize { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalCount")]
+        public int? TotalCount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalPages")]
+        public int? TotalPages { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("hasPreviousPage")]
+        public bool? HasPreviousPage { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("hasNextPage")]
+        public bool? HasNextPage { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FineRecordDtoPaginatedResultApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public FineRecordDtoPaginatedResult? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum FineStatus
     {
 
@@ -35795,6 +37111,123 @@ namespace SocietyManagement.Mobile.Api.Generated
         Billed = 2,
 
         Waived = 3,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FlatContributionDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatId")]
+        public int? FlatId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatNumber")]
+        public string? FlatNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("targetAmount")]
+        public double? TargetAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("paidAmount")]
+        public double? PaidAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("outstandingAmount")]
+        public double? OutstandingAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public FlatContributionStatus? Status { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FlatContributionDtoPaginatedResult
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("items")]
+        public System.Collections.ObjectModel.ObservableCollection<FlatContributionDto>? Items { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pageNumber")]
+        public int? PageNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pageSize")]
+        public int? PageSize { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalCount")]
+        public int? TotalCount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalPages")]
+        public int? TotalPages { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("hasPreviousPage")]
+        public bool? HasPreviousPage { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("hasNextPage")]
+        public bool? HasNextPage { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FlatContributionDtoPaginatedResultApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public FlatContributionDtoPaginatedResult? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FlatContributionKpisDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalFlats")]
+        public int? TotalFlats { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalTargetAmount")]
+        public double? TotalTargetAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalPaidAmount")]
+        public double? TotalPaidAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalOutstandingAmount")]
+        public double? TotalOutstandingAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatsPaidCount")]
+        public int? FlatsPaidCount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatsPartiallyPaidCount")]
+        public int? FlatsPartiallyPaidCount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatsPendingCount")]
+        public int? FlatsPendingCount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatsNoTargetCount")]
+        public int? FlatsNoTargetCount { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FlatContributionKpisDtoApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public FlatContributionKpisDto? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
 
     }
 
@@ -36124,6 +37557,93 @@ namespace SocietyManagement.Mobile.Api.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class MaintenanceBillDetailDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatId")]
+        public int? FlatId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatNumber")]
+        public string? FlatNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("buildingName")]
+        public string? BuildingName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("wingName")]
+        public string? WingName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("billMonth")]
+        public System.DateTimeOffset? BillMonth { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("invoiceNumber")]
+        public string? InvoiceNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("previousBalance")]
+        public double? PreviousBalance { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("fineAmount")]
+        public double? FineAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalAmount")]
+        public double? TotalAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("amountPaid")]
+        public double? AmountPaid { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("balance")]
+        public double? Balance { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("dueDate")]
+        public System.DateTimeOffset? DueDate { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public BillStatus? Status { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("isRolledForward")]
+        public bool? IsRolledForward { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pdfUrl")]
+        public string? PdfUrl { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("ownerNameSnapshot")]
+        public string? OwnerNameSnapshot { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("ownerName")]
+        public string? OwnerName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("tenantName")]
+        public string? TenantName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("items")]
+        public System.Collections.ObjectModel.ObservableCollection<MaintenanceBillItemDto>? Items { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("payments")]
+        public System.Collections.ObjectModel.ObservableCollection<MaintenancePaymentDto>? Payments { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class MaintenanceBillDetailDtoApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public MaintenanceBillDetailDto? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class MaintenanceBillDto
     {
 
@@ -36232,6 +37752,72 @@ namespace SocietyManagement.Mobile.Api.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class MaintenanceBillItemDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("description")]
+        public string? Description { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("amount")]
+        public double? Amount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("itemType")]
+        public BillItemType? ItemType { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class MaintenanceCategoryDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("societyId")]
+        public int? SocietyId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("chargeName")]
+        public string? ChargeName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("chargeType")]
+        public ChargeType? ChargeType { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("monthlyAmount")]
+        public double? MonthlyAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("effectiveFrom")]
+        public System.DateTimeOffset? EffectiveFrom { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("isActive")]
+        public bool? IsActive { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("displayOrder")]
+        public int? DisplayOrder { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class MaintenanceCategoryDtoListApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public System.Collections.ObjectModel.ObservableCollection<MaintenanceCategoryDto>? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class MaintenanceDashboardDto
     {
 
@@ -36300,6 +37886,87 @@ namespace SocietyManagement.Mobile.Api.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("tankerExpense")]
         public double? TankerExpense { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class MaintenancePaymentDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("amount")]
+        public double? Amount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("paymentDate")]
+        public System.DateTimeOffset? PaymentDate { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("paymentMode")]
+        public PaymentMode? PaymentMode { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("transactionReference")]
+        public string? TransactionReference { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("notes")]
+        public string? Notes { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class MaintenanceSettingsDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("societyId")]
+        public int? SocietyId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("billGenerationDay")]
+        public int? BillGenerationDay { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("dueDay")]
+        public int? DueDay { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("gracePeriodDays")]
+        public int? GracePeriodDays { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("lateFeeAmount")]
+        public double? LateFeeAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("invoiceNumberPrefix")]
+        public string? InvoiceNumberPrefix { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("nextInvoiceNumber")]
+        public int? NextInvoiceNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("whatsAppMessageTemplate")]
+        public string? WhatsAppMessageTemplate { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pdfFooterMessage")]
+        public string? PdfFooterMessage { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("whatsAppEnabled")]
+        public bool? WhatsAppEnabled { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class MaintenanceSettingsDtoApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public MaintenanceSettingsDto? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
 
     }
 
@@ -36677,6 +38344,36 @@ namespace SocietyManagement.Mobile.Api.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class PendingContributorDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatId")]
+        public int? FlatId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatNumber")]
+        public string? FlatNumber { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class PendingContributorDtoListApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public System.Collections.ObjectModel.ObservableCollection<PendingContributorDto>? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum PersonRelationship
     {
 
@@ -36705,6 +38402,66 @@ namespace SocietyManagement.Mobile.Api.Generated
         Pending = 1,
 
         Done = 2,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class PoolChildSummaryDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("festivalId")]
+        public int? FestivalId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("name")]
+        public string? Name { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public FestivalStatus? Status { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("budget")]
+        public double? Budget { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("spent")]
+        public double? Spent { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class PoolSummaryDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("festivalId")]
+        public int? FestivalId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("poolCollected")]
+        public double? PoolCollected { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("childrenSpent")]
+        public double? ChildrenSpent { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("poolRemaining")]
+        public double? PoolRemaining { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("children")]
+        public System.Collections.ObjectModel.ObservableCollection<PoolChildSummaryDto>? Children { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class PoolSummaryDtoApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public PoolSummaryDto? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
 
     }
 
@@ -37026,6 +38783,102 @@ namespace SocietyManagement.Mobile.Api.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class SpecialChargeDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatId")]
+        public int? FlatId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatNumber")]
+        public string? FlatNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("chargeName")]
+        public string? ChargeName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("amount")]
+        public double? Amount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("frequency")]
+        public ChargeFrequency? Frequency { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("startDate")]
+        public System.DateTimeOffset? StartDate { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("endDate")]
+        public System.DateTimeOffset? EndDate { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("notes")]
+        public string? Notes { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("isActive")]
+        public bool? IsActive { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class SpecialChargeDtoPaginatedResult
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("items")]
+        public System.Collections.ObjectModel.ObservableCollection<SpecialChargeDto>? Items { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pageNumber")]
+        public int? PageNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pageSize")]
+        public int? PageSize { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalCount")]
+        public int? TotalCount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalPages")]
+        public int? TotalPages { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("hasPreviousPage")]
+        public bool? HasPreviousPage { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("hasNextPage")]
+        public bool? HasNextPage { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class SpecialChargeDtoPaginatedResultApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public SpecialChargeDtoPaginatedResult? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class SponsorContributionPointDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("companyName")]
+        public string? CompanyName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("promised")]
+        public double? Promised { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("received")]
+        public double? Received { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum SponsorshipType
     {
 
@@ -37064,6 +38917,24 @@ namespace SocietyManagement.Mobile.Api.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class StringApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public string? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum SupportTicketStatus
     {
 
@@ -37072,6 +38943,45 @@ namespace SocietyManagement.Mobile.Api.Generated
         InProgress = 2,
 
         Resolved = 3,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class TopContributorDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("memberName")]
+        public string? MemberName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatNumber")]
+        public string? FlatNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("flatId")]
+        public int? FlatId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalAmount")]
+        public double? TotalAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("contributionCount")]
+        public int? ContributionCount { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class TopContributorDtoListApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public System.Collections.ObjectModel.ObservableCollection<TopContributorDto>? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
 
     }
 
@@ -38526,6 +40436,42 @@ namespace SocietyManagement.Mobile.Api.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class VisitorSettingsDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("societyId")]
+        public int? SocietyId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("approvalRequestExpiryMinutes")]
+        public int? ApprovalRequestExpiryMinutes { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("retentionDays")]
+        public int? RetentionDays { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class VisitorSettingsDtoApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public VisitorSettingsDto? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class VisitorVisitDto
     {
 
@@ -38692,6 +40638,114 @@ namespace SocietyManagement.Mobile.Api.Generated
 
     }
 
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class WaterTankerLogDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("date")]
+        public System.DateTimeOffset? Date { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("providerName")]
+        public string? ProviderName { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("vehicleNumber")]
+        public string? VehicleNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("numberOfTankers")]
+        public int? NumberOfTankers { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pricePerTanker")]
+        public double? PricePerTanker { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalAmount")]
+        public double? TotalAmount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("notes")]
+        public string? Notes { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class WaterTankerLogDtoPaginatedResult
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("items")]
+        public System.Collections.ObjectModel.ObservableCollection<WaterTankerLogDto>? Items { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pageNumber")]
+        public int? PageNumber { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("pageSize")]
+        public int? PageSize { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalCount")]
+        public int? TotalCount { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalPages")]
+        public int? TotalPages { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("hasPreviousPage")]
+        public bool? HasPreviousPage { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("hasNextPage")]
+        public bool? HasNextPage { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class WaterTankerLogDtoPaginatedResultApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public WaterTankerLogDtoPaginatedResult? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class WaterTankerLogMonthSummaryDto
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalDeliveries")]
+        public int? TotalDeliveries { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalTankers")]
+        public int? TotalTankers { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("totalAmount")]
+        public double? TotalAmount { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class WaterTankerLogMonthSummaryDtoApiResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("success")]
+        public bool? Success { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public WaterTankerLogMonthSummaryDto? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("errors")]
+        public System.Collections.ObjectModel.ObservableCollection<string>? Errors { get; set; } = default!;
+
+    }
+
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class FileParameter
     {
@@ -38719,6 +40773,41 @@ namespace SocietyManagement.Mobile.Api.Generated
         public string? ContentType { get; private set; }
     }
 
+    [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FileResponse : System.IDisposable
+    {
+        private System.IDisposable? _client;
+        private System.IDisposable? _response;
+
+        public int StatusCode { get; private set; }
+
+        public System.Collections.Generic.IReadOnlyDictionary<string, System.Collections.Generic.IEnumerable<string>> Headers { get; private set; }
+
+        public System.IO.Stream Stream { get; private set; }
+
+        public bool IsPartial
+        {
+            get { return StatusCode == 206; }
+        }
+
+        public FileResponse(int statusCode, System.Collections.Generic.IReadOnlyDictionary<string, System.Collections.Generic.IEnumerable<string>> headers, System.IO.Stream stream, System.IDisposable? client, System.IDisposable? response)
+        {
+            StatusCode = statusCode;
+            Headers = headers;
+            Stream = stream;
+            _client = client;
+            _response = response;
+        }
+
+        public void Dispose()
+        {
+            Stream.Dispose();
+            if (_response != null)
+                _response.Dispose();
+            if (_client != null)
+                _client.Dispose();
+        }
+    }
 
 
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]

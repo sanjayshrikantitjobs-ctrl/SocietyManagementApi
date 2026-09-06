@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:forms="clr-namespace:SocietyManagement.Mobile.Features.Festivals.Forms"
+             x:Class="SocietyManagement.Mobile.Features.Festivals.Forms.TaskFormPage"
+             x:DataType="forms:TaskFormViewModel"
+             Title="Task">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Label Text="Title" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Entry Text="{Binding Title}" />
+
+            <Label Text="Description (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Editor Text="{Binding Description}" AutoSize="TextChanges" />
+
+            <Label Text="Assigned To" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Picker ItemsSource="{Binding VolunteerOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedVolunteer}" />
+
+            <VerticalStackLayout IsVisible="{Binding IsEditMode}" Spacing="14">
+                <Label Text="Status" FontSize="12" TextColor="{StaticResource Gray500}" />
+                <Picker ItemsSource="{Binding StatusOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedStatus}" />
+            </VerticalStackLayout>
+
+            <Grid ColumnDefinitions="2*,Auto" ColumnSpacing="8">
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label Text="Due Date (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
+                    <DatePicker Date="{Binding DueDate}" />
+                </VerticalStackLayout>
+                <Button Grid.Column="1" Text="Clear" Command="{Binding ClearDueDateCommand}" VerticalOptions="End" FontSize="12" />
+            </Grid>
+            <Label Text="No due date set" FontSize="12" TextColor="{StaticResource Gray400}" IsVisible="{Binding HasDueDate, Converter={StaticResource InvertedBoolConverter}}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

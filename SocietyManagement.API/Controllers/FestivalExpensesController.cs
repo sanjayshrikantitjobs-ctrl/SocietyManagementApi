@@ -14,6 +14,7 @@ public class FestivalExpensesController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<FestivalExpenseDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int festivalId, [FromQuery] ExpenseApprovalStatus? status, [FromQuery] int? festivalBudgetCategoryId,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
@@ -24,6 +25,7 @@ public class FestivalExpensesController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Festivals.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create(CreateExpenseCommand command)
     {
         var id = await Mediator.Send(command);
@@ -32,6 +34,7 @@ public class FestivalExpensesController : ApiControllerBase
 
     [HttpPut("{id:int}")]
     [HasPermission(Permissions.Festivals.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(int id, UpdateExpenseCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
@@ -41,6 +44,7 @@ public class FestivalExpensesController : ApiControllerBase
 
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.Festivals.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id)
     {
         await Mediator.Send(new DeleteExpenseCommand(id));
@@ -49,6 +53,7 @@ public class FestivalExpensesController : ApiControllerBase
 
     [HttpPost("{id:int}/submit")]
     [HasPermission(Permissions.Festivals.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Submit(int id)
     {
         await Mediator.Send(new SubmitExpenseCommand(id));
@@ -57,6 +62,7 @@ public class FestivalExpensesController : ApiControllerBase
 
     [HttpPost("{id:int}/approve")]
     [HasPermission(Permissions.Festivals.ApproveExpense)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Approve(int id)
     {
         await Mediator.Send(new ApproveExpenseCommand(id));
@@ -65,6 +71,7 @@ public class FestivalExpensesController : ApiControllerBase
 
     [HttpPost("{id:int}/reject")]
     [HasPermission(Permissions.Festivals.ApproveExpense)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Reject(int id, [FromBody] RejectExpenseRequest request)
     {
         await Mediator.Send(new RejectExpenseCommand(id, request.Reason));
@@ -73,6 +80,7 @@ public class FestivalExpensesController : ApiControllerBase
 
     [HttpPost("{id:int}/mark-paid")]
     [HasPermission(Permissions.Festivals.ApproveExpense)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> MarkPaid(int id)
     {
         await Mediator.Send(new MarkExpensePaidCommand(id));

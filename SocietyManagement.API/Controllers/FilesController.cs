@@ -16,6 +16,7 @@ public class FilesController : ApiControllerBase
 {
     [HttpPost("upload")]
     [RequestSizeLimit(10 * 1024 * 1024)]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Upload(IFormFile file, [FromForm] string folder)
     {
         if (file.Length == 0) throw new BadRequestAppException("No file was uploaded.");

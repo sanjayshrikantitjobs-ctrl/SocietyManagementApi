@@ -201,6 +201,77 @@ public class FestivalExpenseConfiguration : IEntityTypeConfiguration<FestivalExp
     }
 }
 
+public class FestivalDistributionConfiguration : IEntityTypeConfiguration<FestivalDistribution>
+{
+    public void Configure(EntityTypeBuilder<FestivalDistribution> builder)
+    {
+        builder.ToTable("FestivalDistributions");
+        builder.HasQueryFilter(d => !d.IsDeleted);
+        builder.Property(d => d.ItemName).HasMaxLength(150).IsRequired();
+        builder.Property(d => d.Description).HasMaxLength(1000);
+        builder.Property(d => d.EligibilityMinContribution).HasColumnType("decimal(12,2)");
+        builder.HasIndex(d => d.FestivalId);
+
+        builder.HasOne(d => d.Festival)
+            .WithMany(f => f.Distributions)
+            .HasForeignKey(d => d.FestivalId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class FestivalDistributionVariantConfiguration : IEntityTypeConfiguration<FestivalDistributionVariant>
+{
+    public void Configure(EntityTypeBuilder<FestivalDistributionVariant> builder)
+    {
+        builder.ToTable("FestivalDistributionVariants");
+        builder.HasQueryFilter(v => !v.IsDeleted);
+        builder.Property(v => v.Label).HasMaxLength(50).IsRequired();
+
+        builder.HasOne(v => v.FestivalDistribution)
+            .WithMany(d => d.Variants)
+            .HasForeignKey(v => v.FestivalDistributionId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class FestivalDistributionClaimConfiguration : IEntityTypeConfiguration<FestivalDistributionClaim>
+{
+    public void Configure(EntityTypeBuilder<FestivalDistributionClaim> builder)
+    {
+        builder.ToTable("FestivalDistributionClaims");
+        builder.HasQueryFilter(c => !c.IsDeleted);
+        builder.Property(c => c.Notes).HasMaxLength(500);
+        builder.Property(c => c.Amount).HasColumnType("decimal(12,2)");
+        builder.HasIndex(c => new { c.FestivalDistributionId, c.FlatId });
+        builder.HasIndex(c => new { c.FestivalDistributionId, c.Status });
+
+        builder.HasOne(c => c.FestivalDistribution)
+            .WithMany(d => d.Claims)
+            .HasForeignKey(c => c.FestivalDistributionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(c => c.Flat)
+            .WithMany()
+            .HasForeignKey(c => c.FlatId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(c => c.Person)
+            .WithMany()
+            .HasForeignKey(c => c.PersonId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(c => c.Variant)
+            .WithMany()
+            .HasForeignKey(c => c.VariantId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(c => c.DistributedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+    }
+}
+
 public class FestivalVolunteerConfiguration : IEntityTypeConfiguration<FestivalVolunteer>
 {
     public void Configure(EntityTypeBuilder<FestivalVolunteer> builder)

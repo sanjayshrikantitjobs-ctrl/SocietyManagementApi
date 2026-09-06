@@ -43,6 +43,19 @@ public class IsNotNullConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+/// <summary>Generic "does this bound value equal ConverterParameter" check —
+/// used to drive a segmented tab switcher's per-panel IsVisible off one
+/// SelectedTab string property (compares as strings so it works for enum,
+/// int, or string bound values alike).</summary>
+public class EqualsConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value?.ToString()?.Equals(parameter?.ToString(), StringComparison.OrdinalIgnoreCase) == true;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
 public class IsNullConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>

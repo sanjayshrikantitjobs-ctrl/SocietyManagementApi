@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SocietyManagement.Mobile.Shared.ComingSoonPage"
+             Title="{Binding PageTitle}">
+
+    <VerticalStackLayout Padding="32" VerticalOptions="Center" Spacing="8">
+        <Label Text="{Binding PageTitle}" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" />
+        <Label Text="This module is coming soon." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" />
+    </VerticalStackLayout>
+
+</ContentPage>

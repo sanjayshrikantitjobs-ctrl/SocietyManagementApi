@@ -26,6 +26,48 @@ public partial class VehicleScanViewModel : ObservableObject
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? errorMessage;
     [ObservableProperty] private VehicleScanResultDto? scanResult;
+    [ObservableProperty] private string? capturedPhotoPath;
+
+    public ImageSource? CapturedPhotoPreview => string.IsNullOrEmpty(CapturedPhotoPath) ? null : ImageSource.FromFile(CapturedPhotoPath);
+
+    partial void OnCapturedPhotoPathChanged(string? value) => OnPropertyChanged(nameof(CapturedPhotoPreview));
+
+    /// <summary>Opens the camera to photograph the plate for the scan
+    /// record — full on-device OCR (guide box, continuous recognition,
+    /// consensus voting, matching vehicle-live-scan.component.ts) is a
+    /// separate, larger follow-up; this gives the button a real camera
+    /// capture today, with the plate still typed/confirmed manually
+    /// below and the photo attached as evidence (Source becomes
+    /// OcrCamera once a photo is attached, matching how the web tags a
+    /// scan that went through the camera flow vs. pure manual search).</summary>
+    [RelayCommand]
+    private async Task CapturePhotoAsync()
+    {
+        ErrorMessage = null;
+        try
+        {
+            if (!MediaPicker.Default.IsCaptureSupported)
+            {
+                ErrorMessage = "Camera capture isn't supported on this device.";
+                return;
+            }
+
+            var photo = await MediaPicker.Default.CapturePhotoAsync();
+            if (photo is null) return;
+
+            var localPath = Path.Combine(FileSystem.CacheDirectory, photo.FileName);
+            await using (var sourceStream = await photo.OpenReadAsync())
+            await using (var localFileStream = File.Create(localPath))
+            {
+                await sourceStream.CopyToAsync(localFileStream);
+            }
+            CapturedPhotoPath = localPath;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Couldn't capture a photo ({ex.Message}).";
+        }
+    }
 
     [RelayCommand]
     private async Task SearchAsync()
@@ -47,15 +89,19 @@ public partial class VehicleScanViewModel : ObservableObject
         IsBusy = true;
         try
         {
+            byte[]? imageBytes = null;
+            if (!string.IsNullOrEmpty(CapturedPhotoPath) && File.Exists(CapturedPhotoPath))
+                imageBytes = await File.ReadAllBytesAsync(CapturedPhotoPath);
+
             var response = await _scansClient.ConfirmAsync(new ConfirmVehicleScanRequest
             {
                 SocietyId = societyId,
                 NormalizedRegistrationNumber = normalized,
                 RawOcrText = null,
                 Confidence = null,
-                Source = VehicleScanSource.ManualSearch,
+                Source = imageBytes is null ? VehicleScanSource.ManualSearch : VehicleScanSource.OcrCamera,
                 GateId = null,
-                ImageBytes = null
+                ImageBytes = imageBytes
             });
             ScanResult = response.Data;
         }
@@ -75,6 +121,7 @@ public partial class VehicleScanViewModel : ObservableObject
         RegistrationNumber = string.Empty;
         ScanResult = null;
         ErrorMessage = null;
+        CapturedPhotoPath = null;
     }
 
     /// <summary>Mirrors the backend's VehicleNumberNormalizer.Normalize —

@@ -8,7 +8,7 @@
              Title="Festivals">
 
     <RefreshView Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
-        <CollectionView ItemsSource="{Binding Festivals}">
+        <CollectionView ItemsSource="{Binding Festivals}" SelectionMode="Single" SelectionChanged="OnFestivalSelected">
             <CollectionView.EmptyView>
                 <VerticalStackLayout Padding="32" VerticalOptions="Center" Spacing="8">
                     <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13" HorizontalOptions="Center"

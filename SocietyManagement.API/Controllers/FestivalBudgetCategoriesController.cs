@@ -13,6 +13,7 @@ public class FestivalBudgetCategoriesController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<FestivalBudgetCategoryDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] int festivalId)
     {
         var result = await Mediator.Send(new GetBudgetCategoriesQuery(festivalId));
@@ -21,6 +22,7 @@ public class FestivalBudgetCategoriesController : ApiControllerBase
 
     [HttpGet("{id:int}/revisions")]
     [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<FestivalBudgetRevisionDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetRevisions(int id)
     {
         var result = await Mediator.Send(new GetBudgetRevisionsQuery(id));
@@ -29,6 +31,7 @@ public class FestivalBudgetCategoriesController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Festivals.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create(CreateBudgetCategoryCommand command)
     {
         var id = await Mediator.Send(command);
@@ -37,6 +40,7 @@ public class FestivalBudgetCategoriesController : ApiControllerBase
 
     [HttpPut("{id:int}")]
     [HasPermission(Permissions.Festivals.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(int id, UpdateBudgetCategoryCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
@@ -46,6 +50,7 @@ public class FestivalBudgetCategoriesController : ApiControllerBase
 
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.Festivals.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id)
     {
         await Mediator.Send(new DeleteBudgetCategoryCommand(id));

@@ -34,10 +34,11 @@ public class MaintenanceBillDto
     public bool IsRolledForward { get; set; }
     public string? PdfUrl { get; set; }
     public string? OwnerNameSnapshot { get; set; }
-    /// <summary>Current owner/tenant, resolved live from FlatResidencies —
-    /// distinct from OwnerNameSnapshot, which is frozen at bill-generation
-    /// time and may be either depending who was primary contact then. Null
-    /// when no primary-contact resident is on file for that role.</summary>
+    /// <summary>Current Primary Owner/Tenant, resolved live from the
+    /// Occupancy/Person household model (same "Primary Owner" the Residents
+    /// module's Ownership grid shows) — distinct from OwnerNameSnapshot,
+    /// which is frozen at bill-generation time. Null when no current
+    /// occupancy member is on file for that role.</summary>
     public string? OwnerName { get; set; }
     public string? TenantName { get; set; }
 }
@@ -634,8 +635,12 @@ public class MaintenanceBillCommandHandlers :
 }
 
 // ---- Queries -------------------------------------------------------------------
+/// <summary>Statuses is a multi-select (e.g. "Pending + Overdue" in one
+/// view) — same list shape and OR-together semantics as
+/// GetBillsExportPdfQuery/GetBillsExportExcelQuery; null/empty means every
+/// status.</summary>
 public record GetBillsQuery(
-    int SocietyId, int? FlatId, BillStatus? Status, DateTime? BillMonth, string? Search = null,
+    int SocietyId, int? FlatId, List<BillStatus>? Statuses, DateTime? BillMonth, string? Search = null,
     int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<MaintenanceBillDto>>;
 
 public record GetBillByIdQuery(int Id) : IRequest<MaintenanceBillDetailDto>;
@@ -695,19 +700,19 @@ public class MaintenanceBillQueryHandlers :
             query = query.Where(b => b.BillMonth == month);
         }
 
-        // Matches on flat number or the flat's current primary owner/tenant
+        // Matches on flat number or the flat's current Primary Owner/Tenant
         // name — applied before pagination (via a correlated subquery on
-        // FlatResidencies/Member) so totalCount/page contents stay in sync,
+        // OccupancyMembers/Person) so totalCount/page contents stay in sync,
         // same reasoning as the status predicate below.
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim().ToLower();
             query = query.Where(b =>
                 b.Flat.FlatNumber.ToLower().Contains(term) ||
-                _context.FlatResidencies.Any(r =>
-                    !r.IsDeleted && r.MoveOutDate == null && r.IsPrimaryContact && r.FlatId == b.FlatId &&
-                    (r.MemberType == MemberType.Owner || r.MemberType == MemberType.Tenant) &&
-                    (r.Member.FirstName + " " + r.Member.LastName).ToLower().Contains(term)));
+                _context.OccupancyMembers.Any(m =>
+                    !m.IsDeleted && m.LeftDate == null && m.IsPrimary && !m.FlatOccupancy.IsDeleted && m.FlatOccupancy.EndDate == null &&
+                    m.FlatOccupancy.FlatId == b.FlatId &&
+                    (m.Person.FirstName + " " + m.Person.LastName).ToLower().Contains(term)));
         }
 
         // Status is filtered here as SQL-translatable predicates equivalent to
@@ -742,21 +747,45 @@ public class MaintenanceBillQueryHandlers :
         var dtos = items.Select(Project).ToList();
 
         var flatIds = dtos.Select(d => d.FlatId).Distinct().ToList();
-        var primaryContacts = await _context.FlatResidencies
-            .Where(r => !r.IsDeleted && r.MoveOutDate == null && r.IsPrimaryContact
-                && (r.MemberType == MemberType.Owner || r.MemberType == MemberType.Tenant) && flatIds.Contains(r.FlatId))
-            .Select(r => new { r.FlatId, r.MemberType, Name = r.Member.FirstName + " " + r.Member.LastName })
-            .ToListAsync(ct);
-        var ownerNamesByFlat = primaryContacts.Where(r => r.MemberType == MemberType.Owner).ToDictionary(r => r.FlatId, r => r.Name);
-        var tenantNamesByFlat = primaryContacts.Where(r => r.MemberType == MemberType.Tenant).ToDictionary(r => r.FlatId, r => r.Name);
+        var namesByFlat = await GetPrimaryNamesByFlatAsync(flatIds, ct);
 
         foreach (var dto in dtos)
         {
-            dto.OwnerName = ownerNamesByFlat.GetValueOrDefault(dto.FlatId);
-            dto.TenantName = tenantNamesByFlat.GetValueOrDefault(dto.FlatId);
+            var names = namesByFlat.GetValueOrDefault(dto.FlatId);
+            dto.OwnerName = names.Owner;
+            dto.TenantName = names.Tenant;
         }
 
         return (dtos, totalCount);
+    }
+
+    /// <summary>The bill's Owner/Tenant display name, sourced from the
+    /// actively-maintained Occupancy/Person household model's "Primary
+    /// Owner"/"Primary Tenant" flag — the same one the Residents module's
+    /// Ownership/Tenancy grids use — not the older Member/FlatResidency
+    /// model, which many flats never kept in sync (hence stale/wrong names
+    /// on bills). Falls back to the first current member of that occupancy
+    /// type when none is flagged primary, same fallback the grids use.</summary>
+    private async Task<Dictionary<int, (string? Owner, string? Tenant)>> GetPrimaryNamesByFlatAsync(List<int> flatIds, CancellationToken ct)
+    {
+        var members = await _context.OccupancyMembers
+            .Where(m => !m.IsDeleted && m.LeftDate == null && !m.FlatOccupancy.IsDeleted && m.FlatOccupancy.EndDate == null
+                && flatIds.Contains(m.FlatOccupancy.FlatId))
+            .Select(m => new { FlatId = m.FlatOccupancy.FlatId, m.FlatOccupancy.Type, m.IsPrimary, Name = m.Person.FirstName + " " + m.Person.LastName })
+            .ToListAsync(ct);
+
+        var byFlat = members.ToLookup(m => m.FlatId);
+        var result = new Dictionary<int, (string?, string?)>();
+        foreach (var flatId in flatIds)
+        {
+            var flatMembers = byFlat[flatId].ToList();
+            var owners = flatMembers.Where(m => m.Type == OccupancyType.Owner).ToList();
+            var tenants = flatMembers.Where(m => m.Type == OccupancyType.Tenant).ToList();
+            result[flatId] = (
+                (owners.FirstOrDefault(m => m.IsPrimary) ?? owners.FirstOrDefault())?.Name,
+                (tenants.FirstOrDefault(m => m.IsPrimary) ?? tenants.FirstOrDefault())?.Name);
+        }
+        return result;
     }
 
     public async Task<PaginatedResult<MaintenanceBillDto>> Handle(GetBillsQuery request, CancellationToken ct)
@@ -765,7 +794,7 @@ public class MaintenanceBillQueryHandlers :
         var pageNumber = Math.Max(request.PageNumber, 1);
 
         var (dtos, totalCount) = await GetFilteredDtosAsync(
-            request.SocietyId, request.FlatId, request.Status.HasValue ? [request.Status.Value] : null, request.BillMonth, request.Search,
+            request.SocietyId, request.FlatId, request.Statuses, request.BillMonth, request.Search,
             (pageNumber - 1) * pageSize, pageSize, ct);
 
         return new PaginatedResult<MaintenanceBillDto>(dtos, totalCount, pageNumber, pageSize);
@@ -820,15 +849,11 @@ public class MaintenanceBillQueryHandlers :
         // OwnerNameSnapshot is frozen at generation time (correct for the
         // PDF/WhatsApp invoice text, which should keep saying who was
         // billed back then) — but the on-screen detail view should reflect
-        // who actually lives there *now*, same live FlatResidencies/Member
-        // lookup the bills list already uses for its OwnerName column.
-        var primaryContact = await _context.FlatResidencies
-            .Where(r => !r.IsDeleted && r.MoveOutDate == null && r.IsPrimaryContact && r.FlatId == bill.FlatId &&
-                (r.MemberType == MemberType.Owner || r.MemberType == MemberType.Tenant))
-            .Select(r => new { r.MemberType, Name = r.Member.FirstName + " " + r.Member.LastName })
-            .ToListAsync(ct);
-        dto.OwnerName = primaryContact.FirstOrDefault(r => r.MemberType == MemberType.Owner)?.Name;
-        dto.TenantName = primaryContact.FirstOrDefault(r => r.MemberType == MemberType.Tenant)?.Name;
+        // who actually lives there *now*, same live Occupancy/Person Primary
+        // Owner/Tenant lookup the bills list already uses for its OwnerName column.
+        var names = (await GetPrimaryNamesByFlatAsync(new List<int> { bill.FlatId }, ct)).GetValueOrDefault(bill.FlatId);
+        dto.OwnerName = names.Owner;
+        dto.TenantName = names.Tenant;
 
         return new MaintenanceBillDetailDto
         {

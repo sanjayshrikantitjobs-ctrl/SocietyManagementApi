@@ -14,13 +14,14 @@ import { PageEvent } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToastService } from '../../../core/services/toast.service';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { PromptDialogComponent } from '../../../shared/components/prompt-dialog/prompt-dialog.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 import {
   FLAT_CONTRIBUTION_STATUS_LABELS, FestivalContributionDto, FlatContributionDto, FlatContributionKpisDto,
-  FlatContributionStatus, PAYMENT_METHOD_LABELS
+  FlatContributionStatus, FlatContributionsSumDto, PAYMENT_METHOD_LABELS
 } from '../models/festival.model';
 import { FestivalService } from '../services/festival.service';
 import { MOBILE_PATTERN, MOBILE_PATTERN_ERROR } from '../../../shared/validators/mobile.validator';
@@ -40,7 +41,8 @@ const NO_FLAT_OPTION_VALUE = 0;
   standalone: true,
   imports: [
     CommonModule, FormsModule, MatButtonModule, MatButtonToggleModule, MatCheckboxModule, MatChipsModule,
-    MatFormFieldModule, MatIconModule, MatSelectModule, MatSortModule, MatTableModule, DataTableComponent, StatCardComponent
+    MatFormFieldModule, MatIconModule, MatSelectModule, MatSortModule, MatTableModule, MatTooltipModule,
+    DataTableComponent, StatCardComponent
   ],
   template: `
     <div class="tab-content">
@@ -75,6 +77,12 @@ const NO_FLAT_OPTION_VALUE = 0;
             </button>
           </div>
         }
+        @if (flatsSum(); as sum) {
+          <div class="sum-banner">
+            <mat-icon inline>calculate</mat-icon>
+            <span>{{ sum.flatCount }} flat(s) · Target ₹{{ sum.totalTargetAmount | number }} · Paid ₹{{ sum.totalPaidAmount | number }} · Outstanding ₹{{ sum.totalOutstandingAmount | number }}</span>
+          </div>
+        }
         <app-data-table
           [loading]="flatsLoading()" [totalCount]="flatsTotalCount()" [pageSize]="flatsPageSize()" [pageIndex]="flatsPageIndex()"
           searchPlaceholder="Search flat number..." emptyTitle="No flats found"
@@ -82,8 +90,7 @@ const NO_FLAT_OPTION_VALUE = 0;
           (page)="onFlatsPage($event)" (search)="onFlatsSearch($event)">
           <div toolbar>
             <mat-form-field appearance="outline" subscriptSizing="dynamic" class="status-filter">
-              <mat-select [(ngModel)]="statusFilter" (ngModelChange)="onStatusFilterChange()" placeholder="All statuses">
-                <mat-option [value]="null">All statuses</mat-option>
+              <mat-select multiple [(ngModel)]="statusFilter" (ngModelChange)="onStatusFilterChange()" placeholder="All statuses">
                 @for (opt of statusOptions; track opt.value) { <mat-option [value]="opt.value">{{ opt.label }}</mat-option> }
               </mat-select>
             </mat-form-field>
@@ -117,10 +124,23 @@ const NO_FLAT_OPTION_VALUE = 0;
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Outstanding</th>
               <td mat-cell *matCellDef="let f">₹{{ f.outstandingAmount | number }}</td>
             </ng-container>
+            <ng-container matColumnDef="method">
+              <th mat-header-cell *matHeaderCellDef>Payment Method</th>
+              <td mat-cell *matCellDef="let f">
+                @if (f.lastPaymentMethod) {
+                  <mat-chip-set><mat-chip>{{ methodLabel(f.lastPaymentMethod) }}</mat-chip></mat-chip-set>
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+            </ng-container>
             <ng-container matColumnDef="status">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
               <td mat-cell *matCellDef="let f">
                 <mat-chip-set><mat-chip [class]="'status-' + f.status">{{ statusLabel(f.status) }}</mat-chip></mat-chip-set>
+                @if (f.declineReason) {
+                  <mat-icon inline class="decline-flag" [matTooltip]="'Declined: ' + f.declineReason">block</mat-icon>
+                }
               </td>
             </ng-container>
 
@@ -129,11 +149,25 @@ const NO_FLAT_OPTION_VALUE = 0;
           </table>
         </app-data-table>
       } @else {
+        @if (contributionsSum(); as sum) {
+          <div class="sum-banner">
+            <mat-icon inline>calculate</mat-icon>
+            <span>{{ totalCount() }} contribution(s) · Total ₹{{ sum | number }}</span>
+          </div>
+        }
         <app-data-table
           [loading]="loading()" [totalCount]="totalCount()" [pageSize]="pageSize()" [pageIndex]="pageIndex()"
           searchPlaceholder="Search donor or receipt no..." emptyTitle="No contributions yet"
           emptyMessage="Record the first contribution to this festival."
           (page)="onPage($event)" (search)="onSearch($event)">
+          <div toolbar>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="status-filter">
+              <mat-select [(ngModel)]="paymentMethodFilter" (ngModelChange)="onPaymentMethodFilterChange()" placeholder="All payment modes">
+                <mat-option [value]="null">All payment modes</mat-option>
+                @for (opt of paymentMethodOptions; track opt.value) { <mat-option [value]="opt.value">{{ opt.label }}</mat-option> }
+              </mat-select>
+            </mat-form-field>
+          </div>
           <table mat-table [dataSource]="contributions()" matSort (matSortChange)="onSort($event)" table>
             <ng-container matColumnDef="donor">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Donor</th>
@@ -183,6 +217,7 @@ const NO_FLAT_OPTION_VALUE = 0;
     .toolbar .actions { display: flex; gap: 8px; }
     .bulk-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 10px 14px; background: var(--app-primary-light); border-radius: 8px; }
     .bulk-toolbar span { font-size: 13px; font-weight: 600; color: var(--app-primary); }
+    .sum-banner { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 10px 14px; background: var(--app-surface-alt); border-radius: 8px; font-size: 13px; font-weight: 600; }
     .status-filter { width: 180px; }
     div[toolbar] { display: flex; align-items: center; gap: 12px; }
     .muted { color: var(--app-text-muted); font-size: 12px; }
@@ -192,6 +227,7 @@ const NO_FLAT_OPTION_VALUE = 0;
     .status-1 { background: #fef2f2 !important; color: #b91c1c !important; }
     .status-2 { background: #fffbeb !important; color: #b45309 !important; }
     .status-3 { background: #ecfdf5 !important; color: #15803d !important; }
+    .decline-flag { color: #b91c1c; margin-left: 6px; vertical-align: middle; }
   `]
 })
 export class FestivalContributionTabComponent implements OnInit {
@@ -218,16 +254,17 @@ export class FestivalContributionTabComponent implements OnInit {
   readonly bulkMarkingPaid = signal(false);
   get flatColumns(): string[] {
     return this.canContribute()
-      ? ['select', 'flat', 'target', 'paid', 'outstanding', 'status']
-      : ['flat', 'target', 'paid', 'outstanding', 'status'];
+      ? ['select', 'flat', 'target', 'paid', 'outstanding', 'method', 'status']
+      : ['flat', 'target', 'paid', 'outstanding', 'method', 'status'];
   }
-  statusFilter: FlatContributionStatus | null = null;
+  statusFilter: FlatContributionStatus[] = [];
   readonly statusOptions = [
     { value: 1 as FlatContributionStatus, label: 'Pending' },
     { value: 2 as FlatContributionStatus, label: 'Partially Paid' },
     { value: 3 as FlatContributionStatus, label: 'Paid' },
     { value: 0 as FlatContributionStatus, label: 'No Target' }
   ];
+  readonly flatsSum = signal<FlatContributionsSumDto | null>(null);
 
   // "All Contributions" view state
   readonly loading = signal(true);
@@ -238,6 +275,13 @@ export class FestivalContributionTabComponent implements OnInit {
   readonly searchTerm = signal('');
   readonly sortState = signal<Sort | null>(null);
   readonly displayedColumns = ['donor', 'flat', 'amount', 'method', 'date', 'receipt'];
+  paymentMethodFilter: number | null = null;
+  readonly paymentMethodOptions = [
+    { value: 1, label: 'Cash' },
+    { value: 2, label: 'UPI' },
+    { value: 3, label: 'Bank Transfer' }
+  ];
+  readonly contributionsSum = signal<number | null>(null);
 
   private flatOptions: { value: number; label: string }[] = [];
 
@@ -265,7 +309,8 @@ export class FestivalContributionTabComponent implements OnInit {
     this.flatSelection.clear();
     const sort = this.flatsSortState();
     this.festivalService.getFlatContributions({
-      festivalId: this.festivalId(), search: this.flatsSearchTerm() || undefined, status: this.statusFilter ?? undefined,
+      festivalId: this.festivalId(), search: this.flatsSearchTerm() || undefined,
+      statuses: this.statusFilter.length > 0 ? this.statusFilter : undefined,
       sortBy: sort?.direction ? sort.active : undefined, sortDescending: sort?.direction === 'desc',
       pageNumber: this.flatsPageIndex() + 1, pageSize: this.flatsPageSize()
     }).subscribe((result) => {
@@ -273,6 +318,14 @@ export class FestivalContributionTabComponent implements OnInit {
       this.flatsTotalCount.set(result.totalCount);
       this.flatsLoading.set(false);
     });
+    this.loadFlatsSum();
+  }
+
+  loadFlatsSum(): void {
+    this.festivalService.getFlatContributionsSum({
+      festivalId: this.festivalId(), search: this.flatsSearchTerm() || undefined,
+      statuses: this.statusFilter.length > 0 ? this.statusFilter : undefined
+    }).subscribe((sum) => this.flatsSum.set(sum));
   }
 
   private payableFlats(): FlatContributionDto[] {
@@ -408,7 +461,7 @@ export class FestivalContributionTabComponent implements OnInit {
     this.loading.set(true);
     const sort = this.sortState();
     this.festivalService.getContributions({
-      festivalId: this.festivalId(), search: this.searchTerm() || undefined,
+      festivalId: this.festivalId(), search: this.searchTerm() || undefined, paymentMethod: this.paymentMethodFilter ?? undefined,
       sortBy: sort?.direction ? sort.active : undefined, sortDescending: sort?.direction === 'desc',
       pageNumber: this.pageIndex() + 1, pageSize: this.pageSize()
     }).subscribe((result) => {
@@ -416,6 +469,18 @@ export class FestivalContributionTabComponent implements OnInit {
       this.totalCount.set(result.totalCount);
       this.loading.set(false);
     });
+    this.loadContributionsSum();
+  }
+
+  loadContributionsSum(): void {
+    this.festivalService.getContributionsSum({
+      festivalId: this.festivalId(), search: this.searchTerm() || undefined, paymentMethod: this.paymentMethodFilter ?? undefined
+    }).subscribe((sum) => this.contributionsSum.set(sum));
+  }
+
+  onPaymentMethodFilterChange(): void {
+    this.pageIndex.set(0);
+    this.load();
   }
 
   onPage(event: PageEvent): void {

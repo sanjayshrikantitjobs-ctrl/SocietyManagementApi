@@ -81,6 +81,14 @@ public class UpdateContributionCommandValidator : AbstractValidator<UpdateContri
     }
 }
 
+/// <summary>Removes a wrongly-recorded contribution entirely (e.g. a test
+/// entry, or one logged against the wrong flat) — as opposed to
+/// UpdateContributionCommand, which corrects one still meant to stand. Since
+/// FlatContributionStatus/PaidAmount are computed live from the sum of
+/// non-deleted contributions, deleting one is all "reverting" a payment
+/// requires — no separate status field to flip back.</summary>
+public record DeleteContributionCommand(int Id) : IRequest<Unit>;
+
 public record ResendContributionReceiptCommand(int ContributionId, string? WhatsAppNumber) : IRequest<Unit>;
 
 public class ResendContributionReceiptCommandValidator : AbstractValidator<ResendContributionReceiptCommand>
@@ -96,6 +104,7 @@ public class ResendContributionReceiptCommandValidator : AbstractValidator<Resen
 public class ContributionCommandHandlers :
     IRequestHandler<CreateContributionCommand, int>,
     IRequestHandler<UpdateContributionCommand, Unit>,
+    IRequestHandler<DeleteContributionCommand, Unit>,
     IRequestHandler<ResendContributionReceiptCommand, Unit>
 {
     private readonly IApplicationDbContext _context;
@@ -178,6 +187,18 @@ public class ContributionCommandHandlers :
 
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditAction.Update, "Festivals", nameof(FestivalContribution), contribution.Id.ToString(), ct: ct);
+        return Unit.Value;
+    }
+
+    public async Task<Unit> Handle(DeleteContributionCommand request, CancellationToken ct)
+    {
+        var contribution = await _context.FestivalContributions
+            .FirstOrDefaultAsync(c => c.Id == request.Id && !c.IsDeleted, ct)
+            ?? throw new NotFoundException(nameof(FestivalContribution), request.Id);
+
+        contribution.IsDeleted = true;
+        await _context.SaveChangesAsync(ct);
+        await _auditService.LogAsync(AuditAction.Delete, "Festivals", nameof(FestivalContribution), contribution.Id.ToString(), ct: ct);
         return Unit.Value;
     }
 
@@ -287,6 +308,12 @@ public record GetContributionsQuery(
     string? SortBy = null, bool SortDescending = false,
     int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<FestivalContributionDto>>;
 
+/// <summary>The "sum after filters" companion to GetContributionsQuery —
+/// same Search/PaymentMethod/FlatId filter, aggregated over every matching
+/// row rather than just the current page.</summary>
+public record GetContributionsSumQuery(int FestivalId, int? FlatId, string? Search, ContributionPaymentMethod? PaymentMethod)
+    : IRequest<decimal>;
+
 public record GetTopContributorsQuery(int FestivalId, int Top = 10) : IRequest<List<TopContributorDto>>;
 
 public record GetPendingContributorsQuery(int FestivalId) : IRequest<List<PendingContributorDto>>;
@@ -295,6 +322,7 @@ public record GetContributionReceiptPdfQuery(int Id) : IRequest<byte[]>;
 
 public class ContributionQueryHandlers :
     IRequestHandler<GetContributionsQuery, PaginatedResult<FestivalContributionDto>>,
+    IRequestHandler<GetContributionsSumQuery, decimal>,
     IRequestHandler<GetTopContributorsQuery, List<TopContributorDto>>,
     IRequestHandler<GetPendingContributorsQuery, List<PendingContributorDto>>,
     IRequestHandler<GetContributionReceiptPdfQuery, byte[]>
@@ -308,19 +336,28 @@ public class ContributionQueryHandlers :
         _pdfReceiptService = pdfReceiptService;
     }
 
-    public async Task<PaginatedResult<FestivalContributionDto>> Handle(GetContributionsQuery request, CancellationToken ct)
+    /// <summary>Shared by GetContributionsQuery and its "sum" companion so
+    /// the two can never disagree about which rows match a given filter.</summary>
+    private IQueryable<FestivalContribution> ApplyFilters(int festivalId, int? flatId, string? search, ContributionPaymentMethod? paymentMethod)
     {
-        var query = _context.FestivalContributions.Where(c => c.FestivalId == request.FestivalId);
+        var query = _context.FestivalContributions.Where(c => c.FestivalId == festivalId);
 
-        if (request.FlatId.HasValue) query = query.Where(c => c.FlatId == request.FlatId);
+        if (flatId.HasValue) query = query.Where(c => c.FlatId == flatId);
 
-        if (!string.IsNullOrWhiteSpace(request.Search))
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            var term = request.Search.Trim().ToLower();
+            var term = search.Trim().ToLower();
             query = query.Where(c => c.MemberName.ToLower().Contains(term) || c.ReceiptNumber.ToLower().Contains(term));
         }
 
-        if (request.PaymentMethod.HasValue) query = query.Where(c => c.PaymentMethod == request.PaymentMethod);
+        if (paymentMethod.HasValue) query = query.Where(c => c.PaymentMethod == paymentMethod);
+
+        return query;
+    }
+
+    public async Task<PaginatedResult<FestivalContributionDto>> Handle(GetContributionsQuery request, CancellationToken ct)
+    {
+        var query = ApplyFilters(request.FestivalId, request.FlatId, request.Search, request.PaymentMethod);
 
         var totalCount = await query.CountAsync(ct);
         var pageSize = Math.Clamp(request.PageSize, 1, AppConstants.MaxPageSize);
@@ -365,6 +402,9 @@ public class ContributionQueryHandlers :
 
         return new PaginatedResult<FestivalContributionDto>(items, totalCount, pageNumber, pageSize);
     }
+
+    public async Task<decimal> Handle(GetContributionsSumQuery request, CancellationToken ct) =>
+        await ApplyFilters(request.FestivalId, request.FlatId, request.Search, request.PaymentMethod).SumAsync(c => c.Amount, ct);
 
     public async Task<List<TopContributorDto>> Handle(GetTopContributorsQuery request, CancellationToken ct) =>
         await _context.FestivalContributions

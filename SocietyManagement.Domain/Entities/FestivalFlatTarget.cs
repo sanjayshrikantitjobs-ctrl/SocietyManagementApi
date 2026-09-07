@@ -15,4 +15,11 @@ public class FestivalFlatTarget : BaseAuditableEntity
     public Flat Flat { get; set; } = default!;
 
     public decimal TargetAmount { get; set; }
+
+    /// <summary>Non-null when this flat has told the society it won't be
+    /// contributing — a memo, not a status: the flat's computed
+    /// FlatContributionStatus (Pending/PartiallyPaid/Paid) is unaffected, so
+    /// they can still pay later without anyone having to "undeclare" this
+    /// first.</summary>
+    public string? DeclineReason { get; set; }
 }

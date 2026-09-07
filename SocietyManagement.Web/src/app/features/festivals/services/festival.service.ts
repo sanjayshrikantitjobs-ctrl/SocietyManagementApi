@@ -9,14 +9,17 @@ import {
   DistributionClaimStatus, Festival, FestivalBudgetCategoryDto, FestivalBudgetRevisionDto, FestivalContributionDto,
   FestivalDashboardDto, FestivalDistributionDetailDto, FestivalDistributionDto, FestivalDistributionVariantDto,
   FestivalExpenseDto, FestivalSponsorDto, FestivalTaskDto, FestivalVendorDto, FestivalVolunteerDto,
-  FlatContributionDto, FlatContributionKpisDto, FlatContributionStatus, FlatMemberOptionDto, PendingContributorDto,
+  FlatContributionDto, FlatContributionKpisDto, FlatContributionStatus, FlatContributionsSumDto, FlatMemberOptionDto, PendingContributorDto,
   PoolSummaryDto, TopContributorDto
 } from '../models/festival.model';
 
 function toHttpParams(params: Record<string, unknown>): HttpParams {
   let httpParams = new HttpParams();
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
+    if (value === undefined || value === null || value === '') return;
+    if (Array.isArray(value)) {
+      value.forEach((item) => { httpParams = httpParams.append(key, String(item)); });
+    } else {
       httpParams = httpParams.set(key, String(value));
     }
   });
@@ -81,6 +84,10 @@ export class FestivalService {
     return this.http.get<ApiResponse<PaginatedResult<FestivalContributionDto>>>(`${this.baseUrl}/festival-contributions`, { params: toHttpParams(params) })
       .pipe(map((r) => r.data!));
   }
+  getContributionsSum(params: { festivalId: number; flatId?: number; search?: string; paymentMethod?: number }): Observable<number> {
+    return this.http.get<ApiResponse<number>>(`${this.baseUrl}/festival-contributions/sum`, { params: toHttpParams(params) })
+      .pipe(map((r) => r.data!));
+  }
   updateContribution(id: number, payload: Record<string, unknown>): Observable<void> {
     return this.http.put<ApiResponse<void>>(`${this.baseUrl}/festival-contributions/${id}`, { id, ...payload }).pipe(map(() => void 0));
   }
@@ -95,6 +102,9 @@ export class FestivalService {
   createContribution(payload: Record<string, unknown>): Observable<number> {
     return this.http.post<ApiResponse<number>>(`${this.baseUrl}/festival-contributions`, payload).pipe(map((r) => r.data!));
   }
+  deleteContribution(id: number): Observable<void> {
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/festival-contributions/${id}`).pipe(map(() => void 0));
+  }
   downloadReceipt(id: number): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/festival-contributions/${id}/receipt`, { responseType: 'blob' });
   }
@@ -103,10 +113,14 @@ export class FestivalService {
       .pipe(map(() => void 0));
   }
   getFlatContributions(params: {
-    festivalId: number; search?: string; status?: FlatContributionStatus; sortBy?: string; sortDescending?: boolean;
+    festivalId: number; search?: string; statuses?: FlatContributionStatus[]; sortBy?: string; sortDescending?: boolean;
     pageNumber?: number; pageSize?: number;
   }): Observable<PaginatedResult<FlatContributionDto>> {
     return this.http.get<ApiResponse<PaginatedResult<FlatContributionDto>>>(`${this.baseUrl}/festival-contributions/flat-summary`, { params: toHttpParams(params) })
+      .pipe(map((r) => r.data!));
+  }
+  getFlatContributionsSum(params: { festivalId: number; search?: string; statuses?: FlatContributionStatus[] }): Observable<FlatContributionsSumDto> {
+    return this.http.get<ApiResponse<FlatContributionsSumDto>>(`${this.baseUrl}/festival-contributions/flat-summary/sum`, { params: toHttpParams(params) })
       .pipe(map((r) => r.data!));
   }
   getFlatContributionKpis(festivalId: number): Observable<FlatContributionKpisDto> {
@@ -123,6 +137,10 @@ export class FestivalService {
   }
   updateFlatContributionTarget(festivalId: number, flatId: number, targetAmount: number): Observable<void> {
     return this.http.put<ApiResponse<void>>(`${this.baseUrl}/festival-contributions/targets`, { festivalId, flatId, targetAmount })
+      .pipe(map(() => void 0));
+  }
+  setFlatDeclineReason(festivalId: number, flatId: number, reason: string | null): Observable<void> {
+    return this.http.put<ApiResponse<void>>(`${this.baseUrl}/festival-contributions/decline-reason`, { festivalId, flatId, reason })
       .pipe(map(() => void 0));
   }
 

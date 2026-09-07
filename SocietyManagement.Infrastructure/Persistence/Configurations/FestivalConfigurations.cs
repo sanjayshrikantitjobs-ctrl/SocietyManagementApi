@@ -108,6 +108,7 @@ public class FestivalFlatTargetConfiguration : IEntityTypeConfiguration<Festival
         builder.ToTable("FestivalFlatTargets");
         builder.HasQueryFilter(t => !t.IsDeleted);
         builder.Property(t => t.TargetAmount).HasColumnType("decimal(12,2)");
+        builder.Property(t => t.DeclineReason).HasMaxLength(500);
         builder.HasIndex(t => new { t.FestivalId, t.FlatId }).IsUnique().HasFilter("[IsDeleted] = 0");
 
         builder.HasOne(t => t.Festival)

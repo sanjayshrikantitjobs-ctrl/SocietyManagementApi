@@ -16,10 +16,10 @@ public class MaintenanceBillsController : ApiControllerBase
     [HasPermission(Permissions.Maintenance.View)]
     [ProducesResponseType(typeof(ApiResponse<PaginatedResult<MaintenanceBillDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetBills(
-        [FromQuery] int societyId, [FromQuery] int? flatId, [FromQuery] BillStatus? status, [FromQuery] DateTime? billMonth,
+        [FromQuery] int societyId, [FromQuery] int? flatId, [FromQuery] List<BillStatus>? statuses, [FromQuery] DateTime? billMonth,
         [FromQuery] string? search = null, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
-        var result = await Mediator.Send(new GetBillsQuery(societyId, flatId, status, billMonth, search, pageNumber, pageSize));
+        var result = await Mediator.Send(new GetBillsQuery(societyId, flatId, statuses, billMonth, search, pageNumber, pageSize));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 

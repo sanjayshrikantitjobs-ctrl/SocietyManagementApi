@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { ToastService } from '../../../core/services/toast.service';
 import { PromptDialogComponent } from '../../../shared/components/prompt-dialog/prompt-dialog.component';
+import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.service';
 import { MatDialog } from '@angular/material/dialog';
 import {
   FLAT_CONTRIBUTION_STATUS_LABELS, FestivalContributionDto, FlatContributionDto, PAYMENT_METHOD_LABELS
@@ -58,6 +59,21 @@ export interface FlatContributionDetailDialogData {
         }
       </div>
 
+      @if (declineReason()) {
+        <div class="decline-banner">
+          <mat-icon inline>info</mat-icon>
+          <span>Declined to contribute: {{ declineReason() }}</span>
+          @if (data.canContribute) {
+            <button mat-button (click)="setDeclineReason()">Edit</button>
+            <button mat-button (click)="clearDeclineReason()">Clear</button>
+          }
+        </div>
+      } @else if (data.canContribute) {
+        <button mat-stroked-button class="decline-btn" (click)="setDeclineReason()">
+          <mat-icon>block</mat-icon> Mark as Declined to Pay
+        </button>
+      }
+
       <div class="history-header">
         <h3>Contribution History</h3>
         @if (data.canContribute) {
@@ -89,6 +105,7 @@ export interface FlatContributionDetailDialogData {
               <button mat-icon-button (click)="downloadReceipt(c)" matTooltip="Download PDF receipt"><mat-icon>download</mat-icon></button>
               @if (data.canContribute) {
                 <button mat-icon-button (click)="editContribution(c)" matTooltip="Edit"><mat-icon>edit</mat-icon></button>
+                <button mat-icon-button (click)="deleteContribution(c)" matTooltip="Remove (mark unpaid)"><mat-icon>delete</mat-icon></button>
               }
             </td>
           </ng-container>
@@ -107,6 +124,9 @@ export interface FlatContributionDetailDialogData {
     .target-row { display: flex; align-items: center; gap: 24px; padding: 12px 0; border-bottom: 1px solid var(--app-border); margin-bottom: 16px; }
     .target-row .label { display: block; font-size: 11px; color: var(--app-text-muted); }
     .target-row .value { font-weight: 600; }
+    .decline-banner { display: flex; align-items: center; gap: 8px; background: #fef2f2; color: #b91c1c; border-radius: 8px; padding: 8px 12px; margin-bottom: 16px; font-size: 13px; }
+    .decline-banner span { flex: 1; }
+    .decline-btn { margin-bottom: 16px; color: #b91c1c; }
     .history-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .history-header h3 { margin: 0; font-size: 14px; }
     .loading { display: flex; justify-content: center; padding: 24px; }
@@ -124,11 +144,13 @@ export class FlatContributionDetailDialogComponent implements OnInit {
   private readonly festivalService = inject(FestivalService);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
 
   readonly loading = signal(true);
   readonly history = signal<FestivalContributionDto[]>([]);
   readonly target = signal(0);
   readonly paid = signal(0);
+  readonly declineReason = signal<string | null>(null);
   readonly columns = ['date', 'amount', 'method', 'receipt'];
   // Widened to a numeric index signature — the row type from [dataSource]
   // doesn't narrow to the literal union in the template context.
@@ -140,6 +162,7 @@ export class FlatContributionDetailDialogComponent implements OnInit {
   ngOnInit(): void {
     this.target.set(this.data.flat.targetAmount);
     this.paid.set(this.data.flat.paidAmount);
+    this.declineReason.set(this.data.flat.declineReason ?? null);
     this.loadHistory();
   }
 
@@ -240,6 +263,48 @@ export class FlatContributionDetailDialogComponent implements OnInit {
         this.changed = true;
         this.loadHistory();
       });
+    });
+  }
+
+  deleteContribution(contribution: FestivalContributionDto): void {
+    this.confirmDialog.confirm({
+      title: 'Remove Contribution', destructive: true,
+      message: `Remove this ₹${contribution.amount} contribution? The flat's paid amount and status will update immediately.`
+    }).subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.festivalService.deleteContribution(contribution.id).subscribe(() => {
+        this.toast.success('Contribution removed.');
+        this.paid.set(this.paid() - contribution.amount);
+        this.changed = true;
+        this.loadHistory();
+      });
+    });
+  }
+
+  setDeclineReason(): void {
+    const ref = this.dialog.open(PromptDialogComponent, {
+      width: '420px',
+      data: {
+        title: 'Mark as Declined to Pay',
+        submitLabel: 'Save',
+        fields: [{ key: 'reason', label: 'Reason', type: 'textarea', defaultValue: this.declineReason() ?? '' }]
+      }
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (!result) return;
+      this.festivalService.setFlatDeclineReason(this.data.festivalId, this.data.flat.flatId, result.reason).subscribe(() => {
+        this.toast.success('Decline reason saved.');
+        this.declineReason.set(result.reason);
+        this.changed = true;
+      });
+    });
+  }
+
+  clearDeclineReason(): void {
+    this.festivalService.setFlatDeclineReason(this.data.festivalId, this.data.flat.flatId, null).subscribe(() => {
+      this.toast.success('Decline reason cleared.');
+      this.declineReason.set(null);
+      this.changed = true;
     });
   }
 

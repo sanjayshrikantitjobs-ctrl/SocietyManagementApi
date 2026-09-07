@@ -24,6 +24,16 @@ public class FestivalContributionsController : ApiControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
+    [HttpGet("sum")]
+    [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSum(
+        [FromQuery] int festivalId, [FromQuery] int? flatId, [FromQuery] string? search, [FromQuery] ContributionPaymentMethod? paymentMethod)
+    {
+        var result = await Mediator.Send(new GetContributionsSumQuery(festivalId, flatId, search, paymentMethod));
+        return Ok(ApiResponse<decimal>.SuccessResponse(result));
+    }
+
     [HttpGet("top-contributors")]
     [HasPermission(Permissions.Festivals.View)]
     [ProducesResponseType(typeof(ApiResponse<List<TopContributorDto>>), StatusCodes.Status200OK)]
@@ -70,6 +80,15 @@ public class FestivalContributionsController : ApiControllerBase
         return Ok(ApiResponse.SuccessResponse("Contribution updated."));
     }
 
+    [HttpDelete("{id:int}")]
+    [HasPermission(Permissions.Festivals.Contribute)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Delete(int id)
+    {
+        await Mediator.Send(new DeleteContributionCommand(id));
+        return Ok(ApiResponse.SuccessResponse("Contribution removed."));
+    }
+
     [HttpPost("{id:int}/resend-whatsapp")]
     [HasPermission(Permissions.Festivals.Contribute)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
@@ -83,11 +102,21 @@ public class FestivalContributionsController : ApiControllerBase
     [HasPermission(Permissions.Festivals.View)]
     [ProducesResponseType(typeof(ApiResponse<PaginatedResult<FlatContributionDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetFlatSummary(
-        [FromQuery] int festivalId, [FromQuery] string? search, [FromQuery] FlatContributionStatus? status,
+        [FromQuery] int festivalId, [FromQuery] string? search, [FromQuery] List<FlatContributionStatus>? statuses,
         [FromQuery] string? sortBy, [FromQuery] bool sortDescending = false,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
-        var result = await Mediator.Send(new GetFlatContributionsQuery(festivalId, search, status, sortBy, sortDescending, pageNumber, pageSize));
+        var result = await Mediator.Send(new GetFlatContributionsQuery(festivalId, search, statuses, sortBy, sortDescending, pageNumber, pageSize));
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpGet("flat-summary/sum")]
+    [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(ApiResponse<FlatContributionsSumDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetFlatSummarySum(
+        [FromQuery] int festivalId, [FromQuery] string? search, [FromQuery] List<FlatContributionStatus>? statuses)
+    {
+        var result = await Mediator.Send(new GetFlatContributionsSumQuery(festivalId, search, statuses));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
@@ -125,6 +154,15 @@ public class FestivalContributionsController : ApiControllerBase
     {
         await Mediator.Send(command);
         return Ok(ApiResponse.SuccessResponse("Target updated."));
+    }
+
+    [HttpPut("decline-reason")]
+    [HasPermission(Permissions.Festivals.Contribute)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> SetDeclineReason(SetFlatDeclineReasonCommand command)
+    {
+        await Mediator.Send(command);
+        return Ok(ApiResponse.SuccessResponse(string.IsNullOrWhiteSpace(command.Reason) ? "Decline reason cleared." : "Decline reason saved."));
     }
 }
 

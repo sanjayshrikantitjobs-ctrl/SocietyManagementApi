@@ -34,7 +34,7 @@
 		<NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
 
 		<!-- Display name -->
-		<ApplicationTitle>Society Management</ApplicationTitle>
+		<ApplicationTitle>Apna Society Board</ApplicationTitle>
 
 		<!-- App Identifier -->
 		<ApplicationId>com.shrios.societymanagement</ApplicationId>
@@ -54,11 +54,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- App Icon — Shrios "S" mark, cropped from the full brand lockup -->
-		<MauiIcon Include="Resources\AppIcon\shrios_icon.png" Color="#FFFFFF" />
+		<!-- App Icon — Apna Society Board mark -->
+		<MauiIcon Include="Resources\AppIcon\app_icon.png" Color="#FFFFFF" />
 
 		<!-- Splash Screen -->
-		<MauiSplashScreen Include="Resources\Splash\shrios_splash.png" Color="#4f6ef7" BaseSize="228,228" />
+		<MauiSplashScreen Include="Resources\Splash\app_splash.png" Color="#4f6ef7" BaseSize="228,228" />
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />

@@ -138,6 +138,8 @@ export interface FlatContributionDto {
   paidAmount: number;
   outstandingAmount: number;
   status: FlatContributionStatus;
+  declineReason?: string | null;
+  lastPaymentMethod?: ContributionPaymentMethod | null;
 }
 
 export interface FlatContributionKpisDto {
@@ -149,6 +151,13 @@ export interface FlatContributionKpisDto {
   flatsPartiallyPaidCount: number;
   flatsPendingCount: number;
   flatsNoTargetCount: number;
+}
+
+export interface FlatContributionsSumDto {
+  flatCount: number;
+  totalTargetAmount: number;
+  totalPaidAmount: number;
+  totalOutstandingAmount: number;
 }
 
 export interface FestivalSponsorDto {

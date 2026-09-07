@@ -10,11 +10,11 @@
       @if (currentSociety.society()?.logoUrl) {
         <img class="brand-logo" [src]="currentSociety.society()!.logoUrl | assetUrl" alt="" />
       } @else {
-        <mat-icon>apartment</mat-icon>
+        <img class="brand-logo" src="/branding/logo-icon.png" alt="Apna Society Board" />
       }
       @if (showLabels()) {
         <div class="brand-text">
-          <span class="brand-name">{{ currentSociety.society()?.name ?? 'Society Mgmt' }}</span>
+          <span class="brand-name">{{ currentSociety.society()?.name ?? 'Apna Society Board' }}</span>
           @if (currentSociety.society(); as s) {
             <span class="brand-address">{{ s.city }}, {{ s.state }}</span>
           }

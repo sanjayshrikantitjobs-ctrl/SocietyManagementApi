@@ -49,8 +49,7 @@ import { MaintenanceService } from '../services/maintenance.service';
           </mat-form-field>
           <mat-form-field appearance="outline" subscriptSizing="dynamic" class="status-select">
             <mat-label>Status</mat-label>
-            <mat-select [value]="statusFilter()" (selectionChange)="onStatusFilterChange($event.value)">
-              <mat-option [value]="null">All</mat-option>
+            <mat-select multiple [value]="statusFilter()" (selectionChange)="onStatusFilterChange($event.value)">
               @for (s of statusOptions; track s.value) { <mat-option [value]="s.value">{{ s.label }}</mat-option> }
             </mat-select>
           </mat-form-field>
@@ -205,7 +204,7 @@ export class MaintenanceBillsListComponent implements OnInit {
   readonly totalCount = signal(0);
   readonly pageIndex = signal(0);
   readonly pageSize = signal(10);
-  readonly statusFilter = signal<BillStatus | null>(null);
+  readonly statusFilter = signal<BillStatus[]>([]);
   readonly monthFilterDate = signal<Date | null>(new Date());
   readonly displayedColumns = ['select', 'flat', 'occupant', 'invoice', 'total', 'balance', 'dueDate', 'status', 'actions'];
   readonly statusLabels: Record<number, string> = BILL_STATUS_LABELS;
@@ -233,8 +232,8 @@ export class MaintenanceBillsListComponent implements OnInit {
     this.loading.set(true);
     this.selection.clear();
     this.maintenanceService.getBills({
-      societyId: this.societyId, status: this.statusFilter() ?? undefined, billMonth: this.monthFilterAsString(),
-      pageNumber: this.pageIndex() + 1, pageSize: this.pageSize()
+      societyId: this.societyId, statuses: this.statusFilter().length > 0 ? this.statusFilter() : undefined,
+      billMonth: this.monthFilterAsString(), pageNumber: this.pageIndex() + 1, pageSize: this.pageSize()
     }).subscribe((result) => {
       this.bills.set(result.items);
       this.totalCount.set(result.totalCount);
@@ -329,8 +328,8 @@ export class MaintenanceBillsListComponent implements OnInit {
     this.load();
   }
 
-  onStatusFilterChange(status: BillStatus | null): void {
-    this.statusFilter.set(status);
+  onStatusFilterChange(statuses: BillStatus[]): void {
+    this.statusFilter.set(statuses);
     this.pageIndex.set(0);
     this.load();
   }

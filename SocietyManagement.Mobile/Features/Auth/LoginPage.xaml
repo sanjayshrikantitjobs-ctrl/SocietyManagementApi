@@ -10,13 +10,9 @@
     <ScrollView>
         <VerticalStackLayout Padding="32,64,32,32" Spacing="20" MaximumWidthRequest="420" HorizontalOptions="Center">
 
-            <Image Source="shrios_logo.png" HeightRequest="72" Aspect="AspectFit" HorizontalOptions="Center" />
-
-            <Label Text="Society Management"
-                   FontSize="26"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+            <Border BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="16,12" HorizontalOptions="Center">
+                <Image Source="app_logo_full.png" HeightRequest="70" Aspect="AspectFit" />
+            </Border>
 
             <Label Text="Sign in to your account"
                    FontSize="14"

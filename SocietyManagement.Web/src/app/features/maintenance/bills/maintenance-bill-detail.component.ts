@@ -94,8 +94,12 @@ import { MaintenanceService } from '../services/maintenance.service';
               <th mat-header-cell *matHeaderCellDef>Reference</th>
               <td mat-cell *matCellDef="let p">{{ p.transactionReference || '—' }}</td>
             </ng-container>
-            <tr mat-header-row *matHeaderRowDef="['date', 'amount', 'mode', 'reference']"></tr>
-            <tr mat-row *matRowDef="let row; columns: ['date', 'amount', 'mode', 'reference'];"></tr>
+            <ng-container matColumnDef="notes">
+              <th mat-header-cell *matHeaderCellDef>Notes</th>
+              <td mat-cell *matCellDef="let p">{{ p.notes || '—' }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="['date', 'amount', 'mode', 'reference', 'notes']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['date', 'amount', 'mode', 'reference', 'notes'];"></tr>
           </table>
         }
       </div>

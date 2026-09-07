@@ -92,7 +92,7 @@ export class MaintenanceService {
 
   // ---- Bills ---------------------------------------------------------------------
   getBills(params: {
-    societyId: number; flatId?: number; status?: number; billMonth?: string; pageNumber?: number; pageSize?: number;
+    societyId: number; flatId?: number; statuses?: number[]; billMonth?: string; pageNumber?: number; pageSize?: number;
   }): Observable<PaginatedResult<MaintenanceBillDto>> {
     return this.http.get<ApiResponse<PaginatedResult<MaintenanceBillDto>>>(`${this.baseUrl}/maintenance/bills`, { params: toHttpParams(params) })
       .pipe(map((r) => r.data!));

@@ -61,6 +61,7 @@ public static class ApiClientsRegistration
         services.AddHttpClientWithAuth<FestivalBudgetCategoriesClient>();
         services.AddHttpClientWithAuth<FestivalContributionsClient>();
         services.AddHttpClientWithAuth<FestivalDashboardClient>();
+        services.AddHttpClientWithAuth<FestivalDistributionsClient>();
         services.AddHttpClientWithAuth<FestivalExpensesClient>();
         services.AddHttpClientWithAuth<FestivalSponsorsClient>();
         services.AddHttpClientWithAuth<FestivalTasksClient>();

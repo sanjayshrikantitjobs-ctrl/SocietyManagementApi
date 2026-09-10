@@ -53,6 +53,16 @@ public partial class ContributionFormViewModel : ObservableObject
     public bool ShowLockedFlat => !IsEditMode && LockedFlatId is not null;
     public bool ShowWhatsApp => !IsEditMode;
 
+    /// <summary>Set via ApplyQueryAttributes when opened from a specific
+    /// flat's detail page — must re-notify ShowFlatPicker/ShowLockedFlat
+    /// (both computed off this) since they were already bound, at their
+    /// construction-time values, before this property changed.</summary>
+    partial void OnLockedFlatIdChanged(int? value)
+    {
+        OnPropertyChanged(nameof(ShowFlatPicker));
+        OnPropertyChanged(nameof(ShowLockedFlat));
+    }
+
     async partial void OnFestivalIdChanged(int value)
     {
         if (ShowFlatPicker) await LoadFlatsAsync();

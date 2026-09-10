@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:visitors="clr-namespace:SocietyManagement.Mobile.Features.Visitors"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Visitors.VisitorHistoryPage"
+             x:Name="RootPage"
+             x:DataType="visitors:VisitorHistoryViewModel"
+             Title="Visitor History">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+
+        <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,8">
+            <SearchBar Placeholder="Search visitor, mobile or flat..." Text="{Binding Search}" SearchCommand="{Binding LoadCommand}" />
+        </Border>
+
+        <Grid Grid.Row="1" Padding="12,0,12,4" ColumnDefinitions="*,*" ColumnSpacing="8">
+            <Border Style="{StaticResource FieldFrame}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <DatePicker Format="MMM d, yyyy" Date="{Binding FromDate}" FontSize="13" />
+                    <Button Grid.Column="1" Text="✕" Style="{StaticResource TextButton}" FontSize="12" Padding="4"
+                            IsVisible="{Binding HasFromDate}" Command="{Binding ClearFromDateCommand}" />
+                </Grid>
+            </Border>
+            <Border Grid.Column="1" Style="{StaticResource FieldFrame}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <DatePicker Format="MMM d, yyyy" Date="{Binding ToDate}" FontSize="13" />
+                    <Button Grid.Column="1" Text="✕" Style="{StaticResource TextButton}" FontSize="12" Padding="4"
+                            IsVisible="{Binding HasToDate}" Command="{Binding ClearToDateCommand}" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Label Grid.Row="2" Style="{StaticResource ErrorText}" Margin="16,0,16,8" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+        <RefreshView Grid.Row="3" Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+            <CollectionView ItemsSource="{Binding Visits}">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="32" VerticalOptions="Center">
+                        <Label Style="{StaticResource Muted}" Text="No visitors match the current filters." HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:VisitorVisitDto">
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.OpenDetailCommand}" CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <Border Grid.Column="0" Style="{StaticResource Avatar}" WidthRequest="56" HeightRequest="56"
+                                        IsVisible="{Binding VisitorPhotoUrl, Converter={StaticResource StringToBoolConverter}}">
+                                    <Image Source="{Binding VisitorPhotoUrl, Converter={StaticResource AssetUrlConverter}}" Aspect="AspectFill" />
+                                </Border>
+                                <Border Grid.Column="0" Style="{StaticResource Avatar}" WidthRequest="56" HeightRequest="56"
+                                        IsVisible="{Binding VisitorPhotoUrl, Converter={StaticResource StringIsNullOrEmptyConverter}}">
+                                    <Label Text="👤" FontSize="22" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                    <Label Text="{Binding VisitorName}" FontAttributes="Bold" FontSize="14" />
+                                    <Label Text="{Binding FlatNumber, StringFormat='Flat {0}'}" Style="{StaticResource Muted}" FontSize="12" />
+                                    <Label Text="{Binding PurposeName}" Style="{StaticResource Muted}" FontSize="12" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="2" Spacing="4" HorizontalOptions="End">
+                                    <Border Style="{StaticResource chipInfo}">
+                                        <Label Text="{Binding Status}" Style="{StaticResource chipTextInfo}" FontSize="11" />
+                                    </Border>
+                                    <Label Text="{Binding RequestedAt, StringFormat='{0:MMM d, h:mm tt}'}" Style="{StaticResource Muted}" FontSize="11" HorizontalOptions="End" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+
+</ContentPage>

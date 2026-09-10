@@ -100,6 +100,13 @@
                         </DataTrigger>
                     </Button.Triggers>
                 </Button>
+                <Button Text="🎁 Distributions" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Distributions" IsVisible="{Binding ShowStandardTabs}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Distributions">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
             </HorizontalStackLayout>
         </ScrollView>
 
@@ -508,6 +515,57 @@
                                 <Label Grid.Row="1" Grid.Column="1" Text="{Binding DueDate, StringFormat='Due {0:MMM d}'}" Style="{StaticResource Muted}" HorizontalOptions="End"
                                        IsVisible="{Binding DueDate, Converter={StaticResource IsNotNullConverter}}" />
                             </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Distributions panel -->
+        <Grid Grid.Row="4" RowDefinitions="Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Distributions}">
+            <Button Grid.Row="0" Margin="16,10" Text="Add Distribution" Command="{Binding AddDistributionCommand}" HorizontalOptions="Start" FontSize="12" />
+            <CollectionView Grid.Row="1" ItemsSource="{Binding Distributions}">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="32" VerticalOptions="Center">
+                        <Label Style="{StaticResource Muted}" Text="No distributions yet. Set up a giveaway — Kurta, T-shirt, gift, prasad, coupon — for flats that qualify."
+                               HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FestivalDistributionDto">
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenDistributionCommand}" CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="8">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="{Binding ItemName, StringFormat='🎁 {0}'}" FontAttributes="Bold" FontSize="15" />
+                                    <Border Grid.Column="1" Style="{StaticResource chipInfo}" HorizontalOptions="End">
+                                        <Label Text="{Binding Status}" Style="{StaticResource chipTextInfo}" />
+                                    </Border>
+                                </Grid>
+                                <Label Text="{Binding Description}" Style="{StaticResource Muted}" FontSize="12"
+                                       IsVisible="{Binding Description, Converter={StaticResource StringToBoolConverter}}" />
+                                <Grid ColumnDefinitions="*,*,*,*">
+                                    <VerticalStackLayout>
+                                        <Label Text="{Binding EligibleFlatsCount}" FontAttributes="Bold" FontSize="16" HorizontalOptions="Center" />
+                                        <Label Text="Eligible Flats" Style="{StaticResource kpiLabel}" FontSize="9" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1">
+                                        <Label Text="{Binding TotalQuantity}" FontAttributes="Bold" FontSize="16" HorizontalOptions="Center" />
+                                        <Label Text="Total Qty" Style="{StaticResource kpiLabel}" FontSize="9" HorizontalOptions="Center" />
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="2">
+                                        <Label Text="{Binding PendingCount}" FontAttributes="Bold" FontSize="16" HorizontalOptions="Center" TextColor="{StaticResource Warning}" />
+                                        <Label Text="Pending" Style="{StaticResource kpiLabel}" FontSize="9" HorizontalOptions="Center" />
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="3">
+                                        <Label Text="{Binding DistributedCount}" FontAttributes="Bold" FontSize="16" HorizontalOptions="Center" TextColor="{StaticResource Success}" />
+                                        <Label Text="Distributed" Style="{StaticResource kpiLabel}" FontSize="9" HorizontalOptions="Center" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </VerticalStackLayout>
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

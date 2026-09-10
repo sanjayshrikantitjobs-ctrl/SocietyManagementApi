@@ -30,12 +30,14 @@ public partial class FestivalDetailViewModel : ObservableObject
     private readonly FestivalVendorsClient _vendorsClient;
     private readonly FestivalVolunteersClient _volunteersClient;
     private readonly FestivalTasksClient _tasksClient;
+    private readonly FestivalDistributionsClient _distributionsClient;
 
     public FestivalDetailViewModel(
         FestivalsClient festivalsClient, FestivalDashboardClient dashboardClient,
         FestivalBudgetCategoriesClient budgetClient, FestivalContributionsClient contributionsClient,
         FestivalSponsorsClient sponsorsClient, FestivalExpensesClient expensesClient,
-        FestivalVendorsClient vendorsClient, FestivalVolunteersClient volunteersClient, FestivalTasksClient tasksClient)
+        FestivalVendorsClient vendorsClient, FestivalVolunteersClient volunteersClient, FestivalTasksClient tasksClient,
+        FestivalDistributionsClient distributionsClient)
     {
         _festivalsClient = festivalsClient;
         _dashboardClient = dashboardClient;
@@ -46,6 +48,7 @@ public partial class FestivalDetailViewModel : ObservableObject
         _vendorsClient = vendorsClient;
         _volunteersClient = volunteersClient;
         _tasksClient = tasksClient;
+        _distributionsClient = distributionsClient;
     }
 
     [ObservableProperty] private int festivalId;
@@ -203,6 +206,7 @@ public partial class FestivalDetailViewModel : ObservableObject
             case "Vendors": await LoadVendorsAsync(); break;
             case "Volunteers": await LoadVolunteersAsync(); break;
             case "Tasks": await LoadTasksAsync(); break;
+            case "Distributions": await LoadDistributionsAsync(); break;
         }
     }
 
@@ -335,6 +339,43 @@ public partial class FestivalDetailViewModel : ObservableObject
                 }
                 break;
         }
+    }
+
+    // ==================== Distributions ====================
+
+    [ObservableProperty] private ObservableCollection<FestivalDistributionDto> distributions = new();
+
+    [RelayCommand]
+    private async Task LoadDistributionsAsync()
+    {
+        IsBusy = true;
+        ErrorMessage = null;
+        try
+        {
+            var response = await _distributionsClient.FestivalDistributionsGETAsync(FestivalId);
+            Distributions = new ObservableCollection<FestivalDistributionDto>(response.Data ?? new());
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Couldn't load distributions ({ex.Message}).";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task AddDistributionAsync()
+    {
+        await Shell.Current.GoToAsync(nameof(DistributionFormPage), new Dictionary<string, object> { ["festivalId"] = FestivalId });
+    }
+
+    [RelayCommand]
+    private async Task OpenDistributionAsync(FestivalDistributionDto distribution)
+    {
+        if (Shell.Current is null || distribution.Id is not int id) return;
+        await Shell.Current.GoToAsync(nameof(DistributionDetailPage), new Dictionary<string, object> { ["distributionId"] = id });
     }
 
     // ==================== Vendors (society-scoped) ====================

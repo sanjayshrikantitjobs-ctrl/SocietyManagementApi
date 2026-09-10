@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Visitors.VisitorVisitDetailPage"
+             x:DataType="gen:VisitorVisitDto"
+             Title="Visitor Details">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14" HorizontalOptions="Center">
+                    <Border Style="{StaticResource Avatar}" WidthRequest="160" HeightRequest="160" StrokeShape="RoundRectangle 16"
+                            IsVisible="{Binding VisitorPhotoUrl, Converter={StaticResource StringToBoolConverter}}">
+                        <Image Source="{Binding VisitorPhotoUrl, Converter={StaticResource AssetUrlConverter}}" Aspect="AspectFill" />
+                    </Border>
+                    <Border Style="{StaticResource Avatar}" WidthRequest="160" HeightRequest="160" StrokeShape="RoundRectangle 16"
+                            IsVisible="{Binding VisitorPhotoUrl, Converter={StaticResource StringIsNullOrEmptyConverter}}">
+                        <Label Text="👤" FontSize="64" HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Name" Style="{StaticResource Muted}" />
+                        <Label Grid.Column="1" Text="{Binding VisitorName}" FontAttributes="Bold" HorizontalOptions="End" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource BorderColor}, Dark={StaticResource Gray600}}" />
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Mobile" Style="{StaticResource Muted}" />
+                        <Label Grid.Column="1" Text="{Binding VisitorMobile}" FontAttributes="Bold" HorizontalOptions="End" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource BorderColor}, Dark={StaticResource Gray600}}" />
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Flat" Style="{StaticResource Muted}" />
+                        <Label Grid.Column="1" Text="{Binding FlatNumber}" FontAttributes="Bold" HorizontalOptions="End" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource BorderColor}, Dark={StaticResource Gray600}}" />
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Purpose" Style="{StaticResource Muted}" />
+                        <Label Grid.Column="1" Text="{Binding PurposeName}" FontAttributes="Bold" HorizontalOptions="End" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource BorderColor}, Dark={StaticResource Gray600}}" />
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Gate" Style="{StaticResource Muted}" />
+                        <Label Grid.Column="1" Text="{Binding GateName}" FontAttributes="Bold" HorizontalOptions="End" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource BorderColor}, Dark={StaticResource Gray600}}" />
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Number of Visitors" Style="{StaticResource Muted}" />
+                        <Label Grid.Column="1" Text="{Binding NumberOfVisitors}" FontAttributes="Bold" HorizontalOptions="End" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding VisitorVehicleNumber, Converter={StaticResource StringToBoolConverter}}">
+                        <BoxView Grid.ColumnSpan="2" HeightRequest="1" Color="{AppThemeBinding Light={StaticResource BorderColor}, Dark={StaticResource Gray600}}" VerticalOptions="Start" />
+                        <Label Text="Vehicle No." Style="{StaticResource Muted}" Margin="0,10,0,0" />
+                        <Label Grid.Column="1" Text="{Binding VisitorVehicleNumber}" FontAttributes="Bold" HorizontalOptions="End" Margin="0,10,0,0" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource BorderColor}, Dark={StaticResource Gray600}}" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Status" Style="{StaticResource Muted}" />
+                        <Label Grid.Column="1" Text="{Binding Status}" FontAttributes="Bold" HorizontalOptions="End" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource BorderColor}, Dark={StaticResource Gray600}}" />
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Requested" Style="{StaticResource Muted}" />
+                        <Label Grid.Column="1" Text="{Binding RequestedAt, StringFormat='{0:MMM d, yyyy h:mm tt}'}" FontAttributes="Bold" HorizontalOptions="End" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding ApprovedAt, Converter={StaticResource IsNotNullConverter}}">
+                        <BoxView Grid.ColumnSpan="2" HeightRequest="1" Color="{AppThemeBinding Light={StaticResource BorderColor}, Dark={StaticResource Gray600}}" VerticalOptions="Start" />
+                        <Label Text="Approved" Style="{StaticResource Muted}" Margin="0,10,0,0" />
+                        <Label Grid.Column="1" Text="{Binding ApprovedAt, StringFormat='{0:MMM d, yyyy h:mm tt}'}" FontAttributes="Bold" HorizontalOptions="End" Margin="0,10,0,0" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding RejectedAt, Converter={StaticResource IsNotNullConverter}}">
+                        <BoxView Grid.ColumnSpan="2" HeightRequest="1" Color="{AppThemeBinding Light={StaticResource BorderColor}, Dark={StaticResource Gray600}}" VerticalOptions="Start" />
+                        <Label Text="Rejected" Style="{StaticResource Muted}" Margin="0,10,0,0" />
+                        <Label Grid.Column="1" Text="{Binding RejectedAt, StringFormat='{0:MMM d, yyyy h:mm tt}'}" FontAttributes="Bold" HorizontalOptions="End" Margin="0,10,0,0" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding RejectionReason, Converter={StaticResource StringToBoolConverter}}">
+                        <Label Text="Reason" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                        <Label Grid.Column="1" Text="{Binding RejectionReason}" FontAttributes="Bold" HorizontalOptions="End" Margin="0,6,0,0" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding CheckInTime, Converter={StaticResource IsNotNullConverter}}">
+                        <BoxView Grid.ColumnSpan="2" HeightRequest="1" Color="{AppThemeBinding Light={StaticResource BorderColor}, Dark={StaticResource Gray600}}" VerticalOptions="Start" />
+                        <Label Text="Checked In" Style="{StaticResource Muted}" Margin="0,10,0,0" />
+                        <Label Grid.Column="1" Text="{Binding CheckInTime, StringFormat='{0:MMM d, yyyy h:mm tt}'}" FontAttributes="Bold" HorizontalOptions="End" Margin="0,10,0,0" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding CheckOutTime, Converter={StaticResource IsNotNullConverter}}">
+                        <Label Text="Checked Out" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                        <Label Grid.Column="1" Text="{Binding CheckOutTime, StringFormat='{0:MMM d, yyyy h:mm tt}'}" FontAttributes="Bold" HorizontalOptions="End" Margin="0,6,0,0" />
+                    </Grid>
+
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

@@ -89,6 +89,16 @@
         </DataTemplate>
     </Shell.ItemTemplate>
 
+    <!-- First-declared ShellContent = Shell's initial route. A blank
+         branded holding page here (rather than defaulting straight to
+         Login) means a still-valid session never flashes the Login screen
+         while AppShell.xaml.cs's OnLoaded checks it — see SplashPage.xaml.cs. -->
+    <ShellContent
+        Title="Splash"
+        Shell.FlyoutItemIsVisible="False"
+        ContentTemplate="{DataTemplate auth:SplashPage}"
+        Route="SplashPage" />
+
     <ShellContent
         Title="Login"
         Shell.FlyoutItemIsVisible="False"
@@ -120,6 +130,9 @@
         </Tab>
         <Tab Title="Currently Inside">
             <ShellContent ContentTemplate="{DataTemplate visitors:CurrentlyInsidePage}" Route="CurrentlyInsidePage" />
+        </Tab>
+        <Tab Title="History">
+            <ShellContent ContentTemplate="{DataTemplate visitors:VisitorHistoryPage}" Route="VisitorHistoryPage" />
         </Tab>
         <!-- Admin-only on web (separate routed pages, not tabs) — kept as
              tabs here for mobile nav simplicity; mutation buttons inside

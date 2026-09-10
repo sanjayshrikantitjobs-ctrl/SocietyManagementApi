@@ -384,14 +384,18 @@
         </Setter>
     </Style>
 
-    <!-- Home page module tiles (DashboardPage.xaml) — left exactly as-is,
-         the Home screen is explicitly out of scope for the redesign. -->
+    <!-- Home page module tiles (DashboardPage.xaml). FlexLayout.Basis (a
+         percentage of the FlexLayout's own width) replaces a fixed
+         WidthRequest so tiles always fill exactly two per row regardless of
+         screen width — a fixed pixel width left a large unused gutter on
+         wide/foldable screens (reported bug), since FlexLayout wraps once
+         a row runs out of room rather than stretching to fill it. -->
     <Style TargetType="Border" Class="tile">
         <Setter Property="StrokeShape" Value="RoundRectangle 16" />
         <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}" />
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}" />
         <Setter Property="Padding" Value="8" />
-        <Setter Property="WidthRequest" Value="102" />
+        <Setter Property="FlexLayout.Basis" Value="47%" />
         <Setter Property="HeightRequest" Value="100" />
         <Setter Property="Margin" Value="5" />
     </Style>

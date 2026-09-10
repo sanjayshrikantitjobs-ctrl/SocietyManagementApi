@@ -25,6 +25,16 @@ public partial class FestivalsListViewModel : ObservableObject
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? errorMessage;
 
+    /// <summary>Standalone (1) + Contribution Pool (2) — mirrors the web's
+    /// "Primary Festivals & Events" section.</summary>
+    [ObservableProperty] private ObservableCollection<FestivalDto> primaryFestivals = new();
+
+    /// <summary>Child (3) — draws funding from a pool rather than standing
+    /// alone, so it gets its own section, mirroring the web.</summary>
+    [ObservableProperty] private ObservableCollection<FestivalDto> childFestivals = new();
+
+    public bool HasChildFestivals => ChildFestivals.Count > 0;
+
     [RelayCommand]
     private async Task LoadAsync()
     {
@@ -41,6 +51,9 @@ public partial class FestivalsListViewModel : ObservableObject
         {
             var response = await _festivalsClient.FestivalsGETAsync(societyId, null, null, 1, 50);
             Festivals = new ObservableCollection<FestivalDto>(response.Data?.Items ?? new());
+            PrimaryFestivals = new ObservableCollection<FestivalDto>(Festivals.Where(f => f.Kind != FestivalKind.Child));
+            ChildFestivals = new ObservableCollection<FestivalDto>(Festivals.Where(f => f.Kind == FestivalKind.Child));
+            OnPropertyChanged(nameof(HasChildFestivals));
         }
         catch (Exception ex)
         {

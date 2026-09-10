@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Plugin.Maui.OCR;
 using SocietyManagement.Mobile.Api.Generated;
 using SocietyManagement.Mobile.Core;
 
@@ -7,19 +8,25 @@ namespace SocietyManagement.Mobile.Features.VehicleSecurity;
 
 /// <summary>Manual plate entry -> match flow, mirrors vehicle-scan.component.ts's
 /// non-OCR path (confirmAndSearch()) — one call both logs the scan and
-/// returns match/no-match. Live camera OCR (vehicle-live-scan.component.ts's
-/// Tesseract.js-based continuous scan) is a separate, larger piece using
-/// on-device ML Kit/Vision, tracked as its own follow-up rather than bundled
-/// here — this page is the always-available manual fallback either way.</summary>
+/// returns match/no-match. "Scan Plate (Camera)" runs on-device OCR
+/// (ML Kit on Android, Vision on iOS via Plugin.Maui.OCR) against the
+/// captured photo and prefills the field with the recognized plate —
+/// a single-shot capture-then-recognize, not the web's continuous
+/// live-video consensus-vote scan (vehicle-live-scan.component.ts), which
+/// would need a custom camera-preview overlay and is a larger follow-up.
+/// Either way the recognized text is always left editable, never
+/// auto-submitted, same as the web's own OCR path.</summary>
 public partial class VehicleScanViewModel : ObservableObject
 {
     private readonly VehicleScansClient _scansClient;
     private readonly CurrentSocietyService _currentSocietyService;
+    private readonly IOcrService _ocrService;
 
-    public VehicleScanViewModel(VehicleScansClient scansClient, CurrentSocietyService currentSocietyService)
+    public VehicleScanViewModel(VehicleScansClient scansClient, CurrentSocietyService currentSocietyService, IOcrService? ocrService = null)
     {
         _scansClient = scansClient;
         _currentSocietyService = currentSocietyService;
+        _ocrService = ocrService ?? OcrPlugin.Default;
     }
 
     [ObservableProperty] private string registrationNumber = string.Empty;
@@ -32,14 +39,11 @@ public partial class VehicleScanViewModel : ObservableObject
 
     partial void OnCapturedPhotoPathChanged(string? value) => OnPropertyChanged(nameof(CapturedPhotoPreview));
 
-    /// <summary>Opens the camera to photograph the plate for the scan
-    /// record — full on-device OCR (guide box, continuous recognition,
-    /// consensus voting, matching vehicle-live-scan.component.ts) is a
-    /// separate, larger follow-up; this gives the button a real camera
-    /// capture today, with the plate still typed/confirmed manually
-    /// below and the photo attached as evidence (Source becomes
-    /// OcrCamera once a photo is attached, matching how the web tags a
-    /// scan that went through the camera flow vs. pure manual search).</summary>
+    /// <summary>Opens the camera to photograph the plate, then runs
+    /// on-device OCR against that photo and prefills RegistrationNumber
+    /// with the best-looking recognized token (see PickPlateCandidate) —
+    /// the field stays fully editable either way, so a bad read is just
+    /// corrected by hand rather than blocking the scan.</summary>
     [RelayCommand]
     private async Task CapturePhotoAsync()
     {
@@ -56,17 +60,70 @@ public partial class VehicleScanViewModel : ObservableObject
             if (photo is null) return;
 
             var localPath = Path.Combine(FileSystem.CacheDirectory, photo.FileName);
+            byte[] imageBytes;
             await using (var sourceStream = await photo.OpenReadAsync())
-            await using (var localFileStream = File.Create(localPath))
             {
-                await sourceStream.CopyToAsync(localFileStream);
+                using var memoryStream = new MemoryStream();
+                await sourceStream.CopyToAsync(memoryStream);
+                imageBytes = memoryStream.ToArray();
             }
+            await File.WriteAllBytesAsync(localPath, imageBytes);
             CapturedPhotoPath = localPath;
+
+            await RecognizePlateAsync(imageBytes);
         }
         catch (Exception ex)
         {
             ErrorMessage = $"Couldn't capture a photo ({ex.Message}).";
         }
+    }
+
+    private bool _ocrInitialized;
+
+    private async Task RecognizePlateAsync(byte[] imageBytes)
+    {
+        IsBusy = true;
+        try
+        {
+            if (!_ocrInitialized)
+            {
+                await _ocrService.InitAsync();
+                _ocrInitialized = true;
+            }
+
+            var result = await _ocrService.RecognizeTextAsync(imageBytes, tryHard: true);
+            var candidate = result.Success ? PickPlateCandidate(result.Lines) : null;
+            if (candidate is not null)
+            {
+                RegistrationNumber = candidate;
+            }
+            else
+            {
+                ErrorMessage = "Couldn't read a plate in that photo — enter the registration number manually.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"OCR failed ({ex.Message}) — enter the registration number manually.";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>Indian plates normalize to 9-10 alphanumeric characters
+    /// (e.g. MH04AB1234) — picks the recognized line whose normalized form
+    /// is closest to that length, since ML Kit/Vision return every line of
+    /// text on the plate (state name, "IND" badge, etc.) not just the
+    /// number.</summary>
+    private static string? PickPlateCandidate(IList<string> lines)
+    {
+        return lines
+            .Select(NormalizePlate)
+            .Where(n => n.Length >= 6 && n.Length <= 12)
+            .OrderBy(n => Math.Abs(n.Length - 10))
+            .FirstOrDefault();
     }
 
     [RelayCommand]

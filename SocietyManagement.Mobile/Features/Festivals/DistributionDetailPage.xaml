@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:fest="clr-namespace:SocietyManagement.Mobile.Features.Festivals"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Festivals.DistributionDetailPage"
+             x:DataType="fest:DistributionDetailViewModel"
+             x:Name="Root"
+             Title="{Binding Distribution.ItemName, StringFormat='🎁 {0}'}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+            <!-- Header -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding Distribution, Converter={StaticResource IsNotNullConverter}}">
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                        <Border Style="{StaticResource chipInfo}" HorizontalOptions="Start">
+                            <Label Text="{Binding Distribution.Status}" Style="{StaticResource chipTextInfo}" />
+                        </Border>
+                        <Button Grid.Column="2" Text="Edit" Style="{StaticResource ChipButton}" FontSize="12" Command="{Binding EditDistributionCommand}" />
+                    </Grid>
+                    <Label Text="{Binding Distribution.Description}" Style="{StaticResource Muted}" FontSize="13"
+                           IsVisible="{Binding Distribution.Description, Converter={StaticResource StringToBoolConverter}}" />
+                    <Label FontSize="12" Style="{StaticResource Muted}">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="{Binding EligibilityDescription}" />
+                                <Span Text="{Binding Distribution.QuantityPerFlat, StringFormat=' {0} unit(s) per eligible flat.'}" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Stats -->
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="12"
+                  IsVisible="{Binding Distribution, Converter={StaticResource IsNotNullConverter}}">
+                <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Eligible Flats" Style="{StaticResource kpiLabel}" />
+                        <Label Text="{Binding Distribution.EligibleFlatsCount}" Style="{StaticResource kpiValue}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Total Quantity" Style="{StaticResource kpiLabel}" />
+                        <Label Text="{Binding Distribution.TotalQuantity}" Style="{StaticResource kpiValue}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Pending" Style="{StaticResource kpiLabel}" />
+                        <Label Text="{Binding Distribution.PendingCount}" Style="{StaticResource kpiValue}" TextColor="{StaticResource Warning}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Confirmed" Style="{StaticResource kpiLabel}" />
+                        <Label Text="{Binding Distribution.ConfirmedCount}" Style="{StaticResource kpiValue}" TextColor="{StaticResource Info}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Distributed" Style="{StaticResource kpiLabel}" />
+                        <Label Text="{Binding Distribution.DistributedCount}" Style="{StaticResource kpiValue}" TextColor="{StaticResource Success}" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <!-- Variants -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Variants / Sizes" Style="{StaticResource SectionTitle}" FontSize="14" />
+                        <Button Grid.Column="1" Text="+ Add Variant" Style="{StaticResource ChipButton}" FontSize="12" Command="{Binding AddVariantCommand}" />
+                    </Grid>
+                    <Label Style="{StaticResource Muted}" Text="No variants — residents just claim their slot, no size choice." FontSize="12"
+                           IsVisible="{Binding Distribution.Variants.Count, Converter={StaticResource EqualsConverter}, ConverterParameter=0}" />
+                    <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding Distribution.Variants}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="gen:FestivalDistributionVariantDto">
+                                <Border Style="{StaticResource chipBase}" Margin="0,0,6,6">
+                                    <HorizontalStackLayout Spacing="6">
+                                        <Label Text="{Binding Label}" FontSize="12" VerticalOptions="Center" />
+                                        <Button Text="✕" Style="{StaticResource TextButton}" FontSize="11" Padding="2"
+                                                Command="{Binding Source={x:Reference Root}, Path=BindingContext.RemoveVariantCommand}" CommandParameter="{Binding .}" />
+                                    </HorizontalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Requirement by Variant -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding Distribution.VariantBreakdown.Count, Converter={StaticResource CountToBoolConverter}}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Requirement by Variant" Style="{StaticResource SectionTitle}" FontSize="14" />
+                    <CollectionView ItemsSource="{Binding Distribution.VariantBreakdown}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="gen:DistributionVariantBreakdownDto">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" Padding="0,6" ColumnSpacing="8">
+                                    <Label Text="{Binding VariantLabel}" FontSize="12" FontAttributes="Bold" />
+                                    <Label Grid.Column="1" Text="{Binding PendingCount, StringFormat='P {0}'}" Style="{StaticResource Muted}" FontSize="11" />
+                                    <Label Grid.Column="2" Text="{Binding ConfirmedCount, StringFormat='C {0}'}" Style="{StaticResource Muted}" FontSize="11" />
+                                    <Label Grid.Column="3" Text="{Binding DistributedCount, StringFormat='D {0}'}" Style="{StaticResource Muted}" FontSize="11" />
+                                    <Label Grid.Column="4" Text="{Binding TotalCount, StringFormat='Σ {0}'}" FontSize="11" FontAttributes="Bold" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Eligible Flats & Claims -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Eligible Flats &amp; Claims" Style="{StaticResource SectionTitle}" FontSize="14" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button Text="+ Add Flat" Style="{StaticResource OutlineButton}" FontSize="12" Command="{Binding AddFlatCommand}" />
+                        <Button Grid.Column="1" Text="Generate Eligibility" FontSize="12" Command="{Binding GenerateEligibilityCommand}" />
+                    </Grid>
+                    <Border Style="{StaticResource FieldFrame}">
+                        <SearchBar Placeholder="Search flat number..." Text="{Binding FlatSearch}" />
+                    </Border>
+                    <Border Style="{StaticResource FieldFrame}">
+                        <Picker ItemsSource="{Binding StatusOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedStatus}" FontSize="13" />
+                    </Border>
+
+                    <CollectionView ItemsSource="{Binding GroupedClaims}">
+                        <CollectionView.EmptyView>
+                            <Label Style="{StaticResource Muted}" Text="No claims yet — tap &quot;Generate Eligibility&quot; once flats qualify, or &quot;Add Flat&quot; to add one manually."
+                                   FontSize="12" Margin="0,12" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="fest:ClaimFlatGroupVm">
+                                <Border Style="{StaticResource RowCard}" Margin="0,0,0,10">
+                                    <VerticalStackLayout Spacing="8">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <Label Text="{Binding FlatNumber, StringFormat='Flat {0}'}" FontAttributes="Bold" FontSize="14" />
+                                            <Label Grid.Column="1" Text="{Binding Claims.Count, StringFormat='{0} item(s)'}" Style="{StaticResource Muted}" FontSize="11" />
+                                        </Grid>
+                                        <ScrollView Orientation="Horizontal">
+                                            <HorizontalStackLayout Spacing="6">
+                                                <Button Text="Add Extra (Paid)" Style="{StaticResource OutlineButton}" FontSize="11"
+                                                        Command="{Binding Source={x:Reference Root}, Path=BindingContext.AddExtraCommand}" CommandParameter="{Binding .}" />
+                                                <Button Text="Mark All Distributed" Style="{StaticResource OutlineButton}" FontSize="11"
+                                                        IsVisible="{Binding AllDistributed, Converter={StaticResource InvertedBoolConverter}}"
+                                                        Command="{Binding Source={x:Reference Root}, Path=BindingContext.MarkFlatDistributedCommand}" CommandParameter="{Binding .}" />
+                                                <Button Text="Not Qualified" Style="{StaticResource OutlineButton}" FontSize="11" TextColor="{StaticResource Danger}"
+                                                        IsVisible="{Binding HasDistributed, Converter={StaticResource InvertedBoolConverter}}"
+                                                        Command="{Binding Source={x:Reference Root}, Path=BindingContext.RemoveFlatCommand}" CommandParameter="{Binding .}" />
+                                            </HorizontalStackLayout>
+                                        </ScrollView>
+                                        <CollectionView ItemsSource="{Binding Claims}">
+                                            <CollectionView.ItemTemplate>
+                                                <DataTemplate x:DataType="gen:DistributionClaimDto">
+                                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" Padding="0,6" ColumnSpacing="8">
+                                                        <Grid.GestureRecognizers>
+                                                            <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowClaimActionsCommand}" CommandParameter="{Binding .}" />
+                                                        </Grid.GestureRecognizers>
+                                                        <Label Text="{Binding SlotNumber, StringFormat='#{0}'}" Style="{StaticResource Muted}" FontSize="11" />
+                                                        <VerticalStackLayout Grid.Column="1">
+                                                            <Label Text="{Binding MemberName}" FontSize="12" IsVisible="{Binding MemberName, Converter={StaticResource StringToBoolConverter}}" />
+                                                            <Label Text="Unassigned" FontSize="12" Style="{StaticResource Muted}" IsVisible="{Binding MemberName, Converter={StaticResource StringIsNullOrEmptyConverter}}" />
+                                                            <Label Text="{Binding VariantLabel}" Style="{StaticResource Muted}" FontSize="11"
+                                                                   IsVisible="{Binding VariantLabel, Converter={StaticResource StringToBoolConverter}}" />
+                                                        </VerticalStackLayout>
+                                                        <Label Grid.Column="2" Text="{Binding Amount, StringFormat='+₹{0:N0}'}" Style="{StaticResource Muted}" FontSize="11" TextColor="{StaticResource Warning}"
+                                                               IsVisible="{Binding Amount, Converter={StaticResource IsNotNullConverter}}" VerticalOptions="Center" />
+                                                        <Border Grid.Column="3" Style="{StaticResource chipBase}" VerticalOptions="Center">
+                                                            <Label Text="{Binding Status}" FontSize="10" FontAttributes="Bold" />
+                                                        </Border>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </CollectionView.ItemTemplate>
+                                        </CollectionView>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- My Items -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding MyClaims.Count, Converter={StaticResource CountToBoolConverter}}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="My Items" Style="{StaticResource SectionTitle}" FontSize="14" />
+                    <CollectionView ItemsSource="{Binding MyClaims}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="gen:DistributionClaimDto">
+                                <Border Style="{StaticResource RowCard}" Margin="0,0,0,7">
+                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                        <Label Grid.Row="0" Grid.Column="0" Text="{Binding FlatNumber, StringFormat='Flat {0}'}" FontAttributes="Bold" FontSize="13" />
+                                        <Label Grid.Row="1" Grid.Column="0" Text="{Binding SlotNumber, StringFormat='Slot #{0}'}" Style="{StaticResource Muted}" FontSize="11" />
+                                        <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipBase}" HorizontalOptions="End">
+                                            <Label Text="{Binding Status}" FontSize="11" FontAttributes="Bold" />
+                                        </Border>
+                                        <Button Grid.Row="1" Grid.Column="1" Text="Select" Style="{StaticResource ChipButton}" FontSize="11" HorizontalOptions="End"
+                                                Command="{Binding Source={x:Reference Root}, Path=BindingContext.SelectVariantCommand}" CommandParameter="{Binding .}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

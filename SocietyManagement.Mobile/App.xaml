@@ -11,11 +11,13 @@
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <conv:StringToBoolConverter x:Key="StringToBoolConverter" />
+            <conv:StringIsNullOrEmptyConverter x:Key="StringIsNullOrEmptyConverter" />
             <conv:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <conv:CountToBoolConverter x:Key="CountToBoolConverter" />
             <conv:IsNotNullConverter x:Key="IsNotNullConverter" />
             <conv:IsNullConverter x:Key="IsNullConverter" />
             <conv:EqualsConverter x:Key="EqualsConverter" />
+            <conv:AssetUrlConverter x:Key="AssetUrlConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

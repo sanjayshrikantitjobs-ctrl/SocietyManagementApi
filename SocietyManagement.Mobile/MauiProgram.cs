@@ -1,5 +1,6 @@
 ﻿using Microcharts.Maui;
 using Microsoft.Extensions.Logging;
+using Plugin.Maui.OCR;
 using SocietyManagement.Mobile.Core;
 using SocietyManagement.Mobile.Core.Auth;
 using SocietyManagement.Mobile.Features.Auth;
@@ -37,6 +38,7 @@ public static class MauiProgram
 		builder
 			.UseMauiApp<App>()
 			.UseMicrocharts()
+			.UseOcr()
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -62,6 +64,9 @@ public static class MauiProgram
 		builder.Services.AddTransient<NewVisitorPage>();
 		builder.Services.AddTransient<CurrentlyInsideViewModel>();
 		builder.Services.AddTransient<CurrentlyInsidePage>();
+		builder.Services.AddTransient<VisitorHistoryViewModel>();
+		builder.Services.AddTransient<VisitorHistoryPage>();
+		builder.Services.AddTransient<VisitorVisitDetailPage>();
 
 		builder.Services.AddTransient<VehicleScanViewModel>();
 		builder.Services.AddTransient<VehicleScanPage>();
@@ -99,6 +104,8 @@ public static class MauiProgram
 		builder.Services.AddTransient<BudgetRevisionsPage>();
 		builder.Services.AddTransient<FlatContributionDetailViewModel>();
 		builder.Services.AddTransient<FlatContributionDetailPage>();
+		builder.Services.AddTransient<DistributionDetailViewModel>();
+		builder.Services.AddTransient<DistributionDetailPage>();
 
 		builder.Services.AddTransient<BudgetCategoryFormViewModel>();
 		builder.Services.AddTransient<BudgetCategoryFormPage>();
@@ -110,6 +117,8 @@ public static class MauiProgram
 		builder.Services.AddTransient<VolunteerFormPage>();
 		builder.Services.AddTransient<TaskFormViewModel>();
 		builder.Services.AddTransient<TaskFormPage>();
+		builder.Services.AddTransient<DistributionFormViewModel>();
+		builder.Services.AddTransient<DistributionFormPage>();
 		builder.Services.AddTransient<ExpenseFormViewModel>();
 		builder.Services.AddTransient<ExpenseFormPage>();
 		builder.Services.AddTransient<ContributionFormViewModel>();

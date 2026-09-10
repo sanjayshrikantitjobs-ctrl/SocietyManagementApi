@@ -11,6 +11,7 @@ using SocietyManagement.Mobile.Features.Maintenance.Payments;
 using SocietyManagement.Mobile.Features.Residents;
 using SocietyManagement.Mobile.Features.Residents.Forms;
 using SocietyManagement.Mobile.Features.Societies;
+using SocietyManagement.Mobile.Features.Visitors;
 using SocietyManagement.Mobile.Features.Visitors.Forms;
 using SocietyManagement.Mobile.Shared;
 
@@ -48,6 +49,8 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(TaskFormPage), typeof(TaskFormPage));
         Routing.RegisterRoute(nameof(ExpenseFormPage), typeof(ExpenseFormPage));
         Routing.RegisterRoute(nameof(ContributionFormPage), typeof(ContributionFormPage));
+        Routing.RegisterRoute(nameof(DistributionDetailPage), typeof(DistributionDetailPage));
+        Routing.RegisterRoute(nameof(DistributionFormPage), typeof(DistributionFormPage));
         // Maintenance sub-tab forms — reachable only via query-parameter
         // navigation from MaintenancePage's tabs, never flyout destinations.
         Routing.RegisterRoute(nameof(SpecialChargeFormPage), typeof(SpecialChargeFormPage));
@@ -70,6 +73,9 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(EmergencyContactFormPage), typeof(EmergencyContactFormPage));
         Routing.RegisterRoute(nameof(VehicleFormPage), typeof(VehicleFormPage));
         Routing.RegisterRoute(nameof(ResaleListingFormPage), typeof(ResaleListingFormPage));
+        // Reachable only from the Visitors module's new History tab (row
+        // tap) — not a flyout destination of its own.
+        Routing.RegisterRoute(nameof(VisitorVisitDetailPage), typeof(VisitorVisitDetailPage));
         // Drives every FlyoutItem's role-based IsVisible binding (see
         // AppShell.xaml) — the same AuthState instance login/logout update,
         // so the flyout refreshes itself the moment the signed-in role changes.
@@ -80,14 +86,16 @@ public partial class AppShell : Shell
     /// <summary>Mirrors app.config.ts's provideAppInitializer — restores a
     /// still-valid session (stored refresh token) before the user would
     /// otherwise see the Login page, same as the web app not flashing a
-    /// login screen on a page refresh.</summary>
+    /// login screen on a page refresh. Shell's initial route is SplashPage
+    /// (a blank branded holding page, not Login) specifically so this check
+    /// can resolve to either destination without the wrong one flashing
+    /// first — Login only ever appears once we know for certain there's no
+    /// valid session to restore.</summary>
     private async void OnLoaded(object? sender, EventArgs e)
     {
         Loaded -= OnLoaded;
-        if (await _authService.RestoreSessionAsync())
-        {
-            await GoToAsync($"//{nameof(DashboardPage)}");
-        }
+        var restored = await _authService.RestoreSessionAsync();
+        await GoToAsync(restored ? $"//{nameof(DashboardPage)}" : $"//{nameof(LoginPage)}");
     }
 
     /// <summary>Shared navigation target for a module that doesn't have a

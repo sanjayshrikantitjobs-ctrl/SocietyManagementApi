@@ -9,26 +9,30 @@
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="14">
 
-            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
-            <Label Text="Date" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <DatePicker Date="{Binding Date}" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource FieldLabel}" Text="Date" />
+                    <Border Style="{StaticResource FieldFrame}"><DatePicker Date="{Binding Date}" /></Border>
 
-            <Label Text="Tanker Provider Name" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding ProviderName}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Tanker Provider Name" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding ProviderName}" /></Border>
 
-            <Label Text="Vehicle Number" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding VehicleNumber}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Vehicle Number" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding VehicleNumber}" /></Border>
 
-            <Label Text="Number of Tankers" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding NumberOfTankers}" Keyboard="Numeric" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Number of Tankers" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding NumberOfTankers}" Keyboard="Numeric" /></Border>
 
-            <Label Text="Price per Tanker (₹)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding PricePerTanker}" Keyboard="Numeric" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Price per Tanker (₹)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding PricePerTanker}" Keyboard="Numeric" /></Border>
 
-            <Label Text="Notes (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding Notes}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Notes (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Notes}" /></Border>
+                </VerticalStackLayout>
+            </Border>
 
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />

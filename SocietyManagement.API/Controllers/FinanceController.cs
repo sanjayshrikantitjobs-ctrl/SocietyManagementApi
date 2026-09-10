@@ -14,6 +14,7 @@ public class FinanceController : ApiControllerBase
 {
     [HttpGet("overview")]
     [HasPermission(Permissions.Expenses.View)]
+    [ProducesResponseType(typeof(ApiResponse<FinanceOverviewDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetOverview([FromQuery] int societyId)
     {
         var result = await Mediator.Send(new GetFinanceOverviewQuery(societyId));
@@ -22,6 +23,7 @@ public class FinanceController : ApiControllerBase
 
     [HttpGet("income")]
     [HasPermission(Permissions.Expenses.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<FinanceIncomeRowDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetIncome(
         [FromQuery] int societyId, [FromQuery] FinanceSource? source, [FromQuery] DateTime? dateFrom,
         [FromQuery] DateTime? dateTo, [FromQuery] string? search,
@@ -33,6 +35,7 @@ public class FinanceController : ApiControllerBase
 
     [HttpGet("receipts/{source}/{id:int}/pdf")]
     [HasPermission(Permissions.Expenses.View)]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetReceiptPdf(FinanceSource source, int id)
     {
         var pdfBytes = await Mediator.Send(new GetFinanceReceiptPdfQuery(source, id));
@@ -41,6 +44,7 @@ public class FinanceController : ApiControllerBase
 
     [HttpGet("expenses")]
     [HasPermission(Permissions.Expenses.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<FinanceExpenseRowDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetExpenses(
         [FromQuery] int societyId, [FromQuery] FinanceSource? source, [FromQuery] ExpenseCategory? category,
         [FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo, [FromQuery] string? search,
@@ -52,6 +56,7 @@ public class FinanceController : ApiControllerBase
 
     [HttpGet("expenses/{id:int}")]
     [HasPermission(Permissions.Expenses.View)]
+    [ProducesResponseType(typeof(ApiResponse<ExpenseDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetExpenseById(int id)
     {
         var result = await Mediator.Send(new GetExpenseByIdQuery(id));
@@ -60,6 +65,7 @@ public class FinanceController : ApiControllerBase
 
     [HttpPost("expenses")]
     [HasPermission(Permissions.Expenses.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateExpense(CreateGeneralExpenseCommand command)
     {
         var id = await Mediator.Send(command);
@@ -68,6 +74,7 @@ public class FinanceController : ApiControllerBase
 
     [HttpPut("expenses/{id:int}")]
     [HasPermission(Permissions.Expenses.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateExpense(int id, UpdateGeneralExpenseCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id and body id must match."));
@@ -77,6 +84,7 @@ public class FinanceController : ApiControllerBase
 
     [HttpDelete("expenses/{id:int}")]
     [HasPermission(Permissions.Expenses.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> DeleteExpense(int id)
     {
         await Mediator.Send(new DeleteGeneralExpenseCommand(id));
@@ -85,6 +93,7 @@ public class FinanceController : ApiControllerBase
 
     [HttpGet("outstanding")]
     [HasPermission(Permissions.Expenses.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<FinanceOutstandingRowDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetOutstanding(
         [FromQuery] int societyId, [FromQuery] FinanceSource? source, [FromQuery] string? search,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
@@ -95,6 +104,7 @@ public class FinanceController : ApiControllerBase
 
     [HttpGet("ledger")]
     [HasPermission(Permissions.Expenses.View)]
+    [ProducesResponseType(typeof(ApiResponse<FinanceLedgerPageDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetLedger(
         [FromQuery] int societyId, [FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
@@ -105,6 +115,7 @@ public class FinanceController : ApiControllerBase
 
     [HttpGet("reports/summary")]
     [HasPermission(Permissions.Reports.View)]
+    [ProducesResponseType(typeof(ApiResponse<FinanceReportSummaryDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetReportSummary([FromQuery] int societyId, [FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo)
     {
         var result = await Mediator.Send(new GetFinanceReportSummaryQuery(societyId, dateFrom, dateTo));
@@ -113,6 +124,7 @@ public class FinanceController : ApiControllerBase
 
     [HttpGet("reports/export/pdf")]
     [HasPermission(Permissions.Reports.View)]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> ExportReportPdf([FromQuery] int societyId, [FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo)
     {
         var pdfBytes = await Mediator.Send(new GetFinanceReportPdfQuery(societyId, dateFrom, dateTo));
@@ -121,6 +133,7 @@ public class FinanceController : ApiControllerBase
 
     [HttpGet("reports/export/excel")]
     [HasPermission(Permissions.Reports.View)]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> ExportReportExcel([FromQuery] int societyId, [FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo)
     {
         var excelBytes = await Mediator.Send(new GetFinanceReportExcelQuery(societyId, dateFrom, dateTo));

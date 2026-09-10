@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:soc="clr-namespace:SocietyManagement.Mobile.Features.Societies"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Societies.SocietiesPage"
+             x:DataType="soc:SocietiesViewModel"
+             x:Name="Root"
+             Title="Societies">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Button Grid.Row="0" Text="+ Add Society" Margin="16,12,16,4" HorizontalOptions="Start" FontSize="13" Command="{Binding AddSocietyCommand}" />
+
+        <Label Grid.Row="1" Style="{StaticResource ErrorText}" Margin="16,0" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Societies}">
+            <CollectionView.EmptyView>
+                <Label Style="{StaticResource Muted}" Text="No societies yet." HorizontalOptions="Center" Margin="0,24" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="gen:SocietyDto">
+                    <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontAttributes="Bold" />
+                            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipDanger}" HorizontalOptions="End" IsVisible="{Binding IsSubscriptionSuspended}">
+                                <Label Text="Suspended" Style="{StaticResource chipTextDanger}" />
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipSuccess}" HorizontalOptions="End" IsVisible="{Binding IsSubscriptionSuspended, Converter={StaticResource InvertedBoolConverter}}">
+                                <Label Text="Active" Style="{StaticResource chipTextSuccess}" />
+                            </Border>
+                            <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource Muted}">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding City}" />
+                                        <Span Text=", " />
+                                        <Span Text="{Binding State}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+
+                            <!-- Same three row actions as the web: Society
+                                 Structure, Parking Slots, Edit/Delete menu. -->
+                            <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Spacing="20" Margin="0,8,0,0">
+                                <Button Text="🏗️ Structure" Style="{StaticResource TextButton}" FontSize="12"
+                                        Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenStructureCommand}" CommandParameter="{Binding .}" />
+                                <Button Text="🅿️ Parking" Style="{StaticResource TextButton}" FontSize="12"
+                                        Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenParkingCommand}" CommandParameter="{Binding .}" />
+                                <Button Text="⋮ More" Style="{StaticResource TextButton}" FontSize="12"
+                                        Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowSocietyActionsCommand}" CommandParameter="{Binding .}" />
+                            </HorizontalStackLayout>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+
+</ContentPage>

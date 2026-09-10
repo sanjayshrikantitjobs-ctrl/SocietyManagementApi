@@ -9,25 +9,31 @@
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="14">
 
-            <Label Text="{Binding InvoiceNumber, StringFormat='Invoice {0}'}" FontSize="16" FontAttributes="Bold" />
+            <Label Style="{StaticResource PageTitle}" Text="{Binding InvoiceNumber, StringFormat='Invoice {0}'}" FontSize="18" />
 
-            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
-            <Label Text="Amount" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding Amount}" Keyboard="Numeric" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource FieldLabel}" Text="Amount" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Amount}" Keyboard="Numeric" /></Border>
 
-            <Label Text="Payment Date" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <DatePicker Date="{Binding PaymentDate}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Payment Date" />
+                    <Border Style="{StaticResource FieldFrame}"><DatePicker Date="{Binding PaymentDate}" /></Border>
 
-            <Label Text="Payment Mode" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Picker ItemsSource="{Binding PaymentModeOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedPaymentMode}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Payment Mode" />
+                    <Border Style="{StaticResource FieldFrame}">
+                        <Picker ItemsSource="{Binding PaymentModeOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedPaymentMode}" />
+                    </Border>
 
-            <Label Text="Transaction Reference (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding TransactionReference}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Transaction Reference (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding TransactionReference}" /></Border>
 
-            <Label Text="Notes (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Editor Text="{Binding Notes}" AutoSize="TextChanges" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Notes (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Editor Text="{Binding Notes}" AutoSize="TextChanges" /></Border>
+                </VerticalStackLayout>
+            </Border>
 
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />

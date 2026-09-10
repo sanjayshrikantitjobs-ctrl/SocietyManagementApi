@@ -12,14 +12,86 @@
     xmlns:res="clr-namespace:SocietyManagement.Mobile.Features.Residents"
     xmlns:maint="clr-namespace:SocietyManagement.Mobile.Features.Maintenance"
     xmlns:fest="clr-namespace:SocietyManagement.Mobile.Features.Festivals"
+    xmlns:fin="clr-namespace:SocietyManagement.Mobile.Features.Finance"
+    xmlns:staff="clr-namespace:SocietyManagement.Mobile.Features.Staff"
+    xmlns:svc="clr-namespace:SocietyManagement.Mobile.Features.Services"
+    xmlns:comp="clr-namespace:SocietyManagement.Mobile.Features.Complaints"
+    xmlns:comm="clr-namespace:SocietyManagement.Mobile.Features.Committee"
+    xmlns:soc="clr-namespace:SocietyManagement.Mobile.Features.Societies"
+    xmlns:usr="clr-namespace:SocietyManagement.Mobile.Features.Users"
+    xmlns:roles="clr-namespace:SocietyManagement.Mobile.Features.Roles"
+    xmlns:sup="clr-namespace:SocietyManagement.Mobile.Features.Support"
     xmlns:shared="clr-namespace:SocietyManagement.Mobile.Shared"
     x:DataType="authCore:AuthState"
     FlyoutBehavior="Flyout"
-    Title="Society Management">
+    FlyoutBackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource OffBlack}}"
+    Title="Apna Society Board">
+
+    <!-- Matches the web sidebar's own brand block at the top of the nav. -->
+    <Shell.FlyoutHeader>
+        <Grid Padding="20,28,20,18"
+              BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource OffBlack}}">
+            <!-- app_logo_full.png is baked onto an opaque white canvas (no
+                 transparency), so it's wrapped in its own white card here —
+                 otherwise it would show as a stray white rectangle in dark mode. -->
+            <Border BackgroundColor="White" StrokeShape="RoundRectangle 10" Padding="10,8" HorizontalOptions="Start">
+                <Image Source="app_logo_full.png" HeightRequest="40" Aspect="AspectFit" />
+            </Border>
+        </Grid>
+    </Shell.FlyoutHeader>
+
+    <!-- Every FlyoutItem's selected/unselected row look — a light-lavender
+         pill behind bold navy text when active, plain muted text otherwise,
+         exactly mirroring the web sidebar's own active-nav-item style. -->
+    <Shell.ItemTemplate>
+        <DataTemplate x:DataType="{x:Null}">
+            <Grid Padding="12,3">
+                <Border StrokeThickness="0" StrokeShape="RoundRectangle 10" Padding="14,11">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroupList>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="Transparent" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Selected">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="{StaticResource PrimaryLight}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateGroupList>
+                    </VisualStateManager.VisualStateGroups>
+                    <Label Text="{Binding Title}" FontSize="14" VerticalOptions="Center" LineBreakMode="TailTruncation"
+                           TextColor="{StaticResource TextMuted}">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroupList>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter Property="TextColor" Value="{StaticResource TextMuted}" />
+                                            <Setter Property="FontAttributes" Value="None" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Selected">
+                                        <VisualState.Setters>
+                                            <Setter Property="TextColor" Value="{StaticResource PrimaryDarkText}" />
+                                            <Setter Property="FontAttributes" Value="Bold" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateGroupList>
+                        </VisualStateManager.VisualStateGroups>
+                    </Label>
+                </Border>
+            </Grid>
+        </DataTemplate>
+    </Shell.ItemTemplate>
 
     <ShellContent
         Title="Login"
-        Shell.FlyoutBehavior="Disabled"
+        Shell.FlyoutItemIsVisible="False"
         ContentTemplate="{DataTemplate auth:LoginPage}"
         Route="LoginPage" />
 
@@ -34,15 +106,15 @@
          IsVisible in Shell — plain MenuItem does not — hence every
          placeholder below is a FlyoutItem too, not a MenuItem. -->
 
-    <FlyoutItem Title="Home" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
+    <FlyoutItem Title="🏠 Home" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
         <ShellContent ContentTemplate="{DataTemplate dash:DashboardPage}" Route="DashboardPage" />
     </FlyoutItem>
 
-    <FlyoutItem Title="Festivals &amp; Events" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
+    <FlyoutItem Title="🎉 Festivals &amp; Events" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
         <ShellContent ContentTemplate="{DataTemplate fest:FestivalsListPage}" Route="FestivalsListPage" />
     </FlyoutItem>
 
-    <FlyoutItem Title="Visitors">
+    <FlyoutItem Title="🚶 Visitors">
         <Tab Title="New Visitor">
             <ShellContent ContentTemplate="{DataTemplate visitors:NewVisitorPage}" Route="NewVisitorPage" />
         </Tab>
@@ -63,7 +135,7 @@
         </Tab>
     </FlyoutItem>
 
-    <FlyoutItem Title="Vehicle Security">
+    <FlyoutItem Title="🚗 Vehicle Security">
         <Tab Title="Scan Vehicle">
             <ShellContent ContentTemplate="{DataTemplate vs:VehicleScanPage}" Route="VehicleScanPage" />
         </Tab>
@@ -75,58 +147,59 @@
         </Tab>
     </FlyoutItem>
 
-    <FlyoutItem Title="Maintenance" IsVisible="{Binding IsAdmin}">
+    <FlyoutItem Title="🛠️ Maintenance" IsVisible="{Binding IsAdmin}">
         <ShellContent ContentTemplate="{DataTemplate maint:MaintenancePage}" Route="MaintenancePage" />
     </FlyoutItem>
 
-    <FlyoutItem Title="Residents" IsVisible="{Binding IsAdmin}">
-        <ShellContent ContentTemplate="{DataTemplate res:ResidentsListPage}" Route="ResidentsListPage" />
+    <FlyoutItem Title="👥 Residents" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate res:ResidentsPage}" Route="ResidentsPage" />
     </FlyoutItem>
 
-    <FlyoutItem Title="Staff" IsVisible="{Binding IsAdmin}">
-        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="StaffPage" />
+    <FlyoutItem Title="👷 Staff" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate staff:StaffPage}" Route="StaffPage" />
     </FlyoutItem>
-    <FlyoutItem Title="Services" IsVisible="{Binding IsAdmin}">
-        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="ServicesPage" />
+    <FlyoutItem Title="🧰 Services" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate svc:ServicesPage}" Route="ServicesPage" />
     </FlyoutItem>
-    <FlyoutItem Title="Finance" IsVisible="{Binding IsAdmin}">
-        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="FinancePage" />
+    <FlyoutItem Title="💰 Finance" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate fin:FinancePage}" Route="FinancePage" />
     </FlyoutItem>
-    <FlyoutItem Title="Complaints" IsVisible="{Binding IsAdmin}">
-        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="ComplaintsPage" />
+    <FlyoutItem Title="📢 Complaints" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate comp:ComplaintsPage}" Route="ComplaintsPage" />
     </FlyoutItem>
-    <FlyoutItem Title="Committee" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
-        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="CommitteePage" />
+    <FlyoutItem Title="🏛️ Committee" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
+        <ShellContent ContentTemplate="{DataTemplate comm:CommitteePage}" Route="CommitteePage" />
     </FlyoutItem>
 
-    <!-- "My Society" group on the web (My Bills/My Complaints/My Family/Help
-         &amp; Support) is Member self-service — real screens land with the
-         Member-role phase; placeholders here keep the nav item count honest
-         in the meantime. -->
-    <FlyoutItem Title="My Bills" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
+    <!-- "My Society" group on the web (My Bills/My Complaints/My Family) is
+         Member-only self-service — Admin/SuperAdmin manage every flat's
+         bills/complaints/family data through the Maintenance/Complaints/
+         Residents modules instead, so this group is hidden for them (and
+         for Watchman, who has neither). -->
+    <FlyoutItem Title="🧾 My Bills" IsVisible="{Binding IsMember}">
         <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="MyBillsPage" />
     </FlyoutItem>
-    <FlyoutItem Title="My Complaints" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
-        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="MyComplaintsPage" />
+    <FlyoutItem Title="💬 My Complaints" IsVisible="{Binding IsMember}">
+        <ShellContent ContentTemplate="{DataTemplate comp:MyComplaintsPage}" Route="MyComplaintsPage" />
     </FlyoutItem>
-    <FlyoutItem Title="My Family" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
-        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="MyFamilyPage" />
+    <FlyoutItem Title="👨‍👩‍👧 My Family" IsVisible="{Binding IsMember}">
+        <ShellContent ContentTemplate="{DataTemplate res:MyFamilyPage}" Route="MyFamilyPage" />
     </FlyoutItem>
-    <FlyoutItem Title="Help &amp; Support" IsVisible="{Binding ShowHelpAndSupport}">
+    <FlyoutItem Title="❓ Help &amp; Support" IsVisible="{Binding ShowHelpAndSupport}">
         <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="HelpAndSupportPage" />
     </FlyoutItem>
 
-    <FlyoutItem Title="Societies" IsVisible="{Binding IsAdmin}">
-        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="SocietiesPage" />
+    <FlyoutItem Title="🏢 Societies" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate soc:SocietiesPage}" Route="SocietiesPage" />
     </FlyoutItem>
-    <FlyoutItem Title="Users" IsVisible="{Binding IsAdmin}">
-        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="UsersPage" />
+    <FlyoutItem Title="👤 Users" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate usr:UsersPage}" Route="UsersPage" />
     </FlyoutItem>
-    <FlyoutItem Title="Roles &amp; Permissions" IsVisible="{Binding IsAdmin}">
-        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="RolesPage" />
+    <FlyoutItem Title="🔐 Roles &amp; Permissions" IsVisible="{Binding IsAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate roles:RolesPage}" Route="RolesPage" />
     </FlyoutItem>
-    <FlyoutItem Title="Support Tickets" IsVisible="{Binding IsSuperAdmin}">
-        <ShellContent ContentTemplate="{DataTemplate shared:ComingSoonPage}" Route="SupportTicketsPage" />
+    <FlyoutItem Title="🎫 Support Tickets" IsVisible="{Binding IsSuperAdmin}">
+        <ShellContent ContentTemplate="{DataTemplate sup:SupportTicketsPage}" Route="SupportTicketsPage" />
     </FlyoutItem>
 
 </Shell>

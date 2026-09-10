@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:res="clr-namespace:SocietyManagement.Mobile.Features.Residents"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Residents.MyFamilyPage"
+             x:DataType="res:MyFamilyViewModel"
+             Title="My Family">
+
+    <Grid RowDefinitions="Auto,*">
+        <Label Grid.Row="0" Style="{StaticResource ErrorText}" Margin="16,8" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Margin="0,8" />
+
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Members}">
+            <CollectionView.EmptyView>
+                <Label Style="{StaticResource Muted}" Text="No family members on record yet." HorizontalOptions="Center" Margin="0,24" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="gen:OccupancyMemberDto">
+                    <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                            <Border Grid.Column="0" Style="{StaticResource Avatar}">
+                                <Label Text="👤" FontSize="18" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                <Label Text="{Binding PersonName}" FontAttributes="Bold" />
+                                <Label Text="{Binding Relationship}" Style="{StaticResource Muted}" />
+                            </VerticalStackLayout>
+                            <Border Grid.Column="2" Style="{StaticResource chipInfo}" IsVisible="{Binding IsPrimary}" VerticalOptions="Start">
+                                <Label Text="Primary" Style="{StaticResource chipTextInfo}" />
+                            </Border>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+
+</ContentPage>

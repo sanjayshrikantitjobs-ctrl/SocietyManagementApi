@@ -2,11 +2,11 @@ using SocietyManagement.Mobile.Shared;
 
 namespace SocietyManagement.Mobile.Features.Residents;
 
-public partial class ResidentsListPage : ContentPage
+public partial class MyFamilyPage : ContentPage
 {
-    private readonly ResidentsListViewModel _viewModel;
+    private readonly MyFamilyViewModel _viewModel;
 
-    public ResidentsListPage(ResidentsListViewModel viewModel, TopBarView topBar)
+    public MyFamilyPage(MyFamilyViewModel viewModel, TopBarView topBar)
     {
         InitializeComponent();
         BindingContext = _viewModel = viewModel;
@@ -16,11 +16,6 @@ public partial class ResidentsListPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        await _viewModel.LoadCommand.ExecuteAsync(null);
-    }
-
-    private async void OnSearchCompleted(object? sender, EventArgs e)
-    {
         await _viewModel.LoadCommand.ExecuteAsync(null);
     }
 }

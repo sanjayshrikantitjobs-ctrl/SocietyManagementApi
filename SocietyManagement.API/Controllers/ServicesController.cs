@@ -12,6 +12,7 @@ public class ServicesController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Services.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<SocietyServiceDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int societyId, [FromQuery] string? search, [FromQuery] bool? isActive,
         [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,

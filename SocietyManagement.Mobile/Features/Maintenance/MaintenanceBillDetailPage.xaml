@@ -10,101 +10,111 @@
     <Grid RowDefinitions="Auto,*">
 
         <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
-        <Label Grid.Row="0" Margin="16,4" Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+        <Label Grid.Row="0" Style="{StaticResource ErrorText}" Margin="16,4" Text="{Binding ErrorMessage}"
                IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
         <ScrollView Grid.Row="1" IsVisible="{Binding Bill, Converter={StaticResource IsNotNullConverter}}">
             <VerticalStackLayout Padding="16" Spacing="16">
 
                 <Grid ColumnDefinitions="*,Auto">
-                    <Label Grid.Column="0" Text="{Binding Bill.InvoiceNumber}" FontSize="20" FontAttributes="Bold" />
-                    <Label Grid.Column="1" Text="{Binding Bill.Status}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource Primary}" VerticalOptions="Center" />
+                    <Label Grid.Column="0" Style="{StaticResource PageTitle}" Text="{Binding Bill.InvoiceNumber}" FontSize="20" />
+                    <Border Grid.Column="1" Style="{StaticResource chipInfo}" VerticalOptions="Center">
+                        <Label Text="{Binding Bill.Status}" Style="{StaticResource chipTextInfo}" />
+                    </Border>
                 </Grid>
 
                 <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="12">
-                    <Border Grid.Row="0" Grid.Column="0" StrokeShape="RoundRectangle 12" Padding="14">
+                    <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Card}">
                         <VerticalStackLayout>
-                            <Label Text="Flat" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Text="{Binding Bill.FlatNumber}" FontSize="16" FontAttributes="Bold" />
-                            <Label Text="{Binding Bill.BuildingName}" FontSize="11" TextColor="{StaticResource Gray500}" />
+                            <Label Text="Flat" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Bill.FlatNumber}" Style="{StaticResource kpiValue}" FontSize="16" />
+                            <Label Text="{Binding Bill.BuildingName}" Style="{StaticResource Muted}" FontSize="11" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Row="0" Grid.Column="1" StrokeShape="RoundRectangle 12" Padding="14">
+                    <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource Card}">
                         <VerticalStackLayout>
-                            <Label Text="Owner" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Text="{Binding DisplayOwnerName}" FontSize="16" FontAttributes="Bold" />
+                            <Label Text="Owner" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding DisplayOwnerName}" Style="{StaticResource kpiValue}" FontSize="16" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Row="1" Grid.Column="0" StrokeShape="RoundRectangle 12" Padding="14">
+                    <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource Card}">
                         <VerticalStackLayout>
-                            <Label Text="Bill Month" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Text="{Binding Bill.BillMonth, StringFormat='{0:MMMM yyyy}'}" FontSize="16" FontAttributes="Bold" />
+                            <Label Text="Bill Month" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Bill.BillMonth, StringFormat='{0:MMMM yyyy}'}" Style="{StaticResource kpiValue}" FontSize="16" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Row="1" Grid.Column="1" StrokeShape="RoundRectangle 12" Padding="14">
+                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}">
                         <VerticalStackLayout>
-                            <Label Text="Due Date" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Text="{Binding Bill.DueDate, StringFormat='{0:MMM d, yyyy}'}" FontSize="16" FontAttributes="Bold" />
+                            <Label Text="Due Date" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Bill.DueDate, StringFormat='{0:MMM d, yyyy}'}" Style="{StaticResource kpiValue}" FontSize="16" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Row="2" Grid.Column="0" StrokeShape="RoundRectangle 12" Padding="14">
+                    <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource Card}">
                         <VerticalStackLayout>
-                            <Label Text="Total" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Text="{Binding Bill.TotalAmount, StringFormat='₹{0:N0}'}" FontSize="16" FontAttributes="Bold" />
+                            <Label Text="Total" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Bill.TotalAmount, StringFormat='₹{0:N0}'}" Style="{StaticResource kpiValue}" FontSize="16" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Row="2" Grid.Column="1" StrokeShape="RoundRectangle 12" Padding="14">
+                    <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource Card}">
                         <VerticalStackLayout>
-                            <Label Text="Paid" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Text="{Binding Bill.AmountPaid, StringFormat='₹{0:N0}'}" FontSize="16" FontAttributes="Bold" TextColor="#15803D" />
+                            <Label Text="Paid" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Bill.AmountPaid, StringFormat='₹{0:N0}'}" Style="{StaticResource kpiValue}" FontSize="16" TextColor="{StaticResource Success}" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" StrokeShape="RoundRectangle 12" Padding="14">
+                    <Border Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource Card}">
                         <VerticalStackLayout>
-                            <Label Text="Balance" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Text="{Binding Bill.Balance, StringFormat='₹{0:N0}'}" FontSize="18" FontAttributes="Bold" TextColor="#DC2626" />
+                            <Label Text="Balance" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Bill.Balance, StringFormat='₹{0:N0}'}" Style="{StaticResource kpiValue}" TextColor="{StaticResource Danger}" />
                         </VerticalStackLayout>
                     </Border>
                 </Grid>
 
-                <HorizontalStackLayout Spacing="8">
-                    <Button Text="Download PDF" Command="{Binding DownloadPdfCommand}" />
-                    <Button Text="Record Payment" Command="{Binding RecordPaymentCommand}" IsVisible="{Binding CanRecordPayment}" />
-                    <Button Text="Mark as Unpaid" Command="{Binding MarkUnpaidCommand}" IsVisible="{Binding CanMarkUnpaid}" />
-                    <Button Text="Resend WhatsApp" Command="{Binding ResendWhatsAppCommand}" />
-                </HorizontalStackLayout>
+                <FlexLayout Wrap="Wrap" JustifyContent="Start" AlignItems="Start">
+                    <Button Text="Download PDF" Style="{StaticResource OutlineButton}" Command="{Binding DownloadPdfCommand}" Margin="0,0,8,8" />
+                    <Button Text="Record Payment" Command="{Binding RecordPaymentCommand}" IsVisible="{Binding CanRecordPayment}" Margin="0,0,8,8" />
+                    <Button Text="Mark as Unpaid" Style="{StaticResource OutlineButton}" Command="{Binding MarkUnpaidCommand}" IsVisible="{Binding CanMarkUnpaid}" Margin="0,0,8,8" />
+                    <Button Text="Resend WhatsApp" Style="{StaticResource OutlineButton}" Command="{Binding ResendWhatsAppCommand}" Margin="0,0,8,8" />
+                </FlexLayout>
 
-                <Label Text="Bill Items" FontSize="16" FontAttributes="Bold" />
-                <CollectionView ItemsSource="{Binding Bill.Items}">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="gen:MaintenanceBillItemDto">
-                            <Grid Padding="0,6" ColumnDefinitions="*,Auto">
-                                <Label Grid.Column="0" Text="{Binding Description}" />
-                                <Label Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" HorizontalOptions="End" />
-                            </Grid>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Bill Items" Style="{StaticResource SectionTitle}" />
+                        <CollectionView ItemsSource="{Binding Bill.Items}">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="gen:MaintenanceBillItemDto">
+                                    <Grid Padding="0,6" ColumnDefinitions="*,Auto">
+                                        <Label Grid.Column="0" Text="{Binding Description}" />
+                                        <Label Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" HorizontalOptions="End" />
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Border>
 
-                <Label Text="Payment History" FontSize="16" FontAttributes="Bold" />
-                <CollectionView ItemsSource="{Binding Bill.Payments}">
-                    <CollectionView.EmptyView>
-                        <Label Text="No payments recorded yet." TextColor="{StaticResource Gray500}" />
-                    </CollectionView.EmptyView>
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="gen:MaintenancePaymentDto">
-                            <Grid Padding="0,6" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
-                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding PaymentDate, StringFormat='{0:MMM d, yyyy}'}" FontAttributes="Bold" />
-                                <Label Grid.Row="1" Grid.Column="0" Text="{Binding PaymentMode}" FontSize="12" TextColor="{StaticResource Gray500}" />
-                                <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" HorizontalOptions="End" FontAttributes="Bold" />
-                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding TransactionReference}" FontSize="12" TextColor="{StaticResource Gray500}" HorizontalOptions="End" />
-                                <Label Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding Notes, StringFormat='Note: {0}'}"
-                                       IsVisible="{Binding Notes, Converter={StaticResource StringToBoolConverter}}"
-                                       FontSize="12" TextColor="{StaticResource Gray500}" />
-                            </Grid>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Payment History" Style="{StaticResource SectionTitle}" />
+                        <CollectionView ItemsSource="{Binding Bill.Payments}">
+                            <CollectionView.EmptyView>
+                                <Label Style="{StaticResource Muted}" Text="No payments recorded yet." />
+                            </CollectionView.EmptyView>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="gen:MaintenancePaymentDto">
+                                    <Grid Padding="0,6" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                        <Label Grid.Row="0" Grid.Column="0" Text="{Binding PaymentDate, StringFormat='{0:MMM d, yyyy}'}" FontAttributes="Bold" />
+                                        <Label Grid.Row="1" Grid.Column="0" Text="{Binding PaymentMode}" Style="{StaticResource Muted}" />
+                                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" HorizontalOptions="End" FontAttributes="Bold" />
+                                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding TransactionReference}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                                        <Label Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding Notes, StringFormat='Note: {0}'}"
+                                               IsVisible="{Binding Notes, Converter={StaticResource StringToBoolConverter}}"
+                                               Style="{StaticResource Muted}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Border>
 
             </VerticalStackLayout>
         </ScrollView>

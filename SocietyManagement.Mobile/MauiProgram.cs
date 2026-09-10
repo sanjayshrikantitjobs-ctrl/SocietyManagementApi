@@ -1,15 +1,27 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microcharts.Maui;
+using Microsoft.Extensions.Logging;
 using SocietyManagement.Mobile.Core;
 using SocietyManagement.Mobile.Core.Auth;
 using SocietyManagement.Mobile.Features.Auth;
+using SocietyManagement.Mobile.Features.Committee;
+using SocietyManagement.Mobile.Features.Complaints;
 using SocietyManagement.Mobile.Features.Dashboard;
 using SocietyManagement.Mobile.Features.Festivals;
 using SocietyManagement.Mobile.Features.Festivals.Forms;
+using SocietyManagement.Mobile.Features.Finance;
+using SocietyManagement.Mobile.Features.Finance.Forms;
 using SocietyManagement.Mobile.Features.Maintenance;
 using SocietyManagement.Mobile.Features.Maintenance.Forms;
 using SocietyManagement.Mobile.Features.Maintenance.Payments;
 using SocietyManagement.Mobile.Features.ParkingFines;
 using SocietyManagement.Mobile.Features.Residents;
+using SocietyManagement.Mobile.Features.Residents.Forms;
+using SocietyManagement.Mobile.Features.Roles;
+using SocietyManagement.Mobile.Features.Services;
+using SocietyManagement.Mobile.Features.Societies;
+using SocietyManagement.Mobile.Features.Staff;
+using SocietyManagement.Mobile.Features.Support;
+using SocietyManagement.Mobile.Features.Users;
 using SocietyManagement.Mobile.Features.VehicleSecurity;
 using SocietyManagement.Mobile.Features.Visitors;
 using SocietyManagement.Mobile.Features.Visitors.Forms;
@@ -24,6 +36,7 @@ public static class MauiProgram
 		var builder = MauiApp.CreateBuilder();
 		builder
 			.UseMauiApp<App>()
+			.UseMicrocharts()
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -58,8 +71,20 @@ public static class MauiProgram
 		builder.Services.AddTransient<ParkingFinesViewModel>();
 		builder.Services.AddTransient<ParkingFinesPage>();
 
-		builder.Services.AddTransient<ResidentsListViewModel>();
-		builder.Services.AddTransient<ResidentsListPage>();
+		builder.Services.AddTransient<ResidentsViewModel>();
+		builder.Services.AddTransient<ResidentsPage>();
+		builder.Services.AddTransient<MyFamilyViewModel>();
+		builder.Services.AddTransient<MyFamilyPage>();
+		builder.Services.AddTransient<FlatResidentDetailViewModel>();
+		builder.Services.AddTransient<FlatResidentDetailPage>();
+		builder.Services.AddTransient<OccupancyMemberFormViewModel>();
+		builder.Services.AddTransient<OccupancyMemberFormPage>();
+		builder.Services.AddTransient<EmergencyContactFormViewModel>();
+		builder.Services.AddTransient<EmergencyContactFormPage>();
+		builder.Services.AddTransient<VehicleFormViewModel>();
+		builder.Services.AddTransient<VehicleFormPage>();
+		builder.Services.AddTransient<ResaleListingFormViewModel>();
+		builder.Services.AddTransient<ResaleListingFormPage>();
 		builder.Services.AddTransient<MaintenanceViewModel>();
 		builder.Services.AddTransient<MaintenancePage>();
 		builder.Services.AddTransient<MaintenanceBillDetailViewModel>();
@@ -90,6 +115,11 @@ public static class MauiProgram
 		builder.Services.AddTransient<ContributionFormViewModel>();
 		builder.Services.AddTransient<ContributionFormPage>();
 
+		builder.Services.AddTransient<FinanceViewModel>();
+		builder.Services.AddTransient<FinancePage>();
+		builder.Services.AddTransient<FinanceExpenseFormViewModel>();
+		builder.Services.AddTransient<FinanceExpenseFormPage>();
+
 		builder.Services.AddTransient<SpecialChargeFormViewModel>();
 		builder.Services.AddTransient<SpecialChargeFormPage>();
 		builder.Services.AddTransient<FineFormViewModel>();
@@ -107,6 +137,31 @@ public static class MauiProgram
 		builder.Services.AddTransient<PurposeFormPage>();
 		builder.Services.AddTransient<VisitorSettingsViewModel>();
 		builder.Services.AddTransient<VisitorSettingsPage>();
+
+		builder.Services.AddTransient<StaffViewModel>();
+		builder.Services.AddTransient<StaffPage>();
+		builder.Services.AddTransient<ServicesViewModel>();
+		builder.Services.AddTransient<ServicesPage>();
+		builder.Services.AddTransient<CommitteeViewModel>();
+		builder.Services.AddTransient<CommitteePage>();
+		builder.Services.AddTransient<ComplaintsViewModel>();
+		builder.Services.AddTransient<ComplaintsPage>();
+		builder.Services.AddTransient<MyComplaintsViewModel>();
+		builder.Services.AddTransient<MyComplaintsPage>();
+		builder.Services.AddTransient<SocietiesViewModel>();
+		builder.Services.AddTransient<SocietiesPage>();
+		builder.Services.AddTransient<SocietyFormViewModel>();
+		builder.Services.AddTransient<SocietyFormPage>();
+		builder.Services.AddTransient<SocietyStructureViewModel>();
+		builder.Services.AddTransient<SocietyStructurePage>();
+		builder.Services.AddTransient<ParkingSlotsViewModel>();
+		builder.Services.AddTransient<ParkingSlotsPage>();
+		builder.Services.AddTransient<UsersViewModel>();
+		builder.Services.AddTransient<UsersPage>();
+		builder.Services.AddTransient<RolesViewModel>();
+		builder.Services.AddTransient<RolesPage>();
+		builder.Services.AddTransient<SupportTicketsViewModel>();
+		builder.Services.AddTransient<SupportTicketsPage>();
 
 		builder.Services.AddTransient<ComingSoonPage>();
 		builder.Services.AddTransient<ContactUsPage>();

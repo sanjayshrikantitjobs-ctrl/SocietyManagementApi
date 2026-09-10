@@ -8,10 +8,10 @@
 
         <Image Source="shrios_logo.png" HeightRequest="64" Aspect="AspectFit" HorizontalOptions="Center" />
 
-        <Label Text="Shrios Software Technologies" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" />
-        <Label Text="We're here to help." TextColor="{StaticResource Gray500}" HorizontalOptions="Center" />
+        <Label Text="Shrios Software Technologies" Style="{StaticResource PageTitle}" FontSize="18" HorizontalOptions="Center" />
+        <Label Text="We're here to help." Style="{StaticResource PageSubtitle}" HorizontalOptions="Center" />
 
-        <Border Stroke="{StaticResource Gray300}" StrokeShape="RoundRectangle 12" Padding="16" Margin="0,16,0,0">
+        <Border Style="{StaticResource Card}" Margin="0,16,0,0">
             <VerticalStackLayout Spacing="12">
                 <HorizontalStackLayout Spacing="10">
                     <Label Text="&#128222;" FontSize="18" />
@@ -29,7 +29,7 @@
         </Border>
 
         <Label Text="© 2026 Shrios Software Technologies. All rights reserved."
-               FontSize="11" TextColor="{StaticResource Gray400}" HorizontalOptions="Center" Margin="0,24,0,0" />
+               Style="{StaticResource Muted}" FontSize="11" HorizontalOptions="Center" Margin="0,24,0,0" />
 
     </VerticalStackLayout>
 

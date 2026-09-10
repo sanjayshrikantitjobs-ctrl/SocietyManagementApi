@@ -10,25 +10,27 @@
 
     <Grid RowDefinitions="Auto,Auto,Auto,*">
         <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
-        <Label Grid.Row="1" Margin="16,0" Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+        <Label Grid.Row="1" Style="{StaticResource ErrorText}" Margin="16,0" Text="{Binding ErrorMessage}"
                IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
-        <Button Grid.Row="2" Margin="16,10" Text="Add Gate" Command="{Binding AddGateCommand}" HorizontalOptions="Start" FontSize="12"
+        <Button Grid.Row="2" Margin="16,10" Text="Add Gate" Command="{Binding AddGateCommand}" HorizontalOptions="Start"
                 IsVisible="{Binding Auth.IsAdmin}" />
         <CollectionView Grid.Row="3" ItemsSource="{Binding Gates}">
             <CollectionView.EmptyView>
-                <Label Text="No gates configured yet." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" Margin="0,24" />
+                <Label Style="{StaticResource Muted}" Text="No gates configured yet." HorizontalOptions="Center" Margin="0,24" />
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="gen:GateDto">
-                    <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                        <Grid.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowGateActionsCommand}" CommandParameter="{Binding .}" />
-                        </Grid.GestureRecognizers>
-                        <Label Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontAttributes="Bold" />
-                        <Label Grid.Row="1" Grid.Column="0" Text="{Binding Location}" FontSize="12" TextColor="{StaticResource Gray500}" />
-                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding Code}" HorizontalOptions="End" />
-                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding IsActive, StringFormat='{0}'}" FontSize="12" TextColor="{StaticResource Gray500}" HorizontalOptions="End" />
-                    </Grid>
+                    <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowGateActionsCommand}" CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontAttributes="Bold" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding Location}" Style="{StaticResource Muted}" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding Code}" HorizontalOptions="End" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding IsActive, StringFormat='{0}'}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                        </Grid>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

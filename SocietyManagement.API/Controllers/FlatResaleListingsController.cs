@@ -14,6 +14,7 @@ public class FlatResaleListingsController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Members.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<FlatResaleListingDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int societyId, [FromQuery] ListingStatus? status,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
@@ -24,6 +25,7 @@ public class FlatResaleListingsController : ApiControllerBase
 
     [HttpGet("{id:int}")]
     [HasPermission(Permissions.Members.View)]
+    [ProducesResponseType(typeof(ApiResponse<FlatResaleListingDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await Mediator.Send(new GetListingByIdQuery(id));
@@ -32,6 +34,7 @@ public class FlatResaleListingsController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Members.Create)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create(CreateListingCommand command)
     {
         var id = await Mediator.Send(command);
@@ -40,6 +43,7 @@ public class FlatResaleListingsController : ApiControllerBase
 
     [HttpPut("{id:int}")]
     [HasPermission(Permissions.Members.Update)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(int id, UpdateListingCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
@@ -49,6 +53,7 @@ public class FlatResaleListingsController : ApiControllerBase
 
     [HttpPost("{id:int}/under-negotiation")]
     [HasPermission(Permissions.Members.Update)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> MarkUnderNegotiation(int id)
     {
         await Mediator.Send(new MarkUnderNegotiationCommand(id));
@@ -57,6 +62,7 @@ public class FlatResaleListingsController : ApiControllerBase
 
     [HttpPost("{id:int}/sold")]
     [HasPermission(Permissions.Members.Update)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> MarkSold(int id)
     {
         await Mediator.Send(new MarkSoldCommand(id));
@@ -65,6 +71,7 @@ public class FlatResaleListingsController : ApiControllerBase
 
     [HttpPost("{id:int}/withdraw")]
     [HasPermission(Permissions.Members.Update)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Withdraw(int id)
     {
         await Mediator.Send(new WithdrawListingCommand(id));
@@ -73,6 +80,7 @@ public class FlatResaleListingsController : ApiControllerBase
 
     [HttpPost("{id:int}/issue-noc")]
     [HasPermission(Permissions.Members.Update)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> IssueNoc(int id, IssueNocRequest request)
     {
         await Mediator.Send(new IssueNocCommand(id, request.NocIssuedDate, request.NocDocumentUrl));
@@ -81,6 +89,7 @@ public class FlatResaleListingsController : ApiControllerBase
 
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.Members.Delete)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id)
     {
         await Mediator.Send(new DeleteListingCommand(id));

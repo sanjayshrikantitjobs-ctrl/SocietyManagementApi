@@ -14,6 +14,7 @@ public class ComplaintsController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Complaints.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<ComplaintDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int societyId, [FromQuery] ComplaintCategory? category, [FromQuery] ComplaintPriority? priority,
         [FromQuery] string? search)
@@ -24,6 +25,7 @@ public class ComplaintsController : ApiControllerBase
 
     [HttpGet("paged")]
     [HasPermission(Permissions.Complaints.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<ComplaintDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPaged(
         [FromQuery] int societyId, [FromQuery] ComplaintCategory? category, [FromQuery] ComplaintPriority? priority,
         [FromQuery] string? search, [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,
@@ -35,6 +37,7 @@ public class ComplaintsController : ApiControllerBase
 
     [HttpGet("kpis")]
     [HasPermission(Permissions.Complaints.View)]
+    [ProducesResponseType(typeof(ApiResponse<ComplaintKpisDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetKpis([FromQuery] int societyId)
     {
         var result = await Mediator.Send(new GetComplaintKpisQuery(societyId));
@@ -43,6 +46,7 @@ public class ComplaintsController : ApiControllerBase
 
     [HttpGet("mine")]
     [HasPermission(Permissions.Complaints.Create)]
+    [ProducesResponseType(typeof(ApiResponse<List<ComplaintDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMine()
     {
         var result = await Mediator.Send(new GetMyComplaintsQuery());

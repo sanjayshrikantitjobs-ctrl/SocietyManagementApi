@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:fin="clr-namespace:SocietyManagement.Mobile.Features.Finance"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             xmlns:microcharts="clr-namespace:Microcharts.Maui;assembly=Microcharts.Maui"
+             x:Class="SocietyManagement.Mobile.Features.Finance.FinancePage"
+             x:DataType="fin:FinanceViewModel"
+             x:Name="Root"
+             Title="Finance">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <ScrollView Grid.Row="0" Orientation="Horizontal">
+            <HorizontalStackLayout Spacing="4" Padding="10,10,10,4">
+                <Button Text="Overview" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Overview">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Overview">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Income" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Income">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Income">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Expenses" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Expenses">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Expenses">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Outstanding" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Outstanding">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Outstanding">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Ledger" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Ledger">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Ledger">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Receipts" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Receipts">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Receipts">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Reports" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Reports">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Reports">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+            </HorizontalStackLayout>
+        </ScrollView>
+
+        <Label Grid.Row="1" Style="{StaticResource ErrorText}" Margin="16,0" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+        <!-- Overview panel -->
+        <ScrollView Grid.Row="2" IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Overview}">
+            <VerticalStackLayout Padding="16" Spacing="14" IsVisible="{Binding Overview, Converter={StaticResource IsNotNullConverter}}">
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">
+                    <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Label Text="Total Income" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Overview.TotalIncome, StringFormat='₹{0:N0}'}" Style="{StaticResource kpiValue}" FontSize="16" TextColor="{StaticResource Success}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Label Text="Total Expense" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Overview.TotalExpense, StringFormat='₹{0:N0}'}" Style="{StaticResource kpiValue}" FontSize="16" TextColor="{StaticResource Danger}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Label Text="Available Balance" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Overview.AvailableBalance, StringFormat='₹{0:N0}'}" Style="{StaticResource kpiValue}" FontSize="16" TextColor="{StaticResource Info}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Label Text="Pending Collection" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Overview.PendingCollection, StringFormat='₹{0:N0}'}" Style="{StaticResource kpiValue}" FontSize="16" TextColor="{StaticResource Warning}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <Border Style="{StaticResource Card}" IsVisible="{Binding MonthlyTrendChart, Converter={StaticResource IsNotNullConverter}}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Income vs Expense (6 months)" Style="{StaticResource SectionTitle}" FontSize="14" />
+                        <microcharts:ChartView Chart="{Binding MonthlyTrendChart}" HeightRequest="200" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource Card}" IsVisible="{Binding IncomeBySourceChart, Converter={StaticResource IsNotNullConverter}}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Income by Source" Style="{StaticResource SectionTitle}" FontSize="14" />
+                        <microcharts:ChartView Chart="{Binding IncomeBySourceChart}" HeightRequest="180" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource Card}" IsVisible="{Binding ExpenseByCategoryChart, Converter={StaticResource IsNotNullConverter}}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Expense by Category" Style="{StaticResource SectionTitle}" FontSize="14" />
+                        <microcharts:ChartView Chart="{Binding ExpenseByCategoryChart}" HeightRequest="200" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Income panel -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Income}">
+            <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,8">
+                <SearchBar Placeholder="Search payer, flat, or receipt no..." Text="{Binding IncomeSearch}" SearchCommand="{Binding LoadIncomeCommand}" />
+            </Border>
+            <Border Grid.Row="1" Style="{StaticResource FieldFrame}" Margin="12,0,12,4">
+                <Picker ItemsSource="{Binding IncomeSourceOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedIncomeSource}" />
+            </Border>
+            <CollectionView Grid.Row="2" ItemsSource="{Binding Incomes}">
+                <CollectionView.EmptyView>
+                    <Label Style="{StaticResource Muted}" Text="No income recorded yet." HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FinanceIncomeRowDto">
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource chipInfo}" HorizontalOptions="Start">
+                                    <Label Text="{Binding Source}" Style="{StaticResource chipTextInfo}" />
+                                </Border>
+                                <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" TextColor="{StaticResource Success}" HorizontalOptions="End" />
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding PayerName}" FontAttributes="Bold" Margin="0,4,0,0" />
+                                <Label Grid.Row="2" Grid.Column="0" Text="{Binding Description}" Style="{StaticResource Muted}" />
+                                <Label Grid.Row="2" Grid.Column="1" Text="{Binding Date, StringFormat='{0:MMM d, yyyy}'}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Expenses panel -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,Auto,Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Expenses}">
+            <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,8">
+                <SearchBar Placeholder="Search title or paid to..." Text="{Binding ExpenseSearch}" SearchCommand="{Binding LoadExpensesCommand}" />
+            </Border>
+            <Grid Grid.Row="1" Padding="12,0,12,4" ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Border Style="{StaticResource FieldFrame}">
+                    <Picker ItemsSource="{Binding ExpenseSourceOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedExpenseSource}" />
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource FieldFrame}">
+                    <Picker ItemsSource="{Binding ExpenseCategoryOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedExpenseCategory}" />
+                </Border>
+            </Grid>
+            <Button Grid.Row="2" Text="+ Add Expense" Margin="12,0,12,8" HorizontalOptions="End" Command="{Binding AddExpenseCommand}" />
+            <CollectionView Grid.Row="3" ItemsSource="{Binding Expenses}">
+                <CollectionView.EmptyView>
+                    <Label Style="{StaticResource Muted}" Text="No expenses recorded yet." HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FinanceExpenseRowDto">
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowExpenseActionsCommand}" CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+                                <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource chipBase}" BackgroundColor="{StaticResource PurpleLight}" HorizontalOptions="Start">
+                                    <Label Text="{Binding CategoryLabel}" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource Primary}" />
+                                </Border>
+                                <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" TextColor="{StaticResource Danger}" HorizontalOptions="End" />
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Title}" FontAttributes="Bold" Margin="0,4,0,0" />
+                                <Label Grid.Row="2" Grid.Column="0" Text="{Binding PaidTo}" Style="{StaticResource Muted}" />
+                                <Label Grid.Row="2" Grid.Column="1" Text="{Binding ExpenseDate, StringFormat='{0:MMM d, yyyy}'}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Outstanding panel -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Outstanding}">
+            <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,8">
+                <SearchBar Placeholder="Search flat or payer..." Text="{Binding OutstandingSearch}" SearchCommand="{Binding LoadOutstandingCommand}" />
+            </Border>
+            <Border Grid.Row="1" Style="{StaticResource FieldFrame}" Margin="12,0,12,4">
+                <Picker ItemsSource="{Binding OutstandingSourceOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedOutstandingSource}" />
+            </Border>
+            <CollectionView Grid.Row="2" ItemsSource="{Binding Outstandings}">
+                <CollectionView.EmptyView>
+                    <Label Style="{StaticResource Muted}" Text="Nothing outstanding." HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FinanceOutstandingRowDto">
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource chipWarning}" HorizontalOptions="Start">
+                                    <Label Text="{Binding Source}" Style="{StaticResource chipTextWarning}" />
+                                </Border>
+                                <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" TextColor="{StaticResource Danger}" HorizontalOptions="End" />
+                                <Label Grid.Row="1" Grid.Column="0" Text="{Binding PayerName}" FontAttributes="Bold" Margin="0,4,0,0" />
+                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding DaysOverdue, StringFormat='{0} days overdue'}" Style="{StaticResource Muted}" HorizontalOptions="End"
+                                       IsVisible="{Binding DaysOverdue, Converter={StaticResource IsNotNullConverter}}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Ledger panel -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Ledger}">
+            <Grid Grid.Row="0" Padding="12,8,12,4" ColumnDefinitions="2*,2*,Auto,Auto" ColumnSpacing="8">
+                <Border Style="{StaticResource FieldFrame}"><DatePicker Format="MMM d, yyyy" Date="{Binding LedgerFromDate}" FontSize="12" /></Border>
+                <Border Grid.Column="1" Style="{StaticResource FieldFrame}"><DatePicker Format="MMM d, yyyy" Date="{Binding LedgerToDate}" FontSize="12" /></Border>
+                <Button Grid.Column="2" Style="{StaticResource ChipButton}" Text="Apply" Command="{Binding ApplyLedgerDateFilterCommand}" />
+                <Button Grid.Column="3" Style="{StaticResource ChipButton}" Text="All" Command="{Binding ClearLedgerDateFilterCommand}" />
+            </Grid>
+            <Border Grid.Row="1" Style="{StaticResource Card}" Margin="12,4,12,8">
+                <HorizontalStackLayout Spacing="8">
+                    <Label Text="Opening Balance:" Style="{StaticResource Muted}" />
+                    <Label Text="{Binding LedgerOpeningBalance, StringFormat='₹{0:N0}'}" FontAttributes="Bold" />
+                </HorizontalStackLayout>
+            </Border>
+            <CollectionView Grid.Row="2" ItemsSource="{Binding LedgerEntries}">
+                <CollectionView.EmptyView>
+                    <Label Style="{StaticResource Muted}" Text="No transactions in this range." HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FinanceLedgerRowDto">
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource chipBase}" HorizontalOptions="Start">
+                                    <Label Text="{Binding Type}" FontSize="12" FontAttributes="Bold" />
+                                </Border>
+                                <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Description}" FontAttributes="Bold" Margin="0,4,0,0" />
+                                <Label Grid.Row="2" Grid.Column="0" Text="{Binding Date, StringFormat='{0:MMM d, yyyy}'}" Style="{StaticResource Muted}" />
+                                <Label Grid.Row="2" Grid.Column="1" Text="{Binding RunningBalance, StringFormat='Bal ₹{0:N0}'}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Receipts panel -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Receipts}">
+            <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,8">
+                <SearchBar Placeholder="Search receipt no., payer, or flat..." Text="{Binding ReceiptSearch}" SearchCommand="{Binding LoadReceiptsCommand}" />
+            </Border>
+            <CollectionView Grid.Row="1" ItemsSource="{Binding Receipts}">
+                <CollectionView.EmptyView>
+                    <Label Style="{StaticResource Muted}" Text="No receipts yet." HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FinanceIncomeRowDto">
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding ReceiptNumber}" FontAttributes="Bold" />
+                                <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" TextColor="{StaticResource Success}" HorizontalOptions="End" />
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding PayerName}" Margin="0,4,0,0" />
+                                <Label Grid.Row="2" Grid.Column="0" Text="{Binding Date, StringFormat='{0:MMM d, yyyy}'}" Style="{StaticResource Muted}" />
+                                <Button Grid.Row="2" Grid.Column="1" Text="Download" Style="{StaticResource ChipButton}" HorizontalOptions="End"
+                                        Command="{Binding Source={x:Reference Root}, Path=BindingContext.DownloadReceiptCommand}" CommandParameter="{Binding .}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Reports panel -->
+        <ScrollView Grid.Row="2" IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Reports}">
+            <VerticalStackLayout Padding="16" Spacing="14">
+                <Grid ColumnDefinitions="2*,2*,Auto,Auto" ColumnSpacing="8">
+                    <Border Style="{StaticResource FieldFrame}"><DatePicker Format="MMM d, yyyy" Date="{Binding ReportFromDate}" FontSize="12" /></Border>
+                    <Border Grid.Column="1" Style="{StaticResource FieldFrame}"><DatePicker Format="MMM d, yyyy" Date="{Binding ReportToDate}" FontSize="12" /></Border>
+                    <Button Grid.Column="2" Style="{StaticResource ChipButton}" Text="Apply" Command="{Binding ApplyReportDateFilterCommand}" />
+                    <Button Grid.Column="3" Style="{StaticResource ChipButton}" Text="All" Command="{Binding ClearReportDateFilterCommand}" />
+                </Grid>
+
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12" IsVisible="{Binding ReportSummary, Converter={StaticResource IsNotNullConverter}}">
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Label Text="Income" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding ReportSummary.TotalIncome, StringFormat='₹{0:N0}'}" Style="{StaticResource kpiValue}" FontSize="15" TextColor="{StaticResource Success}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Label Text="Expense" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding ReportSummary.TotalExpense, StringFormat='₹{0:N0}'}" Style="{StaticResource kpiValue}" FontSize="15" TextColor="{StaticResource Danger}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Label Text="Net" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding ReportSummary.NetBalance, StringFormat='₹{0:N0}'}" Style="{StaticResource kpiValue}" FontSize="15" TextColor="{StaticResource Info}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <Border Style="{StaticResource Card}" IsVisible="{Binding ReportSummary, Converter={StaticResource IsNotNullConverter}}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Income by Source" Style="{StaticResource SectionTitle}" FontSize="14" />
+                        <CollectionView ItemsSource="{Binding ReportSummary.IncomeBySource}" HeightRequest="120">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="gen:FinanceCategoryAmountDto">
+                                    <Grid ColumnDefinitions="*,Auto" Padding="0,6">
+                                        <Label Text="{Binding Label}" />
+                                        <Label Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" />
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource Card}" IsVisible="{Binding ReportSummary, Converter={StaticResource IsNotNullConverter}}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Expense by Category" Style="{StaticResource SectionTitle}" FontSize="14" />
+                        <CollectionView ItemsSource="{Binding ReportSummary.ExpenseByCategory}" HeightRequest="160">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="gen:FinanceCategoryAmountDto">
+                                    <Grid ColumnDefinitions="*,Auto" Padding="0,6">
+                                        <Label Text="{Binding Label}" />
+                                        <Label Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" />
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Border>
+
+                <HorizontalStackLayout Spacing="8">
+                    <Button Text="Export PDF" Style="{StaticResource OutlineButton}" Command="{Binding ExportReportPdfCommand}" />
+                    <Button Text="Export Excel" Style="{StaticResource OutlineButton}" Command="{Binding ExportReportExcelCommand}" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+
+</ContentPage>

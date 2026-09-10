@@ -12,6 +12,7 @@ public class BuildingsController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Society.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<BuildingDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] int societyId)
     {
         var result = await Mediator.Send(new GetBuildingsQuery(societyId));
@@ -20,6 +21,7 @@ public class BuildingsController : ApiControllerBase
 
     [HttpGet("{id:int}")]
     [HasPermission(Permissions.Society.View)]
+    [ProducesResponseType(typeof(ApiResponse<BuildingDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await Mediator.Send(new GetBuildingByIdQuery(id));
@@ -28,6 +30,7 @@ public class BuildingsController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Society.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create(CreateBuildingCommand command)
     {
         var id = await Mediator.Send(command);
@@ -36,6 +39,7 @@ public class BuildingsController : ApiControllerBase
 
     [HttpPut("{id:int}")]
     [HasPermission(Permissions.Society.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(int id, UpdateBuildingCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
@@ -45,6 +49,7 @@ public class BuildingsController : ApiControllerBase
 
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.Society.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id)
     {
         await Mediator.Send(new DeleteBuildingCommand(id));

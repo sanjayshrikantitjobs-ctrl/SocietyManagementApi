@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:comp="clr-namespace:SocietyManagement.Mobile.Features.Complaints"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Complaints.MyComplaintsPage"
+             x:DataType="comp:MyComplaintsViewModel"
+             Title="My Complaints">
+
+    <Grid RowDefinitions="Auto,*">
+        <Label Grid.Row="0" Style="{StaticResource ErrorText}" Margin="16,8" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Margin="0,8" />
+
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Complaints}">
+            <CollectionView.EmptyView>
+                <Label Style="{StaticResource Muted}" Text="You haven't raised any complaints yet." HorizontalOptions="Center" Margin="0,24" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="gen:ComplaintDto">
+                    <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding Title}" FontAttributes="Bold" />
+                            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipBase}" HorizontalOptions="End">
+                                <Label Text="{Binding Status}" FontSize="12" FontAttributes="Bold" />
+                            </Border>
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding Category}" Style="{StaticResource Muted}" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding CreatedAt, StringFormat='{0:MMM d, yyyy}'}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+
+</ContentPage>

@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:dash="clr-namespace:SocietyManagement.Mobile.Features.Dashboard"
+             xmlns:microcharts="clr-namespace:Microcharts.Maui;assembly=Microcharts.Maui"
              x:Class="SocietyManagement.Mobile.Features.Dashboard.DashboardPage"
              x:DataType="dash:DashboardViewModel"
              Title="Home">
@@ -16,6 +17,114 @@
                     <Label Text="{Binding Auth.RoleName}" FontSize="12" TextColor="{StaticResource White}" Opacity="0.85" />
                 </VerticalStackLayout>
             </Border>
+
+            <!-- Admin overview: KPIs + Requires Attention + charts, mirroring
+                 the web's own Admin Dashboard (admin-summary /
+                 monthly-collection-trend). Hidden for Member/Watchman, who
+                 have no equivalent summary endpoint today. -->
+            <VerticalStackLayout Spacing="14" IsVisible="{Binding Auth.IsAdmin}">
+
+                <ActivityIndicator IsRunning="{Binding IsSummaryBusy}" IsVisible="{Binding IsSummaryBusy}" />
+
+                <VerticalStackLayout Spacing="14" IsVisible="{Binding Summary, Converter={StaticResource IsNotNullConverter}}">
+
+                    <Label Text="Overview" Style="{StaticResource SectionTitle}" Margin="4,0,0,0" />
+
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="12">
+                        <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Card}">
+                            <VerticalStackLayout>
+                                <Label Text="Total Flats" Style="{StaticResource kpiLabel}" />
+                                <Label Text="{Binding Summary.TotalFlats}" Style="{StaticResource kpiValue}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource Card}">
+                            <VerticalStackLayout>
+                                <Label Text="Occupied Flats" Style="{StaticResource kpiLabel}" />
+                                <Label Text="{Binding Summary.OccupiedFlats}" Style="{StaticResource kpiValue}" TextColor="{StaticResource Info}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource Card}">
+                            <VerticalStackLayout>
+                                <Label Text="Owners" Style="{StaticResource kpiLabel}" />
+                                <Label Text="{Binding Summary.OwnersCount}" Style="{StaticResource kpiValue}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}">
+                            <VerticalStackLayout>
+                                <Label Text="Tenants" Style="{StaticResource kpiLabel}" />
+                                <Label Text="{Binding Summary.TenantsCount}" Style="{StaticResource kpiValue}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource Card}">
+                            <VerticalStackLayout>
+                                <Label Text="Collected" Style="{StaticResource kpiLabel}" />
+                                <Label Text="{Binding Summary.CollectedMaintenance, StringFormat='₹{0:N0}'}" Style="{StaticResource kpiValue}" TextColor="{StaticResource Success}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource Card}">
+                            <VerticalStackLayout>
+                                <Label Text="Outstanding" Style="{StaticResource kpiLabel}" />
+                                <Label Text="{Binding Summary.OutstandingAmount, StringFormat='₹{0:N0}'}" Style="{StaticResource kpiValue}" TextColor="{StaticResource Danger}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Row="3" Grid.Column="0" Style="{StaticResource Card}">
+                            <VerticalStackLayout>
+                                <Label Text="Open Complaints" Style="{StaticResource kpiLabel}" />
+                                <Label Text="{Binding Summary.OpenComplaintsCount}" Style="{StaticResource kpiValue}" TextColor="{StaticResource Warning}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Row="3" Grid.Column="1" Style="{StaticResource Card}">
+                            <VerticalStackLayout>
+                                <Label Text="Visitors Today" Style="{StaticResource kpiLabel}" />
+                                <Label Text="{Binding Summary.VisitorsToday}" Style="{StaticResource kpiValue}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Requires Attention" Style="{StaticResource SectionTitle}" FontSize="14" />
+                            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                                <VerticalStackLayout Grid.Row="0" Grid.Column="0">
+                                    <Label Text="{Binding Summary.PendingActions.OutstandingBillsCount}" FontAttributes="Bold" FontSize="18" TextColor="{StaticResource Danger}" />
+                                    <Label Text="Outstanding Bills" Style="{StaticResource Muted}" FontSize="11" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Row="0" Grid.Column="1">
+                                    <Label Text="{Binding Summary.PendingActions.OpenComplaintsCount}" FontAttributes="Bold" FontSize="18" TextColor="{StaticResource Warning}" />
+                                    <Label Text="Open Complaints" Style="{StaticResource Muted}" FontSize="11" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Row="1" Grid.Column="0">
+                                    <Label Text="{Binding Summary.PendingActions.VendorPaymentsDueCount}" FontAttributes="Bold" FontSize="18" />
+                                    <Label Text="Vendor Payments Due" Style="{StaticResource Muted}" FontSize="11" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Row="1" Grid.Column="1">
+                                    <Label Text="{Binding Summary.PendingActions.WaterTankerPendingCount}" FontAttributes="Bold" FontSize="18" />
+                                    <Label Text="Water Tanker Pending" Style="{StaticResource Muted}" FontSize="11" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Row="2" Grid.Column="0">
+                                    <Label Text="{Binding Summary.PendingActions.VisitorRequestsWaitingCount}" FontAttributes="Bold" FontSize="18" TextColor="{StaticResource Info}" />
+                                    <Label Text="Visitor Requests Waiting" Style="{StaticResource Muted}" FontSize="11" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Flat Occupancy" Style="{StaticResource SectionTitle}" FontSize="14" />
+                            <microcharts:ChartView Chart="{Binding OccupancyChart}" HeightRequest="180" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Collected vs Pending — Last 6 Months" Style="{StaticResource SectionTitle}" FontSize="14" />
+                            <microcharts:ChartView Chart="{Binding CollectionChart}" HeightRequest="200" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                </VerticalStackLayout>
+            </VerticalStackLayout>
 
             <Label Text="Quick Access" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Gray500}" Margin="4,0,0,-6" />
 

@@ -11,19 +11,24 @@
         <CollectionView ItemsSource="{Binding Festivals}" SelectionMode="Single" SelectionChanged="OnFestivalSelected">
             <CollectionView.EmptyView>
                 <VerticalStackLayout Padding="32" VerticalOptions="Center" Spacing="8">
-                    <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13" HorizontalOptions="Center"
+                    <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}" HorizontalOptions="Center"
                            IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
-                    <Label Text="No festivals yet." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" />
+                    <Label Style="{StaticResource Muted}" Text="No festivals yet." HorizontalOptions="Center" />
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="gen:FestivalDto">
-                    <Grid Padding="16,12" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                        <Label Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontAttributes="Bold" FontSize="16" />
-                        <Label Grid.Row="1" Grid.Column="0" Text="{Binding Year}" FontSize="13" TextColor="{StaticResource Gray500}" />
-                        <Label Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Text="{Binding Status}" VerticalOptions="Center"
-                               FontAttributes="Bold" TextColor="{StaticResource Primary}" />
-                    </Grid>
+                    <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="16" />
+                                <Label Text="{Binding Year}" Style="{StaticResource Muted}" />
+                            </VerticalStackLayout>
+                            <Border Grid.Column="1" Style="{StaticResource chipInfo}" VerticalOptions="Center">
+                                <Label Text="{Binding Status}" Style="{StaticResource chipTextInfo}" />
+                            </Border>
+                        </Grid>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

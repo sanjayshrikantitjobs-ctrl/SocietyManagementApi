@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:res="clr-namespace:SocietyManagement.Mobile.Features.Residents"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Residents.FlatResidentDetailPage"
+             x:DataType="res:FlatResidentDetailViewModel"
+             x:Name="Root"
+             Title="{Binding PageTitle}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+            <!-- Occupancy panel -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="{Binding OccupancyType, StringFormat='{0} Occupancy'}" Style="{StaticResource SectionTitle}" />
+                        <Button Grid.Column="1" Text="+ Add Member" Style="{StaticResource ChipButton}" FontSize="12" Command="{Binding AddMemberCommand}" />
+                    </Grid>
+
+                    <Label Style="{StaticResource Muted}" Text="No members on file for this flat yet." IsVisible="{Binding HasOccupancy, Converter={StaticResource InvertedBoolConverter}}" />
+
+                    <CollectionView ItemsSource="{Binding Occupancy.Members}" IsVisible="{Binding HasOccupancy}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="gen:OccupancyMemberDto">
+                                <Border Style="{StaticResource RowCard}" Margin="0,0,0,7">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                        <Border Grid.Column="0" Style="{StaticResource Avatar}">
+                                            <Label Text="👤" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                                        </Border>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <HorizontalStackLayout Spacing="6">
+                                                <Label Text="{Binding PersonName}" FontAttributes="Bold" FontSize="14" />
+                                                <Label Text="Primary" TextColor="{StaticResource Primary}" FontSize="11" VerticalOptions="Center" IsVisible="{Binding IsPrimary}" />
+                                            </HorizontalStackLayout>
+                                            <Label Text="{Binding Relationship}" Style="{StaticResource Muted}" FontSize="12" />
+                                            <HorizontalStackLayout Spacing="6">
+                                                <Label Text="{Binding Phone}" Style="{StaticResource Muted}" FontSize="12" />
+                                                <Label Text="{Binding WhatsAppNumber, StringFormat='· WA {0}'}" Style="{StaticResource Muted}" FontSize="12"
+                                                       IsVisible="{Binding WhatsAppNumber, Converter={StaticResource StringToBoolConverter}}" />
+                                            </HorizontalStackLayout>
+                                        </VerticalStackLayout>
+                                        <HorizontalStackLayout Grid.Column="2" Spacing="10">
+                                            <Button Text="✏️" Style="{StaticResource TextButton}" FontSize="14" Padding="4"
+                                                    Command="{Binding Source={x:Reference Root}, Path=BindingContext.EditMemberCommand}" CommandParameter="{Binding .}" />
+                                            <Button Text="🗑️" Style="{StaticResource TextButton}" FontSize="14" Padding="4"
+                                                    Command="{Binding Source={x:Reference Root}, Path=BindingContext.RemoveMemberCommand}" CommandParameter="{Binding .}" />
+                                        </HorizontalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Documents -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasOccupancy}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Documents" Style="{StaticResource SectionTitle}" />
+                        <Button Grid.Column="1" Text="Upload" Style="{StaticResource ChipButton}" FontSize="12" Command="{Binding UploadDocumentCommand}" />
+                    </Grid>
+                    <Label Style="{StaticResource Muted}" Text="No documents uploaded yet." IsVisible="{Binding Documents.Count, Converter={StaticResource EqualsConverter}, ConverterParameter=0}" />
+                    <CollectionView ItemsSource="{Binding Documents}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="gen:ResidentDocumentDto">
+                                <Border Style="{StaticResource RowCard}" Margin="0,0,0,7">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <VerticalStackLayout Grid.Column="0">
+                                            <Label Text="{Binding DocumentType}" FontAttributes="Bold" FontSize="13" />
+                                            <Label Text="{Binding UploadedByName, StringFormat='by {0}'}" Style="{StaticResource Muted}" FontSize="11" />
+                                        </VerticalStackLayout>
+                                        <Button Grid.Column="1" Text="🗑️" Style="{StaticResource TextButton}" FontSize="14" Padding="4"
+                                                Command="{Binding Source={x:Reference Root}, Path=BindingContext.DeleteDocumentCommand}" CommandParameter="{Binding .}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Login Accounts -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasOccupancy}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Login Accounts" Style="{StaticResource SectionTitle}" />
+                    <CollectionView ItemsSource="{Binding Logins}">
+                        <CollectionView.EmptyView>
+                            <Label Style="{StaticResource Muted}" Text="No members on file for this flat yet." />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="res:MemberLoginItemViewModel">
+                                <Border Style="{StaticResource RowCard}" Margin="0,0,0,7">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Grid.Column="0" Text="{Binding PersonName}" FontSize="13" VerticalOptions="Center" />
+                                        <Label Grid.Column="1" Text="Checking…" Style="{StaticResource Muted}" IsVisible="{Binding IsChecking}" />
+                                        <Border Grid.Column="1" Style="{StaticResource chipSuccess}" IsVisible="{Binding Login, Converter={StaticResource IsNotNullConverter}}">
+                                            <Label Text="{Binding Login.Email}" Style="{StaticResource chipTextSuccess}" FontSize="11" />
+                                        </Border>
+                                        <Button Grid.Column="1" Text="Create Login" Style="{StaticResource ChipButton}" FontSize="11"
+                                                IsVisible="{Binding ShowCreateLogin}"
+                                                Command="{Binding Source={x:Reference Root}, Path=BindingContext.CreateLoginCommand}" CommandParameter="{Binding .}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Emergency Contacts -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Emergency Contacts" Style="{StaticResource SectionTitle}" />
+                        <Button Grid.Column="1" Text="+ Add Contact" Style="{StaticResource ChipButton}" FontSize="12" Command="{Binding AddEmergencyContactCommand}" />
+                    </Grid>
+                    <Label Style="{StaticResource Muted}" Text="No emergency contacts on file for this flat yet." IsVisible="{Binding EmergencyContacts.Count, Converter={StaticResource EqualsConverter}, ConverterParameter=0}" />
+                    <CollectionView ItemsSource="{Binding EmergencyContacts}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="gen:EmergencyContactDto">
+                                <Border Style="{StaticResource RowCard}" Margin="0,0,0,7">
+                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                        <Label Grid.Row="0" Grid.Column="0" Text="{Binding ContactName}" FontAttributes="Bold" FontSize="13" />
+                                        <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource Muted}" FontSize="12">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding Relationship}" />
+                                                    <Span Text=" · " />
+                                                    <Span Text="{Binding Phone}" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                        <HorizontalStackLayout Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Spacing="10" VerticalOptions="Center">
+                                            <Button Text="✏️" Style="{StaticResource TextButton}" FontSize="14" Padding="4"
+                                                    Command="{Binding Source={x:Reference Root}, Path=BindingContext.EditEmergencyContactCommand}" CommandParameter="{Binding .}" />
+                                            <Button Text="🗑️" Style="{StaticResource TextButton}" FontSize="14" Padding="4"
+                                                    Command="{Binding Source={x:Reference Root}, Path=BindingContext.DeleteEmergencyContactCommand}" CommandParameter="{Binding .}" />
+                                        </HorizontalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Vehicles -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Vehicles" Style="{StaticResource SectionTitle}" />
+                        <Button Grid.Column="1" Text="+ Add Vehicle" Style="{StaticResource ChipButton}" FontSize="12" Command="{Binding AddVehicleCommand}" />
+                    </Grid>
+                    <Label Style="{StaticResource Muted}" Text="No vehicles assigned to this flat yet." IsVisible="{Binding Vehicles.Count, Converter={StaticResource EqualsConverter}, ConverterParameter=0}" />
+                    <CollectionView ItemsSource="{Binding Vehicles}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="gen:VehicleDto">
+                                <Border Style="{StaticResource RowCard}" Margin="0,0,0,7">
+                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                        <Label Grid.Row="0" Grid.Column="0" Text="{Binding RegistrationNumber}" FontAttributes="Bold" FontSize="13" />
+                                        <Label Grid.Row="1" Grid.Column="0" Text="{Binding VehicleType}" Style="{StaticResource Muted}" FontSize="12" />
+                                        <HorizontalStackLayout Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Spacing="10" VerticalOptions="Center">
+                                            <Button Text="✏️" Style="{StaticResource TextButton}" FontSize="14" Padding="4"
+                                                    Command="{Binding Source={x:Reference Root}, Path=BindingContext.EditVehicleCommand}" CommandParameter="{Binding .}" />
+                                            <Button Text="🗑️" Style="{StaticResource TextButton}" FontSize="14" Padding="4"
+                                                    Command="{Binding Source={x:Reference Root}, Path=BindingContext.DeleteVehicleCommand}" CommandParameter="{Binding .}" />
+                                        </HorizontalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Occupancy History -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Occupancy History" Style="{StaticResource SectionTitle}" />
+                    <Label Style="{StaticResource Muted}" Text="No history yet." IsVisible="{Binding History.Count, Converter={StaticResource EqualsConverter}, ConverterParameter=0}" />
+                    <CollectionView ItemsSource="{Binding History}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="gen:FlatOccupancyDto">
+                                <Border Style="{StaticResource RowCard}" Margin="0,0,0,7">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <Border Grid.Column="0" Style="{StaticResource chipBase}" VerticalOptions="Start">
+                                            <Label Text="{Binding Type}" FontSize="11" FontAttributes="Bold" />
+                                        </Border>
+                                        <HorizontalStackLayout Grid.Column="1" Margin="10,0,0,0" Spacing="6" VerticalOptions="Center">
+                                            <Label Text="{Binding StartDate, StringFormat='{0:MMM d, yyyy}'}" FontSize="12" />
+                                            <Label Text="–" FontSize="12" />
+                                            <Label Text="{Binding EndDate, StringFormat='{0:MMM d, yyyy}'}" FontSize="12"
+                                                   IsVisible="{Binding EndDate, Converter={StaticResource IsNotNullConverter}}" />
+                                            <Label Text="Current" FontSize="12" TextColor="{StaticResource Success}"
+                                                   IsVisible="{Binding EndDate, Converter={StaticResource IsNullConverter}}" />
+                                        </HorizontalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

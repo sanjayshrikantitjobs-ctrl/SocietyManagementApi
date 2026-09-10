@@ -13,39 +13,40 @@
         <CollectionView Grid.Row="1" ItemsSource="{Binding Revisions}">
             <CollectionView.EmptyView>
                 <VerticalStackLayout Padding="32" VerticalOptions="Center">
-                    <Label Text="No changes recorded yet." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" />
+                    <Label Style="{StaticResource Muted}" Text="No changes recorded yet." HorizontalOptions="Center" />
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="gen:FestivalBudgetRevisionDto">
-                    <VerticalStackLayout Padding="16,10" Spacing="2">
-                        <Label Text="{Binding CreatedAt, StringFormat='{0:MMM d, yyyy h:mm tt}'}" FontSize="12" TextColor="{StaticResource Gray500}" />
-                        <Label FontSize="13">
-                            <Label.FormattedText>
-                                <FormattedString>
-                                    <Span Text="Estimated: " />
-                                    <Span Text="{Binding PreviousEstimatedAmount, StringFormat='₹{0:N0}'}" />
-                                    <Span Text=" → " />
-                                    <Span Text="{Binding NewEstimatedAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" />
-                                </FormattedString>
-                            </Label.FormattedText>
-                        </Label>
-                        <Label FontSize="13">
-                            <Label.FormattedText>
-                                <FormattedString>
-                                    <Span Text="Approved: " />
-                                    <Span Text="{Binding PreviousApprovedAmount, StringFormat='₹{0:N0}'}" />
-                                    <Span Text=" → " />
-                                    <Span Text="{Binding NewApprovedAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" />
-                                </FormattedString>
-                            </Label.FormattedText>
-                        </Label>
-                        <Label Text="{Binding Reason}" FontSize="12" TextColor="{StaticResource Gray500}"
-                               IsVisible="{Binding Reason, Converter={StaticResource StringToBoolConverter}}" />
-                        <Label Text="{Binding CreatedBy, StringFormat='by {0}'}" FontSize="11" TextColor="{StaticResource Gray400}"
-                               IsVisible="{Binding CreatedBy, Converter={StaticResource StringToBoolConverter}}" />
-                        <BoxView HeightRequest="1" BackgroundColor="{StaticResource Gray200}" Margin="0,8,0,0" />
-                    </VerticalStackLayout>
+                    <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="{Binding CreatedAt, StringFormat='{0:MMM d, yyyy h:mm tt}'}" Style="{StaticResource Muted}" />
+                            <Label FontSize="13">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="Estimated: " />
+                                        <Span Text="{Binding PreviousEstimatedAmount, StringFormat='₹{0:N0}'}" />
+                                        <Span Text=" → " />
+                                        <Span Text="{Binding NewEstimatedAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                            <Label FontSize="13">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="Approved: " />
+                                        <Span Text="{Binding PreviousApprovedAmount, StringFormat='₹{0:N0}'}" />
+                                        <Span Text=" → " />
+                                        <Span Text="{Binding NewApprovedAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                            <Label Text="{Binding Reason}" Style="{StaticResource Muted}"
+                                   IsVisible="{Binding Reason, Converter={StaticResource StringToBoolConverter}}" />
+                            <Label Text="{Binding CreatedBy, StringFormat='by {0}'}" FontSize="11" TextColor="{StaticResource Gray400}"
+                                   IsVisible="{Binding CreatedBy, Converter={StaticResource StringToBoolConverter}}" />
+                        </VerticalStackLayout>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

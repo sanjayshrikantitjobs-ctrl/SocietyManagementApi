@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:forms="clr-namespace:SocietyManagement.Mobile.Features.Residents.Forms"
+             x:Class="SocietyManagement.Mobile.Features.Residents.Forms.EmergencyContactFormPage"
+             x:DataType="forms:EmergencyContactFormViewModel"
+             Title="Emergency Contact">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource FieldLabel}" Text="Contact Name" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding ContactName}" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Relationship" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Relationship}" Placeholder="e.g. Brother, Friend" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Phone" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Phone}" Keyboard="Telephone" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Alternate Phone (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding AlternatePhone}" Keyboard="Telephone" /></Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

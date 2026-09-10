@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:res="clr-namespace:SocietyManagement.Mobile.Features.Residents"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             xmlns:microcharts="clr-namespace:Microcharts.Maui;assembly=Microcharts.Maui"
+             x:Class="SocietyManagement.Mobile.Features.Residents.ResidentsPage"
+             x:DataType="res:ResidentsViewModel"
+             x:Name="Root"
+             Title="Residents">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <ScrollView Grid.Row="0" Orientation="Horizontal">
+            <HorizontalStackLayout Spacing="4" Padding="10,10,10,4">
+                <Button Text="Overview" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Overview">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Overview">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Owner" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Owner">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Owner">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Tenant" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Tenant">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Tenant">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Vehicle Listing" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Vehicles">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Vehicles">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Resale Listings" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Resale">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Resale">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+            </HorizontalStackLayout>
+        </ScrollView>
+
+        <Label Grid.Row="1" Style="{StaticResource ErrorText}" Margin="16,0" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+        <!-- Overview panel -->
+        <ScrollView Grid.Row="2" IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Overview}">
+            <VerticalStackLayout Padding="16" Spacing="14" IsVisible="{Binding Summary, Converter={StaticResource IsNotNullConverter}}">
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="12">
+                    <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Label Text="Total Flats" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Summary.TotalFlats}" Style="{StaticResource kpiValue}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Label Text="Vacant" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Summary.VacantFlats}" Style="{StaticResource kpiValue}" TextColor="{StaticResource Warning}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Label Text="Owner Occupied" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Summary.OwnerOccupiedFlats}" Style="{StaticResource kpiValue}" TextColor="{StaticResource Info}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Label Text="Tenant Occupied" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Summary.TenantOccupiedFlats}" Style="{StaticResource kpiValue}" TextColor="{StaticResource Purple}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Label Text="Total Owners" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Summary.TotalOwners}" Style="{StaticResource kpiValue}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Label Text="Total Tenants" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Summary.TotalTenants}" Style="{StaticResource kpiValue}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Label Text="Total Members" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Summary.TotalMembers}" Style="{StaticResource kpiValue}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <Border Style="{StaticResource Card}" IsVisible="{Binding OccupancyChart, Converter={StaticResource IsNotNullConverter}}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Flat Occupancy" Style="{StaticResource SectionTitle}" FontSize="14" />
+                        <microcharts:ChartView Chart="{Binding OccupancyChart}" HeightRequest="200" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Label Text="Recent Occupancy Changes" Style="{StaticResource SectionTitle}" Margin="4,4,0,0" />
+                <CollectionView ItemsSource="{Binding RecentChanges}" HeightRequest="360">
+                    <CollectionView.EmptyView>
+                        <Label Style="{StaticResource Muted}" Text="No recent changes." HorizontalOptions="Center" Margin="0,12" />
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="gen:RecentOccupancyChangeDto">
+                            <Border Style="{StaticResource RowCard}" Margin="0,0,0,7">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Grid.Column="0" FontSize="13">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{Binding PersonName}" FontAttributes="Bold" />
+                                                <Span Text="{Binding MovedIn, StringFormat=' {0}'}" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Label Grid.Column="1" Text="{Binding ChangeDate, StringFormat='{0:MMM d}'}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Owner panel -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Owner}">
+            <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,8">
+                <SearchBar Placeholder="Search flat number or owner name..." Text="{Binding OwnerSearch}" SearchCommand="{Binding LoadOwnersCommand}" />
+            </Border>
+            <CollectionView Grid.Row="1" ItemsSource="{Binding Owners}">
+                <CollectionView.EmptyView>
+                    <Label Style="{StaticResource Muted}" Text="No flats found." HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FlatOwnershipGridDto">
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenFlatDetailCommand}" CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding FlatNumber, StringFormat='Flat {0}'}" FontAttributes="Bold" />
+                                <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipSuccess}" HorizontalOptions="End" IsVisible="{Binding HasOwner}">
+                                    <Label Text="Owned" Style="{StaticResource chipTextSuccess}" />
+                                </Border>
+                                <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipNeutral}" HorizontalOptions="End" IsVisible="{Binding HasOwner, Converter={StaticResource InvertedBoolConverter}}">
+                                    <Label Text="Vacant" Style="{StaticResource chipTextNeutral}" />
+                                </Border>
+                                <Label Grid.Row="1" Grid.Column="0" Text="{Binding PrimaryOwnerName}" Style="{StaticResource Muted}" />
+                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding PrimaryOwnerPhone}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Tenant panel -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Tenant}">
+            <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,8">
+                <SearchBar Placeholder="Search flat number or tenant name..." Text="{Binding TenantSearch}" SearchCommand="{Binding LoadTenantsCommand}" />
+            </Border>
+            <CollectionView Grid.Row="1" ItemsSource="{Binding Tenants}">
+                <CollectionView.EmptyView>
+                    <Label Style="{StaticResource Muted}" Text="No flats found." HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FlatTenancyGridDto">
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenFlatDetailCommand}" CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding FlatNumber, StringFormat='Flat {0}'}" FontAttributes="Bold" />
+                                <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipInfo}" HorizontalOptions="End" IsVisible="{Binding HasTenant}">
+                                    <Label Text="Tenant Occupied" Style="{StaticResource chipTextInfo}" />
+                                </Border>
+                                <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipNeutral}" HorizontalOptions="End" IsVisible="{Binding HasTenant, Converter={StaticResource InvertedBoolConverter}}">
+                                    <Label Text="Vacant" Style="{StaticResource chipTextNeutral}" />
+                                </Border>
+                                <Label Grid.Row="1" Grid.Column="0" Text="{Binding PrimaryTenantName}" Style="{StaticResource Muted}" />
+                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding PrimaryTenantPhone}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Vehicle Listing panel -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Vehicles}">
+            <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,8">
+                <SearchBar Placeholder="Search reg. no., owner, or flat..." Text="{Binding VehicleSearch}" SearchCommand="{Binding LoadVehiclesCommand}" />
+            </Border>
+            <Button Grid.Row="1" Text="+ Add Vehicle" Style="{StaticResource ChipButton}" HorizontalOptions="End" Margin="12,0,12,8" Command="{Binding AddVehicleCommand}" />
+            <CollectionView Grid.Row="2" ItemsSource="{Binding Vehicles}">
+                <CollectionView.EmptyView>
+                    <Label Style="{StaticResource Muted}" Text="No vehicles registered yet." HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:VehicleDto">
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.EditVehicleCommand}" CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding RegistrationNumber}" FontAttributes="Bold" />
+                                <Label Grid.Row="0" Grid.Column="1" Text="{Binding VehicleType}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                                <Label Grid.Row="1" Grid.Column="0" Text="{Binding FlatNumber, StringFormat='Flat {0}'}" Style="{StaticResource Muted}" />
+                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding ParkingSlotNumber, StringFormat='Slot {0}'}" Style="{StaticResource Muted}" HorizontalOptions="End"
+                                       IsVisible="{Binding ParkingSlotNumber, Converter={StaticResource StringToBoolConverter}}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Resale Listings panel -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,Auto,*"
+              IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Resale}">
+            <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,8">
+                <Picker ItemsSource="{Binding ResaleStatusOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedResaleStatus}" />
+            </Border>
+            <Button Grid.Row="1" Text="+ Add Listing" Style="{StaticResource ChipButton}" HorizontalOptions="End" Margin="12,0,12,8" Command="{Binding AddResaleListingCommand}" />
+            <CollectionView Grid.Row="2" ItemsSource="{Binding ResaleListings}">
+                <CollectionView.EmptyView>
+                    <Label Style="{StaticResource Muted}" Text="No resale listings yet." HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FlatResaleListingDto">
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.EditResaleListingCommand}" CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding FlatNumber, StringFormat='Flat {0}'}" FontAttributes="Bold" />
+                                <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipBase}" HorizontalOptions="End">
+                                    <Label Text="{Binding Status}" FontSize="12" FontAttributes="Bold" />
+                                </Border>
+                                <Label Grid.Row="1" Grid.Column="0" Text="{Binding ListedByMemberName}" Style="{StaticResource Muted}" />
+                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding AskingPrice, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
+                                <Label Grid.Row="2" Grid.Column="0" Text="{Binding AvailableFrom, StringFormat='Available {0:MMM d, yyyy}'}" Style="{StaticResource Muted}" />
+                                <Label Grid.Row="2" Grid.Column="1" Text="NOC Requested" Style="{StaticResource Muted}" HorizontalOptions="End" IsVisible="{Binding NocRequested}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+    </Grid>
+
+</ContentPage>

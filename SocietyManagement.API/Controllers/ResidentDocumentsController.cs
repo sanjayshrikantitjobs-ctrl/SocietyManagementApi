@@ -16,6 +16,7 @@ public class ResidentDocumentsController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Occupancy.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<ResidentDocumentDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] int flatOccupancyId)
     {
         var result = await Mediator.Send(new GetResidentDocumentsQuery(flatOccupancyId));
@@ -24,6 +25,7 @@ public class ResidentDocumentsController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Occupancy.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Upload(UploadResidentDocumentCommand command)
     {
         var id = await Mediator.Send(command);
@@ -32,6 +34,7 @@ public class ResidentDocumentsController : ApiControllerBase
 
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.Occupancy.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id)
     {
         await Mediator.Send(new DeleteResidentDocumentCommand(id));

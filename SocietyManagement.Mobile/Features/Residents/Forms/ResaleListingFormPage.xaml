@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:forms="clr-namespace:SocietyManagement.Mobile.Features.Residents.Forms"
+             x:Class="SocietyManagement.Mobile.Features.Residents.Forms.ResaleListingFormPage"
+             x:DataType="forms:ResaleListingFormViewModel"
+             Title="Resale Listing">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <VerticalStackLayout Spacing="14" IsVisible="{Binding IsEditMode, Converter={StaticResource InvertedBoolConverter}}">
+                        <Label Style="{StaticResource FieldLabel}" Text="Listed By" />
+                        <Border Style="{StaticResource FieldFrame}">
+                            <Picker ItemsSource="{Binding MemberOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedMember}" />
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Asking Price" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding AskingPrice}" Keyboard="Numeric" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Available From" />
+                    <Border Style="{StaticResource FieldFrame}"><DatePicker Date="{Binding AvailableFrom}" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Visit Timing Notes (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding VisitTimingNotes}" /></Border>
+
+                    <HorizontalStackLayout Spacing="8">
+                        <CheckBox IsChecked="{Binding NocRequested}" />
+                        <Label Text="NOC requested" VerticalOptions="Center" FontSize="13" />
+                    </HorizontalStackLayout>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Notes (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Editor Text="{Binding Notes}" AutoSize="TextChanges" /></Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

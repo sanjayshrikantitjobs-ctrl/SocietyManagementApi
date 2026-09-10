@@ -9,31 +9,37 @@
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="14">
 
-            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
-            <Label Text="Category" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Picker ItemsSource="{Binding CategoryOptions}" ItemDisplayBinding="{Binding Label}"
-                    SelectedItem="{Binding SelectedCategory}" IsEnabled="{Binding IsEditMode, Converter={StaticResource InvertedBoolConverter}}" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource FieldLabel}" Text="Category" />
+                    <Border Style="{StaticResource FieldFrame}">
+                        <Picker ItemsSource="{Binding CategoryOptions}" ItemDisplayBinding="{Binding Label}"
+                                SelectedItem="{Binding SelectedCategory}" IsEnabled="{Binding IsEditMode, Converter={StaticResource InvertedBoolConverter}}" />
+                    </Border>
 
-            <VerticalStackLayout IsVisible="{Binding ShowCustomName}" Spacing="14">
-                <Label Text="Custom Category Name" FontSize="12" TextColor="{StaticResource Gray500}" />
-                <Entry Text="{Binding CustomCategoryName}" />
-            </VerticalStackLayout>
+                    <VerticalStackLayout IsVisible="{Binding ShowCustomName}" Spacing="14">
+                        <Label Style="{StaticResource FieldLabel}" Text="Custom Category Name" />
+                        <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding CustomCategoryName}" /></Border>
+                    </VerticalStackLayout>
 
-            <Label Text="Estimated Amount" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding EstimatedAmount}" Keyboard="Numeric" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Estimated Amount" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding EstimatedAmount}" Keyboard="Numeric" /></Border>
 
-            <Label Text="Approved Amount" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding ApprovedAmount}" Keyboard="Numeric" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Approved Amount" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding ApprovedAmount}" Keyboard="Numeric" /></Border>
 
-            <Label Text="Notes (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Editor Text="{Binding Notes}" AutoSize="TextChanges" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Notes (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Editor Text="{Binding Notes}" AutoSize="TextChanges" /></Border>
 
-            <VerticalStackLayout IsVisible="{Binding IsEditMode}" Spacing="14">
-                <Label Text="Reason for Change (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
-                <Entry Text="{Binding Reason}" />
-            </VerticalStackLayout>
+                    <VerticalStackLayout IsVisible="{Binding IsEditMode}" Spacing="14">
+                        <Label Style="{StaticResource FieldLabel}" Text="Reason for Change (optional)" />
+                        <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Reason}" /></Border>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
 
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />

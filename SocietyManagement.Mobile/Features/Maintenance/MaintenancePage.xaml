@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:maint="clr-namespace:SocietyManagement.Mobile.Features.Maintenance"
              xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             xmlns:microcharts="clr-namespace:Microcharts.Maui;assembly=Microcharts.Maui"
              x:Class="SocietyManagement.Mobile.Features.Maintenance.MaintenancePage"
              x:DataType="maint:MaintenanceViewModel"
              x:Name="Root"
@@ -11,18 +12,60 @@
     <Grid RowDefinitions="Auto,Auto,*">
 
         <ScrollView Grid.Row="0" Orientation="Horizontal">
-            <HorizontalStackLayout Spacing="6" Padding="8">
-                <Button Text="Dashboard" Command="{Binding SelectTabCommand}" CommandParameter="Dashboard" />
-                <Button Text="Bills" Command="{Binding SelectTabCommand}" CommandParameter="Bills" />
-                <Button Text="Categories" Command="{Binding SelectTabCommand}" CommandParameter="Categories" />
-                <Button Text="Special Charges" Command="{Binding SelectTabCommand}" CommandParameter="SpecialCharges" />
-                <Button Text="Fines" Command="{Binding SelectTabCommand}" CommandParameter="Fines" />
-                <Button Text="Water Tanker" Command="{Binding SelectTabCommand}" CommandParameter="WaterTanker" />
-                <Button Text="Settings" Command="{Binding SelectTabCommand}" CommandParameter="Settings" />
+            <HorizontalStackLayout Spacing="4" Padding="10,10,10,4">
+                <Button Text="Dashboard" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Dashboard">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Dashboard">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Bills" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Bills">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Bills">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Categories" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Categories">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Categories">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Special Charges" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="SpecialCharges">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="SpecialCharges">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Fines" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Fines">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Fines">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Water Tanker" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="WaterTanker">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="WaterTanker">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Settings" Style="{StaticResource segmentTab}" Command="{Binding SelectTabCommand}" CommandParameter="Settings">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding SelectedTab}" Value="Settings">
+                            <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
             </HorizontalStackLayout>
         </ScrollView>
 
-        <Label Grid.Row="1" Margin="16,0" Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+        <Label Grid.Row="1" Style="{StaticResource ErrorText}" Margin="16,0" Text="{Binding ErrorMessage}"
                IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
         <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
@@ -30,51 +73,101 @@
         <!-- Dashboard panel -->
         <ScrollView Grid.Row="2" IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Dashboard}">
             <VerticalStackLayout Padding="16" Spacing="12">
+
+                <HorizontalStackLayout Spacing="12">
+                    <HorizontalStackLayout Spacing="4">
+                        <Button Text="Monthly" Style="{StaticResource segmentTab}" Command="{Binding SetDashboardViewModeCommand}" CommandParameter="Month">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding DashboardViewMode}" Value="Month">
+                                    <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Yearly" Style="{StaticResource segmentTab}" Command="{Binding SetDashboardViewModeCommand}" CommandParameter="Year">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding DashboardViewMode}" Value="Year">
+                                    <Setter Property="Style" Value="{StaticResource segmentTabActive}" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </HorizontalStackLayout>
+
+                    <Border Style="{StaticResource FieldFrame}" WidthRequest="150"
+                            IsVisible="{Binding DashboardViewMode, Converter={StaticResource EqualsConverter}, ConverterParameter=Month}">
+                        <DatePicker Format="MMMM yyyy" Date="{Binding DashboardMonthDate}" FontSize="13" />
+                    </Border>
+                    <Border Style="{StaticResource FieldFrame}" WidthRequest="110"
+                            IsVisible="{Binding DashboardViewMode, Converter={StaticResource EqualsConverter}, ConverterParameter=Year}">
+                        <Picker ItemsSource="{Binding DashboardYearOptions}" SelectedItem="{Binding DashboardYear}" FontSize="13" />
+                    </Border>
+                </HorizontalStackLayout>
+
                 <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="12"
                       IsVisible="{Binding Kpis, Converter={StaticResource IsNotNullConverter}}">
-                    <Border Grid.Row="0" Grid.Column="0" StrokeShape="RoundRectangle 12" Padding="14">
-                        <VerticalStackLayout>
-                            <Label Text="Bills Generated" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Text="{Binding Kpis.BillsGenerated}" FontSize="24" FontAttributes="Bold" />
+                    <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Bills Generated" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Kpis.BillsGenerated}" Style="{StaticResource kpiValue}" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Row="0" Grid.Column="1" StrokeShape="RoundRectangle 12" Padding="14">
-                        <VerticalStackLayout>
-                            <Label Text="Total Flats" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Text="{Binding Kpis.TotalFlats}" FontSize="24" FontAttributes="Bold" />
+                    <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Total Flats" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Kpis.TotalFlats}" Style="{StaticResource kpiValue}" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Row="1" Grid.Column="0" StrokeShape="RoundRectangle 12" Padding="14">
-                        <VerticalStackLayout>
-                            <Label Text="Paid" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Text="{Binding Kpis.Paid}" FontSize="24" FontAttributes="Bold" TextColor="#15803D" />
+                    <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Paid" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Kpis.Paid}" Style="{StaticResource kpiValue}" TextColor="{StaticResource Success}" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Row="1" Grid.Column="1" StrokeShape="RoundRectangle 12" Padding="14">
-                        <VerticalStackLayout>
-                            <Label Text="Overdue" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Text="{Binding Kpis.Overdue}" FontSize="24" FontAttributes="Bold" TextColor="#DC2626" />
+                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Overdue" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Kpis.Overdue}" Style="{StaticResource kpiValue}" TextColor="{StaticResource Danger}" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Row="2" Grid.Column="0" StrokeShape="RoundRectangle 12" Padding="14">
-                        <VerticalStackLayout>
-                            <Label Text="Collected" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Text="{Binding Kpis.TotalCollection, StringFormat='₹{0:N0}'}" FontSize="18" FontAttributes="Bold" />
+                    <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Collected" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Kpis.TotalCollection, StringFormat='₹{0:N0}'}" Style="{StaticResource kpiValue}" FontSize="16" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Row="2" Grid.Column="1" StrokeShape="RoundRectangle 12" Padding="14">
-                        <VerticalStackLayout>
-                            <Label Text="Outstanding" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Text="{Binding Kpis.Outstanding, StringFormat='₹{0:N0}'}" FontSize="18" FontAttributes="Bold" TextColor="#DC2626" />
+                    <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Outstanding" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Kpis.Outstanding, StringFormat='₹{0:N0}'}" Style="{StaticResource kpiValue}" FontSize="16" TextColor="{StaticResource Danger}" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" StrokeShape="RoundRectangle 12" Padding="14">
-                        <VerticalStackLayout>
-                            <Label Text="Tanker Expense" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Text="{Binding Kpis.TankerExpense, StringFormat='₹{0:N0}'}" FontSize="18" FontAttributes="Bold" />
+                    <Border Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Tanker Expense" Style="{StaticResource kpiLabel}" />
+                            <Label Text="{Binding Kpis.TankerExpense, StringFormat='₹{0:N0}'}" Style="{StaticResource kpiValue}" FontSize="16" />
                         </VerticalStackLayout>
                     </Border>
                 </Grid>
+
+                <Border Style="{StaticResource Card}" IsVisible="{Binding MonthlyTrendChart, Converter={StaticResource IsNotNullConverter}}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Monthly Collection Trend" Style="{StaticResource SectionTitle}" FontSize="14" />
+                        <microcharts:ChartView Chart="{Binding MonthlyTrendChart}" HeightRequest="200" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource Card}" IsVisible="{Binding PaidVsPendingChart, Converter={StaticResource IsNotNullConverter}}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Paid vs Pending" Style="{StaticResource SectionTitle}" FontSize="14" />
+                        <microcharts:ChartView Chart="{Binding PaidVsPendingChart}" HeightRequest="180" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource Card}" IsVisible="{Binding OutstandingByWingChart, Converter={StaticResource IsNotNullConverter}}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Outstanding by Wing" Style="{StaticResource SectionTitle}" FontSize="14" />
+                        <microcharts:ChartView Chart="{Binding OutstandingByWingChart}" HeightRequest="200" />
+                    </VerticalStackLayout>
+                </Border>
             </VerticalStackLayout>
         </ScrollView>
 
@@ -82,45 +175,59 @@
         <Grid Grid.Row="2" RowDefinitions="Auto,Auto,Auto,Auto,*"
               IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Bills}">
 
-            <SearchBar Grid.Row="0" Margin="8,4" Placeholder="Search flat or owner name..." Text="{Binding BillSearch}" SearchCommand="{Binding LoadBillsCommand}" />
+            <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,8">
+                <SearchBar Placeholder="Search flat or owner name..." Text="{Binding BillSearch}"
+                           SearchCommand="{Binding LoadBillsCommand}" TextChanged="OnBillSearchTextChanged" />
+            </Border>
 
             <Grid Grid.Row="1" Padding="12,4" ColumnDefinitions="2*,Auto,2*" ColumnSpacing="8">
-                <DatePicker Grid.Column="0" Format="MMMM yyyy" Date="{Binding BillMonthFilterDate}" FontSize="13" />
-                <Button Grid.Column="1" Text="All" Command="{Binding ClearMonthFilterCommand}" FontSize="12" Padding="8,0" />
-                <Picker Grid.Column="2" ItemsSource="{Binding StatusOptions}" ItemDisplayBinding="{Binding Label}"
-                        SelectedItem="{Binding SelectedStatusOption}" FontSize="13" />
+                <Border Style="{StaticResource FieldFrame}"><DatePicker Format="MMMM yyyy" Date="{Binding BillMonthFilterDate}" FontSize="13" /></Border>
+                <Button Grid.Column="1" Style="{StaticResource ChipButton}" Text="All" Command="{Binding ClearMonthFilterCommand}" />
+                <Border Grid.Column="2" Style="{StaticResource FieldFrame}">
+                    <Picker ItemsSource="{Binding StatusOptions}" ItemDisplayBinding="{Binding Label}"
+                            SelectedItem="{Binding SelectedStatusOption}" FontSize="13" />
+                </Border>
             </Grid>
 
-            <Grid Grid.Row="2" Padding="12,0" ColumnDefinitions="2*,Auto" ColumnSpacing="8">
-                <DatePicker Grid.Column="0" Format="MMMM yyyy" Date="{Binding GenerateBillMonth}" FontSize="13" />
-                <Button Grid.Column="1" Text="Generate Bills" Command="{Binding GenerateBillsCommand}" FontSize="12" />
-            </Grid>
+            <Border Grid.Row="2" Style="{StaticResource chipInfo}" Margin="12,0,12,4" HorizontalOptions="Start"
+                    IsVisible="{Binding BillsBalanceSummary, Converter={StaticResource IsNotNullConverter}}">
+                <HorizontalStackLayout Spacing="6">
+                    <Label Text="Balance" Style="{StaticResource chipTextInfo}" FontAttributes="Bold" FontSize="11" />
+                    <Label Text="{Binding BillsBalanceSummary.TotalBalance, StringFormat='₹{0:N0}'}" Style="{StaticResource chipTextInfo}" FontAttributes="Bold" FontSize="13" />
+                    <Label Text="{Binding BillsBalanceSummary.Count, StringFormat='across {0} bill(s)'}" Style="{StaticResource chipTextInfo}" FontSize="11" />
+                </HorizontalStackLayout>
+            </Border>
 
-            <Grid Grid.Row="3" Padding="12,8" ColumnDefinitions="*,*" ColumnSpacing="8">
-                <Button Grid.Column="0" Text="Export PDF" Command="{Binding ExportBillsPdfCommand}" FontSize="12" />
-                <Button Grid.Column="1" Text="Export Excel" Command="{Binding ExportBillsExcelCommand}" FontSize="12" />
+            <Grid Grid.Row="3" Padding="12,8" ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Button Grid.Column="0" Style="{StaticResource OutlineButton}" Text="Export PDF" Command="{Binding ExportBillsPdfCommand}" FontSize="12" />
+                <Button Grid.Column="1" Style="{StaticResource OutlineButton}" Text="Export Excel" Command="{Binding ExportBillsExcelCommand}" FontSize="12" />
+                <Button Grid.Column="2" Text="Generate Bills" Command="{Binding GenerateBillsCommand}" FontSize="12" />
             </Grid>
 
             <CollectionView Grid.Row="4" ItemsSource="{Binding Bills}">
                 <CollectionView.EmptyView>
                     <VerticalStackLayout Padding="32" VerticalOptions="Center">
-                        <Label Text="No bills yet. Tap 'Generate Bills' to create this month's invoices."
-                               HorizontalOptions="Center" HorizontalTextAlignment="Center" TextColor="{StaticResource Gray500}" />
+                        <Label Style="{StaticResource Muted}" Text="No bills yet. Tap 'Generate Bills' to create this month's invoices."
+                               HorizontalOptions="Center" HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="gen:MaintenanceBillDto">
-                        <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowBillActionsCommand}" CommandParameter="{Binding .}" />
-                            </Grid.GestureRecognizers>
-                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding FlatNumber, StringFormat='Flat {0}'}" FontAttributes="Bold" />
-                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding InvoiceNumber}" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Grid.Row="2" Grid.Column="0" Text="{Binding BillMonth, StringFormat='{0:MMMM yyyy}'}" FontSize="11" TextColor="{StaticResource Gray500}" />
-                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding Balance, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
-                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding Status}" FontSize="12" TextColor="{StaticResource Primary}" HorizontalOptions="End" />
-                            <Label Grid.Row="2" Grid.Column="1" Text="{Binding DueDate, StringFormat='Due {0:MMM d}'}" FontSize="11" TextColor="{StaticResource Gray500}" HorizontalOptions="End" />
-                        </Grid>
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowBillActionsCommand}" CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding FlatNumber, StringFormat='Flat {0}'}" FontAttributes="Bold" />
+                                <Label Grid.Row="1" Grid.Column="0" Text="{Binding InvoiceNumber}" Style="{StaticResource Muted}" />
+                                <Label Grid.Row="2" Grid.Column="0" Text="{Binding BillMonth, StringFormat='{0:MMMM yyyy}'}" Style="{StaticResource Muted}" />
+                                <Label Grid.Row="0" Grid.Column="1" Text="{Binding Balance, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
+                                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource chipInfo}" HorizontalOptions="End">
+                                    <Label Text="{Binding Status}" Style="{StaticResource chipTextInfo}" />
+                                </Border>
+                                <Label Grid.Row="2" Grid.Column="1" Text="{Binding DueDate, StringFormat='Due {0:MMM d}'}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                            </Grid>
+                        </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
@@ -131,17 +238,19 @@
                         IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Categories}">
             <CollectionView.EmptyView>
                 <VerticalStackLayout Padding="32" VerticalOptions="Center">
-                    <Label Text="No charge categories yet." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" />
+                    <Label Style="{StaticResource Muted}" Text="No charge categories yet." HorizontalOptions="Center" />
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="gen:MaintenanceCategoryDto">
-                    <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                        <Label Grid.Row="0" Grid.Column="0" Text="{Binding ChargeName}" FontAttributes="Bold" />
-                        <Label Grid.Row="1" Grid.Column="0" Text="{Binding ChargeType}" FontSize="12" TextColor="{StaticResource Gray500}" />
-                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding MonthlyAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
-                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding IsActive, StringFormat='{0}'}" FontSize="12" HorizontalOptions="End" />
-                    </Grid>
+                    <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding ChargeName}" FontAttributes="Bold" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding ChargeType}" Style="{StaticResource Muted}" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding MonthlyAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding IsActive, StringFormat='{0}'}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                        </Grid>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
@@ -149,23 +258,28 @@
         <!-- Special Charges panel -->
         <Grid Grid.Row="2" RowDefinitions="Auto,Auto,*"
               IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=SpecialCharges}">
-            <SearchBar Grid.Row="0" Margin="8,4" Placeholder="Search flat or charge name..." Text="{Binding SpecialChargeSearch}" SearchCommand="{Binding LoadSpecialChargesCommand}" />
+            <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,8">
+                <SearchBar Placeholder="Search flat or charge name..." Text="{Binding SpecialChargeSearch}"
+                           SearchCommand="{Binding LoadSpecialChargesCommand}" TextChanged="OnSpecialChargeSearchTextChanged" />
+            </Border>
             <Button Grid.Row="1" Margin="16,0,16,10" Text="Add Special Charge" Command="{Binding AddSpecialChargeCommand}" HorizontalOptions="Start" FontSize="12" />
             <CollectionView Grid.Row="2" ItemsSource="{Binding SpecialCharges}">
                 <CollectionView.EmptyView>
-                    <Label Text="No special charges yet." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" Margin="0,24" />
+                    <Label Style="{StaticResource Muted}" Text="No special charges yet." HorizontalOptions="Center" Margin="0,24" />
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="gen:SpecialChargeDto">
-                        <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowSpecialChargeActionsCommand}" CommandParameter="{Binding .}" />
-                            </Grid.GestureRecognizers>
-                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding ChargeName}" FontAttributes="Bold" />
-                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding FlatNumber, StringFormat='Flat {0}'}" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
-                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding Frequency}" FontSize="12" TextColor="{StaticResource Primary}" HorizontalOptions="End" />
-                        </Grid>
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowSpecialChargeActionsCommand}" CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding ChargeName}" FontAttributes="Bold" />
+                                <Label Grid.Row="1" Grid.Column="0" Text="{Binding FlatNumber, StringFormat='Flat {0}'}" Style="{StaticResource Muted}" />
+                                <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
+                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding Frequency}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                            </Grid>
+                        </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
@@ -174,25 +288,32 @@
         <!-- Fines panel -->
         <Grid Grid.Row="2" RowDefinitions="Auto,Auto,Auto,*"
               IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Fines}">
-            <SearchBar Grid.Row="0" Margin="8,4" Placeholder="Search flat or reason..." Text="{Binding FineSearch}" SearchCommand="{Binding LoadFinesCommand}" />
-            <Picker Grid.Row="1" Margin="16,0" ItemsSource="{Binding FineStatusOptions}" ItemDisplayBinding="{Binding Label}"
-                    SelectedItem="{Binding SelectedFineStatus}" FontSize="13" />
+            <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,8">
+                <SearchBar Placeholder="Search flat or reason..." Text="{Binding FineSearch}"
+                           SearchCommand="{Binding LoadFinesCommand}" TextChanged="OnFineSearchTextChanged" />
+            </Border>
+            <Border Grid.Row="1" Style="{StaticResource FieldFrame}" Margin="16,0">
+                <Picker ItemsSource="{Binding FineStatusOptions}" ItemDisplayBinding="{Binding Label}"
+                        SelectedItem="{Binding SelectedFineStatus}" FontSize="13" />
+            </Border>
             <Button Grid.Row="2" Margin="16,10" Text="Record Fine" Command="{Binding AddFineCommand}" HorizontalOptions="Start" FontSize="12" />
             <CollectionView Grid.Row="3" ItemsSource="{Binding Fines}">
                 <CollectionView.EmptyView>
-                    <Label Text="No fines recorded yet." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" Margin="0,24" />
+                    <Label Style="{StaticResource Muted}" Text="No fines recorded yet." HorizontalOptions="Center" Margin="0,24" />
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="gen:FineRecordDto">
-                        <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowFineActionsCommand}" CommandParameter="{Binding .}" />
-                            </Grid.GestureRecognizers>
-                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding Reason}" FontAttributes="Bold" />
-                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding FlatNumber, StringFormat='Flat {0}'}" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
-                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding Status}" FontSize="12" TextColor="{StaticResource Primary}" HorizontalOptions="End" />
-                        </Grid>
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowFineActionsCommand}" CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding Reason}" FontAttributes="Bold" />
+                                <Label Grid.Row="1" Grid.Column="0" Text="{Binding FlatNumber, StringFormat='Flat {0}'}" Style="{StaticResource Muted}" />
+                                <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" TextColor="{StaticResource Danger}" />
+                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding Status}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                            </Grid>
+                        </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
@@ -201,38 +322,49 @@
         <!-- Water Tanker panel -->
         <Grid Grid.Row="2" RowDefinitions="Auto,Auto,Auto,Auto,*"
               IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=WaterTanker}">
-            <DatePicker Grid.Row="0" Margin="16,8" Format="MMMM yyyy" Date="{Binding WaterTankerMonth}" />
-            <Grid Grid.Row="1" Padding="12,0" ColumnDefinitions="*,*,*" ColumnSpacing="8" IsVisible="{Binding WaterTankerSummary, Converter={StaticResource IsNotNullConverter}}">
-                <VerticalStackLayout Grid.Column="0">
-                    <Label Text="Deliveries" FontSize="11" TextColor="{StaticResource Gray500}" />
-                    <Label Text="{Binding WaterTankerSummary.TotalDeliveries}" FontAttributes="Bold" />
-                </VerticalStackLayout>
-                <VerticalStackLayout Grid.Column="1">
-                    <Label Text="Tankers Used" FontSize="11" TextColor="{StaticResource Gray500}" />
-                    <Label Text="{Binding WaterTankerSummary.TotalTankers}" FontAttributes="Bold" />
-                </VerticalStackLayout>
-                <VerticalStackLayout Grid.Column="2">
-                    <Label Text="Amount Paid" FontSize="11" TextColor="{StaticResource Gray500}" />
-                    <Label Text="{Binding WaterTankerSummary.TotalAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" />
-                </VerticalStackLayout>
+            <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="16,8"><DatePicker Format="MMMM yyyy" Date="{Binding WaterTankerMonth}" /></Border>
+            <Grid Grid.Row="1" Padding="12,4" ColumnDefinitions="*,*,*" ColumnSpacing="8" IsVisible="{Binding WaterTankerSummary, Converter={StaticResource IsNotNullConverter}}">
+                <Border Grid.Column="0" Style="{StaticResource Card}" Padding="10">
+                    <VerticalStackLayout>
+                        <Label Text="Deliveries" Style="{StaticResource kpiLabel}" FontSize="11" />
+                        <Label Text="{Binding WaterTankerSummary.TotalDeliveries}" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Card}" Padding="10">
+                    <VerticalStackLayout>
+                        <Label Text="Tankers Used" Style="{StaticResource kpiLabel}" FontSize="11" />
+                        <Label Text="{Binding WaterTankerSummary.TotalTankers}" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource Card}" Padding="10">
+                    <VerticalStackLayout>
+                        <Label Text="Amount Paid" Style="{StaticResource kpiLabel}" FontSize="11" />
+                        <Label Text="{Binding WaterTankerSummary.TotalAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Border>
             </Grid>
-            <SearchBar Grid.Row="2" Margin="8,4" Placeholder="Search provider or vehicle number..." Text="{Binding WaterTankerSearch}" SearchCommand="{Binding LoadWaterTankerCommand}" />
+            <Border Grid.Row="2" Style="{StaticResource FieldFrame}" Margin="8,4">
+                <SearchBar Placeholder="Search provider or vehicle number..." Text="{Binding WaterTankerSearch}"
+                           SearchCommand="{Binding LoadWaterTankerCommand}" TextChanged="OnWaterTankerSearchTextChanged" />
+            </Border>
             <Button Grid.Row="3" Margin="16,0,16,10" Text="Log Tanker Entry" Command="{Binding AddWaterTankerLogCommand}" HorizontalOptions="Start" FontSize="12" />
             <CollectionView Grid.Row="4" ItemsSource="{Binding WaterTankerLogs}">
                 <CollectionView.EmptyView>
-                    <Label Text="No tanker deliveries logged this month." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" Margin="0,24" />
+                    <Label Style="{StaticResource Muted}" Text="No tanker deliveries logged this month." HorizontalOptions="Center" Margin="0,24" />
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="gen:WaterTankerLogDto">
-                        <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowWaterTankerLogActionsCommand}" CommandParameter="{Binding .}" />
-                            </Grid.GestureRecognizers>
-                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding ProviderName}" FontAttributes="Bold" />
-                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding VehicleNumber}" FontSize="12" TextColor="{StaticResource Gray500}" />
-                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding TotalAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
-                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding NumberOfTankers, StringFormat='{0} tanker(s)'}" FontSize="12" TextColor="{StaticResource Gray500}" HorizontalOptions="End" />
-                        </Grid>
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowWaterTankerLogActionsCommand}" CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding ProviderName}" FontAttributes="Bold" />
+                                <Label Grid.Row="1" Grid.Column="0" Text="{Binding VehicleNumber}" Style="{StaticResource Muted}" />
+                                <Label Grid.Row="0" Grid.Column="1" Text="{Binding TotalAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
+                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding NumberOfTankers, StringFormat='{0} tanker(s)'}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                            </Grid>
+                        </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
@@ -241,32 +373,36 @@
         <!-- Settings panel -->
         <ScrollView Grid.Row="2" IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Settings}">
             <VerticalStackLayout Padding="16" Spacing="14">
-                <Label Text="Bill Generation Day (1-28)" FontSize="12" TextColor="{StaticResource Gray500}" />
-                <Entry Text="{Binding SettingsBillGenerationDay}" Keyboard="Numeric" />
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="14">
+                        <Label Style="{StaticResource FieldLabel}" Text="Bill Generation Day (1-28)" />
+                        <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding SettingsBillGenerationDay}" Keyboard="Numeric" /></Border>
 
-                <Label Text="Due Day (1-28)" FontSize="12" TextColor="{StaticResource Gray500}" />
-                <Entry Text="{Binding SettingsDueDay}" Keyboard="Numeric" />
+                        <Label Style="{StaticResource FieldLabel}" Text="Due Day (1-28)" />
+                        <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding SettingsDueDay}" Keyboard="Numeric" /></Border>
 
-                <Label Text="Grace Period (days)" FontSize="12" TextColor="{StaticResource Gray500}" />
-                <Entry Text="{Binding SettingsGracePeriodDays}" Keyboard="Numeric" />
+                        <Label Style="{StaticResource FieldLabel}" Text="Grace Period (days)" />
+                        <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding SettingsGracePeriodDays}" Keyboard="Numeric" /></Border>
 
-                <Label Text="Late Fee Amount" FontSize="12" TextColor="{StaticResource Gray500}" />
-                <Entry Text="{Binding SettingsLateFeeAmount}" Keyboard="Numeric" />
+                        <Label Style="{StaticResource FieldLabel}" Text="Late Fee Amount" />
+                        <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding SettingsLateFeeAmount}" Keyboard="Numeric" /></Border>
 
-                <Label Text="Invoice Number Prefix" FontSize="12" TextColor="{StaticResource Gray500}" />
-                <Entry Text="{Binding SettingsInvoiceNumberPrefix}" />
+                        <Label Style="{StaticResource FieldLabel}" Text="Invoice Number Prefix" />
+                        <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding SettingsInvoiceNumberPrefix}" /></Border>
 
-                <HorizontalStackLayout Spacing="8">
-                    <CheckBox IsChecked="{Binding SettingsWhatsAppEnabled}" />
-                    <Label Text="WhatsApp Notifications Enabled (Super Admin only)" VerticalOptions="Center" FontSize="13" />
-                </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="8">
+                            <CheckBox IsChecked="{Binding SettingsWhatsAppEnabled}" />
+                            <Label Text="WhatsApp Notifications Enabled (Super Admin only)" VerticalOptions="Center" FontSize="13" />
+                        </HorizontalStackLayout>
 
-                <Label Text="WhatsApp Message Template" FontSize="12" TextColor="{StaticResource Gray500}" />
-                <Editor Text="{Binding SettingsWhatsAppMessageTemplate}" AutoSize="TextChanges" />
-                <Label Text="Placeholders: {OwnerName} {Month} {Amount} {DueDate}" FontSize="11" TextColor="{StaticResource Gray400}" />
+                        <Label Style="{StaticResource FieldLabel}" Text="WhatsApp Message Template" />
+                        <Border Style="{StaticResource FieldFrame}"><Editor Text="{Binding SettingsWhatsAppMessageTemplate}" AutoSize="TextChanges" /></Border>
+                        <Label Style="{StaticResource Muted}" Text="Placeholders: {OwnerName} {Month} {Amount} {DueDate}" />
 
-                <Label Text="PDF Footer Message" FontSize="12" TextColor="{StaticResource Gray500}" />
-                <Editor Text="{Binding SettingsPdfFooterMessage}" AutoSize="TextChanges" />
+                        <Label Style="{StaticResource FieldLabel}" Text="PDF Footer Message" />
+                        <Border Style="{StaticResource FieldFrame}"><Editor Text="{Binding SettingsPdfFooterMessage}" AutoSize="TextChanges" /></Border>
+                    </VerticalStackLayout>
+                </Border>
 
                 <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
                 <Button Text="Save Settings" Command="{Binding SaveSettingsCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />

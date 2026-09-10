@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SocietyManagement.API.Authorization;
 using SocietyManagement.Application.Features.Roles.Commands;
+using SocietyManagement.Application.Features.Roles.Common;
 using SocietyManagement.Application.Features.Roles.Queries;
 using SocietyManagement.Shared.Constants;
 using SocietyManagement.Shared.Wrappers;
@@ -15,6 +16,7 @@ public class RolesController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Roles_.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<RoleDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetRoles()
     {
         var result = await Mediator.Send(new GetRolesQuery());

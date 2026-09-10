@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SocietyManagement.API.Authorization;
 using SocietyManagement.Application.Features.Users.Commands.CreateUser;
+using SocietyManagement.Application.Features.Users.Common;
 using SocietyManagement.Application.Features.Users.Commands.DeleteUser;
 using SocietyManagement.Application.Features.Users.Commands.LockUser;
 using SocietyManagement.Application.Features.Users.Commands.ResetUserPassword;
@@ -21,6 +22,7 @@ public class UsersController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Users.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<UserDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUsers(
         [FromQuery] string? search, [FromQuery] int? roleId, [FromQuery] bool? isActive,
         [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,

@@ -15,6 +15,7 @@ public class CommitteeController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Committee.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<CommitteeMemberDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] int societyId)
     {
         var result = await Mediator.Send(new GetCommitteeMembersQuery(societyId));

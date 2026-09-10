@@ -9,29 +9,35 @@
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="14">
 
-            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
-            <Label Text="Name" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding Name}" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource FieldLabel}" Text="Name" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Name}" /></Border>
 
-            <Label Text="Category" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Picker ItemsSource="{Binding CategoryOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedCategory}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Category" />
+                    <Border Style="{StaticResource FieldFrame}">
+                        <Picker ItemsSource="{Binding CategoryOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedCategory}" />
+                    </Border>
 
-            <Label Text="Phone (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding Phone}" Keyboard="Telephone" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Phone (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Phone}" Keyboard="Telephone" /></Border>
 
-            <Label Text="Email (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding Email}" Keyboard="Email" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Email (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Email}" Keyboard="Email" /></Border>
 
-            <Label Text="GST Number (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding GstNumber}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="GST Number (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding GstNumber}" /></Border>
 
-            <Label Text="Address (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Editor Text="{Binding Address}" AutoSize="TextChanges" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Address (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Editor Text="{Binding Address}" AutoSize="TextChanges" /></Border>
 
-            <Label Text="Rating (0-5)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding Rating}" Keyboard="Numeric" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Rating (0-5)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Rating}" Keyboard="Numeric" /></Border>
+                </VerticalStackLayout>
+            </Border>
 
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />

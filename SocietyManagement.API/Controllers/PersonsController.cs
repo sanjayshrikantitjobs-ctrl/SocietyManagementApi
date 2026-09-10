@@ -13,6 +13,7 @@ public class PersonsController : ApiControllerBase
 {
     [HttpGet("search")]
     [HasPermission(Permissions.Occupancy.View)]
+    [ProducesResponseType(typeof(ApiResponse<PersonDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Search([FromQuery] int societyId, [FromQuery] string phone)
     {
         var result = await Mediator.Send(new SearchPersonsQuery(societyId, phone));
@@ -21,6 +22,7 @@ public class PersonsController : ApiControllerBase
 
     [HttpGet("{id:int}")]
     [HasPermission(Permissions.Occupancy.View)]
+    [ProducesResponseType(typeof(ApiResponse<PersonDetailDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await Mediator.Send(new GetPersonByIdQuery(id));
@@ -29,6 +31,7 @@ public class PersonsController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Occupancy.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create(CreatePersonCommand command)
     {
         var id = await Mediator.Send(command);
@@ -37,6 +40,7 @@ public class PersonsController : ApiControllerBase
 
     [HttpPut("{id:int}")]
     [HasPermission(Permissions.Occupancy.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(int id, UpdatePersonCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id and body id must match."));
@@ -46,6 +50,7 @@ public class PersonsController : ApiControllerBase
 
     [HttpGet("{id:int}/login")]
     [HasPermission(Permissions.Occupancy.View)]
+    [ProducesResponseType(typeof(ApiResponse<PersonLoginDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetLogin(int id)
     {
         var result = await Mediator.Send(new GetPersonLoginQuery(id));
@@ -54,6 +59,7 @@ public class PersonsController : ApiControllerBase
 
     [HttpPost("{id:int}/create-login")]
     [HasPermission(Permissions.Occupancy.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
     public async Task<IActionResult> CreateLogin(int id, [FromBody] CreatePersonLoginRequest request)
     {
         var userId = await Mediator.Send(new CreateUserForPersonCommand(id, request.FlatId, request.RoleId, request.Password));

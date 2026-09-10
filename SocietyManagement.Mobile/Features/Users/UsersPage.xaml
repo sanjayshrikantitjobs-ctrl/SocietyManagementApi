@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:usr="clr-namespace:SocietyManagement.Mobile.Features.Users"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Users.UsersPage"
+             x:DataType="usr:UsersViewModel"
+             Title="Users">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,12,12,4">
+            <SearchBar Placeholder="Search name or email..." Text="{Binding Search}" SearchCommand="{Binding LoadCommand}" />
+        </Border>
+
+        <Label Grid.Row="1" Style="{StaticResource ErrorText}" Margin="16,0" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Users}">
+            <CollectionView.EmptyView>
+                <Label Style="{StaticResource Muted}" Text="No users found." HorizontalOptions="Center" Margin="0,24" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="gen:UserDto">
+                    <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                            <Label Grid.Row="0" Grid.Column="0">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding FirstName}" FontAttributes="Bold" />
+                                        <Span Text=" " />
+                                        <Span Text="{Binding LastName}" FontAttributes="Bold" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipInfo}" HorizontalOptions="End">
+                                <Label Text="{Binding RoleName}" Style="{StaticResource chipTextInfo}" />
+                            </Border>
+                            <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Email}" Style="{StaticResource Muted}" />
+                            <Label Grid.Row="2" Grid.Column="0" Text="{Binding SocietyName}" Style="{StaticResource Muted}" FontSize="12"
+                                   IsVisible="{Binding SocietyName, Converter={StaticResource StringToBoolConverter}}" />
+                            <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource chipDanger}" HorizontalOptions="End" IsVisible="{Binding IsLocked}">
+                                <Label Text="Locked" Style="{StaticResource chipTextDanger}" />
+                            </Border>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+
+</ContentPage>

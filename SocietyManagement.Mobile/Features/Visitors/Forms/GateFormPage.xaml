@@ -9,22 +9,26 @@
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="14">
 
-            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
-            <Label Text="Name" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding Name}" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource FieldLabel}" Text="Name" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Name}" /></Border>
 
-            <Label Text="Code" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding Code}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Code" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Code}" /></Border>
 
-            <Label Text="Location (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding Location}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Location (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Location}" /></Border>
 
-            <HorizontalStackLayout Spacing="8" IsVisible="{Binding IsEditMode}">
-                <CheckBox IsChecked="{Binding IsActive}" />
-                <Label Text="Active" VerticalOptions="Center" />
-            </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="8" IsVisible="{Binding IsEditMode}">
+                        <CheckBox IsChecked="{Binding IsActive}" />
+                        <Label Text="Active" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
 
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />

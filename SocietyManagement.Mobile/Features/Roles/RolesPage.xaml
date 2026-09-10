@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:roles="clr-namespace:SocietyManagement.Mobile.Features.Roles"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Roles.RolesPage"
+             x:DataType="roles:RolesViewModel"
+             Title="Roles &amp; Permissions">
+
+    <Grid RowDefinitions="Auto,*">
+        <Label Grid.Row="0" Style="{StaticResource ErrorText}" Margin="16,8" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Margin="0,8" />
+
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Roles}">
+            <CollectionView.EmptyView>
+                <Label Style="{StaticResource Muted}" Text="No roles found." HorizontalOptions="Center" Margin="0,24" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="gen:RoleDto">
+                    <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontAttributes="Bold" />
+                            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipBase}" HorizontalOptions="End" IsVisible="{Binding IsSystemRole}">
+                                <Label Text="System" FontSize="12" FontAttributes="Bold" />
+                            </Border>
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding Description}" Style="{StaticResource Muted}"
+                                   IsVisible="{Binding Description, Converter={StaticResource StringToBoolConverter}}" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding UserCount, StringFormat='{0} users'}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+
+</ContentPage>

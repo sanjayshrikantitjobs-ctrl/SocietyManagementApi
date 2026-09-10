@@ -1,8 +1,10 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microcharts;
 using SocietyManagement.Mobile.Api.Generated;
 using SocietyManagement.Mobile.Features.Festivals.Forms;
+using SocietyManagement.Mobile.Shared;
 
 namespace SocietyManagement.Mobile.Features.Festivals;
 
@@ -49,6 +51,10 @@ public partial class FestivalDetailViewModel : ObservableObject
     [ObservableProperty] private int festivalId;
     [ObservableProperty] private FestivalDto? festival;
     [ObservableProperty] private FestivalKpisDto? kpis;
+    [ObservableProperty] private Chart? collectionProgressChart;
+    [ObservableProperty] private Chart? budgetVsActualChart;
+    [ObservableProperty] private Chart? expenseByCategoryChart;
+    [ObservableProperty] private Chart? sponsorContributionChart;
     [ObservableProperty] private ObservableCollection<PoolChildSummaryDto> childFestivals = new();
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? errorMessage;
@@ -79,7 +85,9 @@ public partial class FestivalDetailViewModel : ObservableObject
             NotifyKindFlagsChanged();
 
             var dashboardResponse = await _dashboardClient.FestivalDashboardAsync(FestivalId);
-            Kpis = dashboardResponse.Data?.Kpis;
+            var dashboard = dashboardResponse.Data;
+            Kpis = dashboard?.Kpis;
+            BuildDashboardCharts(dashboard);
 
             if (Festival?.Kind == FestivalKind.Pool)
             {
@@ -95,6 +103,40 @@ public partial class FestivalDetailViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    /// <summary>Mirrors festival-dashboard's 4 charts (Budget vs Actual,
+    /// Collection Progress, Expense by Category, Sponsor Contribution) —
+    /// FestivalDashboardDto already carries every point these need
+    /// (FestivalDashboardFeature.cs), just never rendered on mobile before.</summary>
+    private void BuildDashboardCharts(FestivalDashboardDto? dashboard)
+    {
+        if (dashboard is null)
+        {
+            CollectionProgressChart = null;
+            BudgetVsActualChart = null;
+            ExpenseByCategoryChart = null;
+            SponsorContributionChart = null;
+            return;
+        }
+
+        var budget = dashboard.Kpis?.Budget ?? 0;
+        var collected = dashboard.Kpis?.Collected ?? 0;
+        var remaining = Math.Max(budget - collected, 0);
+        CollectionProgressChart = ChartFactory.BuildProportionDonut(
+            "Collected", collected, ChartFactory.ColorSuccess,
+            "Remaining", remaining, ChartFactory.ColorMuted);
+
+        BudgetVsActualChart = ChartFactory.BuildPairedBar(
+            (dashboard.BudgetVsActual ?? new()).Select(c => (c.CategoryName, c.Approved ?? 0, c.Actual ?? 0)).ToList(),
+            ChartFactory.ColorInfo, ChartFactory.ColorWarning);
+
+        ExpenseByCategoryChart = ChartFactory.BuildCategoryDonut(
+            (dashboard.ExpenseByCategory ?? new()).Select(e => (e.CategoryName, e.Amount ?? 0)).ToList());
+
+        SponsorContributionChart = ChartFactory.BuildPairedBar(
+            (dashboard.SponsorContributions ?? new()).Select(s => (s.CompanyName, s.Promised ?? 0, s.Received ?? 0)).ToList(),
+            ChartFactory.ColorInfo, ChartFactory.ColorSuccess);
     }
 
     private void NotifyKindFlagsChanged()
@@ -594,7 +636,10 @@ public partial class FestivalDetailViewModel : ObservableObject
             var search = string.IsNullOrWhiteSpace(ContributionSearch) ? null : ContributionSearch;
             if (ContributionView == "Flats")
             {
-                var response = await _contributionsClient.FlatSummaryAsync(FestivalId, search, SelectedContributionStatus.Value, null, false, 1, 100);
+                var statuses = SelectedContributionStatus.Value is { } status
+                    ? new List<FlatContributionStatus> { status }
+                    : null;
+                var response = await _contributionsClient.FlatSummaryAsync(FestivalId, search, statuses, null, false, 1, 100);
                 FlatContributions = new ObservableCollection<FlatContributionDto>(response.Data?.Items ?? new());
             }
             else

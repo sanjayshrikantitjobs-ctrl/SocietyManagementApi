@@ -13,6 +13,7 @@ public class ParkingSlotsController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Society.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<ParkingSlotDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] int societyId, [FromQuery] ParkingStatus? status)
     {
         var result = await Mediator.Send(new GetParkingSlotsQuery(societyId, status));
@@ -21,6 +22,7 @@ public class ParkingSlotsController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Society.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Create(CreateParkingSlotCommand command)
     {
         var id = await Mediator.Send(command);
@@ -29,6 +31,7 @@ public class ParkingSlotsController : ApiControllerBase
 
     [HttpPost("{id:int}/allocate")]
     [HasPermission(Permissions.Society.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Allocate(int id, [FromQuery] int? flatId)
     {
         await Mediator.Send(new AllocateParkingSlotCommand(id, flatId));
@@ -37,6 +40,7 @@ public class ParkingSlotsController : ApiControllerBase
 
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.Society.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id)
     {
         await Mediator.Send(new DeleteParkingSlotCommand(id));

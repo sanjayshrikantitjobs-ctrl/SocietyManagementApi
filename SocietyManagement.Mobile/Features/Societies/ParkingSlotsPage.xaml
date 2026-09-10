@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:soc="clr-namespace:SocietyManagement.Mobile.Features.Societies"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Societies.ParkingSlotsPage"
+             x:DataType="soc:ParkingSlotsViewModel"
+             x:Name="Root"
+             Title="Parking Slots">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Button Grid.Row="0" Text="+ Add Slot" Margin="16,12,16,4" HorizontalOptions="Start" FontSize="13" Command="{Binding AddSlotCommand}" />
+
+        <Label Grid.Row="1" Style="{StaticResource ErrorText}" Margin="16,0" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Slots}">
+            <CollectionView.EmptyView>
+                <Label Style="{StaticResource Muted}" Text="No parking slots yet." HorizontalOptions="Center" Margin="0,24" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="gen:ParkingSlotDto">
+                    <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding SlotNumber, StringFormat='Slot {0}'}" FontAttributes="Bold" />
+                            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipSuccess}" HorizontalOptions="End" IsVisible="{Binding Status, Converter={StaticResource EqualsConverter}, ConverterParameter=Vacant}">
+                                <Label Text="Vacant" Style="{StaticResource chipTextSuccess}" />
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipInfo}" HorizontalOptions="End" IsVisible="{Binding Status, Converter={StaticResource EqualsConverter}, ConverterParameter=Allocated}">
+                                <Label Text="Allocated" Style="{StaticResource chipTextInfo}" />
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipWarning}" HorizontalOptions="End" IsVisible="{Binding Status, Converter={StaticResource EqualsConverter}, ConverterParameter=Reserved}">
+                                <Label Text="Reserved" Style="{StaticResource chipTextWarning}" />
+                            </Border>
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding Type}" Style="{StaticResource Muted}" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding AllocatedFlatNumber, StringFormat='Flat {0}'}" Style="{StaticResource Muted}" HorizontalOptions="End"
+                                   IsVisible="{Binding AllocatedFlatNumber, Converter={StaticResource StringToBoolConverter}}" />
+                            <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Spacing="16" Margin="0,6,0,0">
+                                <Button Text="Allocate" Style="{StaticResource TextButton}" FontSize="12"
+                                        Command="{Binding Source={x:Reference Root}, Path=BindingContext.AllocateCommand}" CommandParameter="{Binding .}" />
+                                <Button Text="Delete" Style="{StaticResource TextButton}" TextColor="{StaticResource Danger}" FontSize="12"
+                                        Command="{Binding Source={x:Reference Root}, Path=BindingContext.DeleteSlotCommand}" CommandParameter="{Binding .}" />
+                            </HorizontalStackLayout>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+
+</ContentPage>

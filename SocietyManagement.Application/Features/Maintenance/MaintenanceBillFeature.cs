@@ -67,6 +67,15 @@ public class MaintenanceBillDetailDto : MaintenanceBillDto
     public List<MaintenancePaymentDto> Payments { get; set; } = new();
 }
 
+/// <summary>Aggregate over every bill matching the list screen's current
+/// filters (not just the current page) — lets the toolbar show a running
+/// "Balance" total that stays correct regardless of page size.</summary>
+public class BillsBalanceSummaryDto
+{
+    public int Count { get; set; }
+    public decimal TotalBalance { get; set; }
+}
+
 /// <summary>Status is derived at read time from the amounts themselves,
 /// not the stored payment-progress field — comparing this bill's
 /// outstanding Balance against its own month's charge (TotalAmount minus
@@ -643,6 +652,12 @@ public record GetBillsQuery(
     int SocietyId, int? FlatId, List<BillStatus>? Statuses, DateTime? BillMonth, string? Search = null,
     int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<MaintenanceBillDto>>;
 
+/// <summary>Same filters as GetBillsQuery, unpaginated — mirrors
+/// GetBillsExportPdfQuery/GetBillsExportExcelQuery's "every matching bill"
+/// scope, but only to total the Balance column rather than produce a file.</summary>
+public record GetBillsBalanceSummaryQuery(
+    int SocietyId, int? FlatId, List<BillStatus>? Statuses, DateTime? BillMonth, string? Search = null) : IRequest<BillsBalanceSummaryDto>;
+
 public record GetBillByIdQuery(int Id) : IRequest<MaintenanceBillDetailDto>;
 
 public record GetBillPdfQuery(int Id) : IRequest<byte[]>;
@@ -657,6 +672,7 @@ public record GetBillsExportExcelQuery(int SocietyId, List<BillStatus>? Statuses
 
 public class MaintenanceBillQueryHandlers :
     IRequestHandler<GetBillsQuery, PaginatedResult<MaintenanceBillDto>>,
+    IRequestHandler<GetBillsBalanceSummaryQuery, BillsBalanceSummaryDto>,
     IRequestHandler<GetBillByIdQuery, MaintenanceBillDetailDto>,
     IRequestHandler<GetBillPdfQuery, byte[]>,
     IRequestHandler<GetBillsExportPdfQuery, byte[]>,
@@ -798,6 +814,14 @@ public class MaintenanceBillQueryHandlers :
             (pageNumber - 1) * pageSize, pageSize, ct);
 
         return new PaginatedResult<MaintenanceBillDto>(dtos, totalCount, pageNumber, pageSize);
+    }
+
+    public async Task<BillsBalanceSummaryDto> Handle(GetBillsBalanceSummaryQuery request, CancellationToken ct)
+    {
+        var (dtos, totalCount) = await GetFilteredDtosAsync(
+            request.SocietyId, request.FlatId, request.Statuses, request.BillMonth, request.Search, null, null, ct);
+
+        return new BillsBalanceSummaryDto { Count = totalCount, TotalBalance = dtos.Sum(d => d.Balance) };
     }
 
     private async Task<MaintenanceBillsExportData> BuildExportDataAsync(

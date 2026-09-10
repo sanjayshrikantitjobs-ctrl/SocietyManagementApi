@@ -22,7 +22,7 @@ import { ConfirmDialogService } from '../../../shared/services/confirm-dialog.se
 import { Society } from '../../../core/models/society.model';
 import { SocietyService } from '../../society-setup/services/society.service';
 import { MONTH_YEAR_FORMATS } from '../../../shared/utils/month-picker-format';
-import { BILL_STATUS_LABELS, BillStatus, MaintenanceBillDto } from '../models/maintenance.model';
+import { BILL_STATUS_LABELS, BillsBalanceSummaryDto, BillStatus, MaintenanceBillDto } from '../models/maintenance.model';
 import { MaintenanceService } from '../services/maintenance.service';
 
 @Component({
@@ -53,6 +53,11 @@ import { MaintenanceService } from '../services/maintenance.service';
               @for (s of statusOptions; track s.value) { <mat-option [value]="s.value">{{ s.label }}</mat-option> }
             </mat-select>
           </mat-form-field>
+        </div>
+        <div class="balance-summary">
+          <span class="balance-summary-label">Balance</span>
+          <span class="balance-summary-value">₹{{ balanceSummary()?.totalBalance ?? 0 | number }}</span>
+          <span class="balance-summary-count">across {{ balanceSummary()?.count ?? 0 }} bill(s)</span>
         </div>
         <div class="toolbar-actions">
           <button mat-stroked-button [matMenuTriggerFor]="exportMenu"><mat-icon>download</mat-icon> Export</button>
@@ -174,6 +179,10 @@ import { MaintenanceService } from '../services/maintenance.service';
     .tab-content { padding: 20px 0; }
     .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
     .filters { display: flex; align-items: center; gap: 12px; }
+    .balance-summary { display: flex; align-items: baseline; gap: 6px; padding: 8px 16px; background: var(--app-primary-light); border-radius: 8px; }
+    .balance-summary-label { font-size: 12px; font-weight: 600; color: var(--app-text-muted); }
+    .balance-summary-value { font-size: 16px; font-weight: 700; color: var(--app-primary); }
+    .balance-summary-count { font-size: 12px; color: var(--app-text-muted); }
     .toolbar-actions { display: flex; align-items: center; gap: 10px; }
     .bulk-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 10px 14px; background: var(--app-primary-light); border-radius: 8px; }
     .bulk-toolbar span { font-size: 13px; font-weight: 600; color: var(--app-primary); }
@@ -211,6 +220,9 @@ export class MaintenanceBillsListComponent implements OnInit {
   readonly statusOptions = Object.entries(BILL_STATUS_LABELS).map(([value, label]) => ({ value: Number(value), label }));
   readonly selection = new SelectionModel<number>(true, []);
   readonly exportStatuses = signal<Set<number>>(new Set());
+  /** Totals every bill matching the current Month/Status filters, not just
+   * the current page — kept in sync with load() below. */
+  readonly balanceSummary = signal<BillsBalanceSummaryDto | null>(null);
 
   private societyId = 0;
 
@@ -231,14 +243,19 @@ export class MaintenanceBillsListComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.selection.clear();
+    const statuses = this.statusFilter().length > 0 ? this.statusFilter() : undefined;
+    const billMonth = this.monthFilterAsString();
+
     this.maintenanceService.getBills({
-      societyId: this.societyId, statuses: this.statusFilter().length > 0 ? this.statusFilter() : undefined,
-      billMonth: this.monthFilterAsString(), pageNumber: this.pageIndex() + 1, pageSize: this.pageSize()
+      societyId: this.societyId, statuses, billMonth, pageNumber: this.pageIndex() + 1, pageSize: this.pageSize()
     }).subscribe((result) => {
       this.bills.set(result.items);
       this.totalCount.set(result.totalCount);
       this.loading.set(false);
     });
+
+    this.maintenanceService.getBillsBalanceSummary({ societyId: this.societyId, statuses, billMonth })
+      .subscribe((summary) => this.balanceSummary.set(summary));
   }
 
   allSelected(): boolean {

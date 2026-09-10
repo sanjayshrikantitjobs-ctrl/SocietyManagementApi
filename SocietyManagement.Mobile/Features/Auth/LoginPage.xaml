@@ -5,7 +5,7 @@
              x:Class="SocietyManagement.Mobile.Features.Auth.LoginPage"
              x:DataType="auth:LoginViewModel"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray950}}">
+             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceAlt}, Dark={StaticResource OffBlack}}">
 
     <ScrollView>
         <VerticalStackLayout Padding="32,64,32,32" Spacing="20" MaximumWidthRequest="420" HorizontalOptions="Center">
@@ -14,34 +14,31 @@
                 <Image Source="app_logo_full.png" HeightRequest="70" Aspect="AspectFit" />
             </Border>
 
-            <Label Text="Sign in to your account"
-                   FontSize="14"
-                   HorizontalOptions="Center"
-                   TextColor="{StaticResource Gray500}"
-                   Margin="0,0,0,12" />
+            <Label Text="Sign in to your account" Style="{StaticResource PageSubtitle}"
+                   HorizontalOptions="Center" HorizontalTextAlignment="Center"
+                   Margin="0,0,0,4" />
 
-            <Label Text="Email or Mobile Number" FontSize="13" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding Identifier}"
-                   Placeholder="e.g. you@example.com or 9XXXXXXXXX"
-                   Keyboard="Email"
-                   ReturnType="Next" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource FieldLabel}" Text="Email or Mobile Number" />
+                    <Border Style="{StaticResource FieldFrame}">
+                        <Entry Text="{Binding Identifier}" Placeholder="e.g. you@example.com or 9XXXXXXXXX" Keyboard="Email" ReturnType="Next" />
+                    </Border>
 
-            <Label Text="Password" FontSize="13" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding Password}"
-                   Placeholder="Password"
-                   IsPassword="True"
-                   ReturnType="Next" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Password" />
+                    <Border Style="{StaticResource FieldFrame}">
+                        <Entry Text="{Binding Password}" Placeholder="Password" IsPassword="True" ReturnType="Next" />
+                    </Border>
 
-            <Label Text="Society Code" FontSize="13" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding SocietyCode}"
-                   Placeholder="Society Code" />
-            <Label Text="Not required for Super Admin login."
-                   FontSize="11"
-                   TextColor="{StaticResource Gray400}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Society Code" />
+                    <Border Style="{StaticResource FieldFrame}">
+                        <Entry Text="{Binding SocietyCode}" Placeholder="Society Code" />
+                    </Border>
+                    <Label Style="{StaticResource Muted}" Text="Not required for Super Admin login." />
+                </VerticalStackLayout>
+            </Border>
 
-            <Label Text="{Binding ErrorMessage}"
-                   TextColor="#DC2626"
-                   FontSize="13"
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
             <Button Text="Sign In"
@@ -53,7 +50,7 @@
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Center" />
 
             <HorizontalStackLayout HorizontalOptions="Center" Spacing="6" Margin="0,16,0,0">
-                <Label Text="Need help signing in?" FontSize="12" TextColor="{StaticResource Gray500}" VerticalOptions="Center" />
+                <Label Text="Need help signing in?" Style="{StaticResource Muted}" VerticalOptions="Center" />
                 <Label Text="Contact Us" FontSize="12" TextColor="{StaticResource Primary}" FontAttributes="Bold" VerticalOptions="Center">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnContactUsTapped" />

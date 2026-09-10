@@ -12,4 +12,10 @@ public partial class DashboardPage : ContentPage
         BindingContext = _viewModel = viewModel;
         Shell.SetTitleView(this, topBar);
     }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        await _viewModel.LoadCommand.ExecuteAsync(null);
+    }
 }

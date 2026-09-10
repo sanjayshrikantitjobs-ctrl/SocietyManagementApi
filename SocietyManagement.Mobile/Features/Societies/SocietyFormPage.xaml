@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:soc="clr-namespace:SocietyManagement.Mobile.Features.Societies"
+             x:Class="SocietyManagement.Mobile.Features.Societies.SocietyFormPage"
+             x:DataType="soc:SocietyFormViewModel"
+             Title="Society">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource FieldLabel}" Text="Logo URL (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding LogoUrl}" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Name" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Name}" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Registration Number (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding RegistrationNumber}" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Address" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Address}" /></Border>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <VerticalStackLayout Spacing="14">
+                            <Label Style="{StaticResource FieldLabel}" Text="City" />
+                            <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding City}" /></Border>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="14">
+                            <Label Style="{StaticResource FieldLabel}" Text="State" />
+                            <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding State}" /></Border>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Pincode" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Pincode}" Keyboard="Numeric" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Contact Email (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding ContactEmail}" Keyboard="Email" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Contact Phone (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding ContactPhone}" Keyboard="Telephone" /></Border>
+
+                    <VerticalStackLayout Spacing="14" IsVisible="{Binding IsEditMode}">
+                        <Label Style="{StaticResource FieldLabel}" Text="Society Code" />
+                        <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Code}" /></Border>
+                        <Label Style="{StaticResource Muted}" FontSize="11" Text="Residents enter this at login. Share it with them." />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Super Admin-only: SetSubscription/SetSuspension are separate,
+                 more tightly gated endpoints from the plain Update above
+                 (see SocietyCommands.cs) — applied immediately, not queued
+                 behind Save. -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding IsEditMode}">
+                <VerticalStackLayout Spacing="10" IsVisible="{Binding Auth.IsSuperAdmin}">
+                    <Label FontSize="13">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Subscription active until " />
+                                <Span Text="{Binding SubscriptionEndDate, StringFormat='{0:MMM d, yyyy}'}" FontAttributes="Bold" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="+30 days" Style="{StaticResource ChipButton}" Command="{Binding ExtendSubscriptionCommand}" CommandParameter="30" />
+                        <Button Text="+60 days" Style="{StaticResource ChipButton}" Command="{Binding ExtendSubscriptionCommand}" CommandParameter="60" />
+                        <Button Text="+1 year" Style="{StaticResource ChipButton}" Command="{Binding ExtendSubscriptionCommand}" CommandParameter="365" />
+                    </HorizontalStackLayout>
+
+                    <HorizontalStackLayout Spacing="8" Margin="0,8,0,0">
+                        <CheckBox IsChecked="{Binding IsSuspended}" />
+                        <Label Text="Restrict this society (blocks access immediately, regardless of dates)" VerticalOptions="Center" FontSize="13" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

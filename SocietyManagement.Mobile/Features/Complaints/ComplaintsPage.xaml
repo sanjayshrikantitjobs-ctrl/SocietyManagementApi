@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:comp="clr-namespace:SocietyManagement.Mobile.Features.Complaints"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Complaints.ComplaintsPage"
+             x:DataType="comp:ComplaintsViewModel"
+             Title="Complaints">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
+
+        <Grid Grid.Row="0" Padding="12,12,12,4" ColumnDefinitions="*,*,*,*,*" ColumnSpacing="6"
+              IsVisible="{Binding Kpis, Converter={StaticResource IsNotNullConverter}}">
+            <VerticalStackLayout>
+                <Label Text="{Binding Kpis.Open}" FontAttributes="Bold" FontSize="16" HorizontalOptions="Center" TextColor="{StaticResource Danger}" />
+                <Label Text="Open" Style="{StaticResource Muted}" FontSize="10" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="1">
+                <Label Text="{Binding Kpis.Assigned}" FontAttributes="Bold" FontSize="16" HorizontalOptions="Center" TextColor="{StaticResource Warning}" />
+                <Label Text="Assigned" Style="{StaticResource Muted}" FontSize="10" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="2">
+                <Label Text="{Binding Kpis.InProgress}" FontAttributes="Bold" FontSize="16" HorizontalOptions="Center" TextColor="{StaticResource Info}" />
+                <Label Text="In Progress" Style="{StaticResource Muted}" FontSize="10" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="3">
+                <Label Text="{Binding Kpis.Resolved}" FontAttributes="Bold" FontSize="16" HorizontalOptions="Center" TextColor="{StaticResource Success}" />
+                <Label Text="Resolved" Style="{StaticResource Muted}" FontSize="10" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="4">
+                <Label Text="{Binding Kpis.Closed}" FontAttributes="Bold" FontSize="16" HorizontalOptions="Center" />
+                <Label Text="Closed" Style="{StaticResource Muted}" FontSize="10" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <Border Grid.Row="1" Style="{StaticResource FieldFrame}" Margin="12,4,12,4">
+            <SearchBar Placeholder="Search flat or title..." Text="{Binding Search}" SearchCommand="{Binding LoadCommand}" />
+        </Border>
+
+        <Grid Grid.Row="2" Padding="12,0,12,4" ColumnDefinitions="*,*" ColumnSpacing="8">
+            <Border Style="{StaticResource FieldFrame}">
+                <Picker ItemsSource="{Binding CategoryOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedCategory}" FontSize="13" />
+            </Border>
+            <Border Grid.Column="1" Style="{StaticResource FieldFrame}">
+                <Picker ItemsSource="{Binding PriorityOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedPriority}" FontSize="13" />
+            </Border>
+        </Grid>
+
+        <Label Grid.Row="3" Style="{StaticResource ErrorText}" Margin="16,0" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <ActivityIndicator Grid.Row="3" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+        <CollectionView Grid.Row="4" ItemsSource="{Binding Complaints}">
+            <CollectionView.EmptyView>
+                <Label Style="{StaticResource Muted}" Text="No complaints found." HorizontalOptions="Center" Margin="0,24" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="gen:ComplaintDto">
+                    <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding Title}" FontAttributes="Bold" />
+                            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipBase}" HorizontalOptions="End">
+                                <Label Text="{Binding Status}" FontSize="12" FontAttributes="Bold" />
+                            </Border>
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding FlatNumber, StringFormat='Flat {0}'}" Style="{StaticResource Muted}" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding Category}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                            <Label Grid.Row="2" Grid.Column="0" Text="{Binding RaisedByName}" Style="{StaticResource Muted}" FontSize="12" />
+                            <Label Grid.Row="2" Grid.Column="1" Text="{Binding Priority}" Style="{StaticResource Muted}" FontSize="12" HorizontalOptions="End" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+
+</ContentPage>

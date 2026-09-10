@@ -101,6 +101,11 @@ export interface MaintenanceBillDto {
   tenantName?: string | null;
 }
 
+export interface BillsBalanceSummaryDto {
+  count: number;
+  totalBalance: number;
+}
+
 export interface BulkRecordPaymentResultDto {
   maintenanceBillId: number;
   invoiceNumber: string;

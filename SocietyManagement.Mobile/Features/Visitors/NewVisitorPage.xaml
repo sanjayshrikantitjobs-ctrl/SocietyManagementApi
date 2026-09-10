@@ -10,55 +10,59 @@
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="14">
 
-            <Label Text="Photo" FontSize="13" TextColor="{StaticResource Gray500}" />
-            <Image Source="{Binding PhotoPreviewSource}" HeightRequest="160" Aspect="AspectFit"
-                   IsVisible="{Binding LocalPhotoPath, Converter={StaticResource StringToBoolConverter}}" />
-            <Button Text="{Binding CapturePhotoButtonText}" Command="{Binding CapturePhotoCommand}" />
-            <ActivityIndicator IsRunning="{Binding IsUploadingPhoto}" IsVisible="{Binding IsUploadingPhoto}" HorizontalOptions="Center" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource FieldLabel}" Text="Photo" />
+                    <Image Source="{Binding PhotoPreviewSource}" HeightRequest="160" Aspect="AspectFit"
+                           IsVisible="{Binding LocalPhotoPath, Converter={StaticResource StringToBoolConverter}}" />
+                    <Button Style="{StaticResource OutlineButton}" Text="{Binding CapturePhotoButtonText}" Command="{Binding CapturePhotoCommand}" />
+                    <ActivityIndicator IsRunning="{Binding IsUploadingPhoto}" IsVisible="{Binding IsUploadingPhoto}" HorizontalOptions="Center" />
 
-            <Label Text="Flat" FontSize="13" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding FlatSearchText}" Placeholder="Search flat number" TextChanged="OnFlatSearchTextChanged" />
-            <CollectionView x:Name="FlatResultsView"
-                             ItemsSource="{Binding FlatSearchResults}"
-                             SelectionMode="Single"
-                             SelectionChanged="OnFlatSelected"
-                             IsVisible="{Binding FlatSearchResults.Count, Converter={StaticResource CountToBoolConverter}}"
-                             HeightRequest="140">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="gen:FlatDto">
-                        <Grid Padding="8">
-                            <Label Text="{Binding FlatNumber}" FontAttributes="Bold" />
-                        </Grid>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-            <Label Text="{Binding SelectedFlat.FlatNumber, StringFormat='Selected: {0}'}"
-                   IsVisible="{Binding SelectedFlat, Converter={StaticResource IsNotNullConverter}}"
-                   TextColor="{StaticResource Primary}" FontSize="13" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Flat" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding FlatSearchText}" Placeholder="Search flat number" TextChanged="OnFlatSearchTextChanged" /></Border>
+                    <CollectionView x:Name="FlatResultsView"
+                                     ItemsSource="{Binding FlatSearchResults}"
+                                     SelectionMode="Single"
+                                     SelectionChanged="OnFlatSelected"
+                                     IsVisible="{Binding FlatSearchResults.Count, Converter={StaticResource CountToBoolConverter}}"
+                                     HeightRequest="140">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="gen:FlatDto">
+                                <Grid Padding="8">
+                                    <Label Text="{Binding FlatNumber}" FontAttributes="Bold" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                    <Label Text="{Binding SelectedFlat.FlatNumber, StringFormat='Selected: {0}'}"
+                           IsVisible="{Binding SelectedFlat, Converter={StaticResource IsNotNullConverter}}"
+                           TextColor="{StaticResource Info}" FontAttributes="Bold" FontSize="13" />
 
-            <Label Text="Purpose" FontSize="13" TextColor="{StaticResource Gray500}" />
-            <Picker ItemsSource="{Binding Purposes}" SelectedItem="{Binding SelectedPurpose}" ItemDisplayBinding="{Binding Name}" Title="Select purpose" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Purpose" />
+                    <Border Style="{StaticResource FieldFrame}"><Picker ItemsSource="{Binding Purposes}" SelectedItem="{Binding SelectedPurpose}" ItemDisplayBinding="{Binding Name}" Title="Select purpose" /></Border>
 
-            <Label Text="Gate" FontSize="13" TextColor="{StaticResource Gray500}" />
-            <Picker ItemsSource="{Binding Gates}" SelectedItem="{Binding SelectedGate}" ItemDisplayBinding="{Binding Name}" Title="Select gate" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Gate" />
+                    <Border Style="{StaticResource FieldFrame}"><Picker ItemsSource="{Binding Gates}" SelectedItem="{Binding SelectedGate}" ItemDisplayBinding="{Binding Name}" Title="Select gate" /></Border>
 
-            <Label Text="Visitor Name" FontSize="13" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding VisitorName}" Placeholder="Full name" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Visitor Name" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding VisitorName}" Placeholder="Full name" /></Border>
 
-            <Label Text="Visitor Mobile" FontSize="13" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding VisitorMobile}" Placeholder="10-digit mobile number" Keyboard="Telephone" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Visitor Mobile" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding VisitorMobile}" Placeholder="10-digit mobile number" Keyboard="Telephone" /></Border>
 
-            <Label Text="Vehicle Number (optional)" FontSize="13" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding VisitorVehicleNumber}" Placeholder="e.g. MH04AB1234" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Vehicle Number (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding VisitorVehicleNumber}" Placeholder="e.g. MH04AB1234" /></Border>
 
-            <Label Text="Number of Visitors" FontSize="13" TextColor="{StaticResource Gray500}" />
-            <Stepper Value="{Binding NumberOfVisitors}" Minimum="1" Maximum="20" />
-            <Label Text="{Binding NumberOfVisitors}" HorizontalOptions="Center" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Number of Visitors" />
+                    <Stepper Value="{Binding NumberOfVisitors}" Minimum="1" Maximum="20" />
+                    <Label Text="{Binding NumberOfVisitors}" HorizontalOptions="Center" FontAttributes="Bold" />
+                </VerticalStackLayout>
+            </Border>
 
-            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
-            <Label Text="{Binding SuccessMessage}" TextColor="#15803D" FontSize="13"
+            <Label Text="{Binding SuccessMessage}" TextColor="{StaticResource Success}" FontSize="13"
                    IsVisible="{Binding SuccessMessage, Converter={StaticResource StringToBoolConverter}}" />
 
             <Button Text="Submit Request" Command="{Binding SubmitCommand}" HeightRequest="48" Margin="0,8,0,0"

@@ -10,8 +10,8 @@
         <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
             <Label Text="{Binding SocietyName}" FontAttributes="Bold" FontSize="15"
                    LineBreakMode="TailTruncation"
-                   TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
-            <Label Text="{Binding SocietyAddress}" FontSize="10" TextColor="{StaticResource Gray500}"
+                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+            <Label Text="{Binding SocietyAddress}" Style="{StaticResource Muted}" FontSize="10"
                    LineBreakMode="TailTruncation"
                    IsVisible="{Binding SocietyAddress, Converter={StaticResource StringToBoolConverter}}" />
         </VerticalStackLayout>

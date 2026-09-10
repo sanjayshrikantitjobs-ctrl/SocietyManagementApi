@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:svc="clr-namespace:SocietyManagement.Mobile.Features.Services"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Services.ServicesPage"
+             x:DataType="svc:ServicesViewModel"
+             Title="Services">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,12,12,4">
+            <SearchBar Placeholder="Search service or vendor..." Text="{Binding Search}" SearchCommand="{Binding LoadCommand}" />
+        </Border>
+
+        <Label Grid.Row="1" Style="{StaticResource ErrorText}" Margin="16,0" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Services}">
+            <CollectionView.EmptyView>
+                <Label Style="{StaticResource Muted}" Text="No services on file yet." HorizontalOptions="Center" Margin="0,24" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="gen:SocietyServiceDto">
+                    <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding ServiceName}" FontAttributes="Bold" />
+                            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipSuccess}" HorizontalOptions="End" IsVisible="{Binding IsActive}">
+                                <Label Text="Active" Style="{StaticResource chipTextSuccess}" />
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipNeutral}" HorizontalOptions="End" IsVisible="{Binding IsActive, Converter={StaticResource InvertedBoolConverter}}">
+                                <Label Text="Inactive" Style="{StaticResource chipTextNeutral}" />
+                            </Border>
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding VendorName}" Style="{StaticResource Muted}" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding ContactNumber}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                            <Label Grid.Row="2" Grid.Column="0" Text="{Binding RenewalDate, StringFormat='Renews {0:MMM d, yyyy}'}" Style="{StaticResource Muted}" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+
+</ContentPage>

@@ -1,10 +1,12 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microcharts;
 using SocietyManagement.Mobile.Api.Generated;
 using SocietyManagement.Mobile.Core;
 using SocietyManagement.Mobile.Features.Maintenance.Forms;
 using SocietyManagement.Mobile.Features.Maintenance.Payments;
+using SocietyManagement.Mobile.Shared;
 
 namespace SocietyManagement.Mobile.Features.Maintenance;
 
@@ -61,16 +63,42 @@ public partial class MaintenanceViewModel : ObservableObject
     [ObservableProperty] private string? errorMessage;
 
     [ObservableProperty] private MaintenanceKpisDto? kpis;
+    [ObservableProperty] private Chart? monthlyTrendChart;
+    [ObservableProperty] private Chart? paidVsPendingChart;
+    [ObservableProperty] private Chart? outstandingByWingChart;
     [ObservableProperty] private ObservableCollection<MaintenanceBillDto> bills = new();
     [ObservableProperty] private ObservableCollection<MaintenanceCategoryDto> categories = new();
+
+    /// <summary>"Month" or "Year" — mirrors the web dashboard's
+    /// Monthly/Yearly mat-button-toggle-group.</summary>
+    [ObservableProperty] private string dashboardViewMode = "Month";
+    [ObservableProperty] private DateTime dashboardMonthDate = DateTime.Today;
+    [ObservableProperty] private int dashboardYear = DateTime.Today.Year;
+    public ObservableCollection<int> DashboardYearOptions { get; } = new(BuildDashboardYearOptions());
+
+    private static List<int> BuildDashboardYearOptions()
+    {
+        var current = DateTime.Today.Year;
+        return Enumerable.Range(0, 6).Select(i => current + 1 - i).ToList();
+    }
+
+    partial void OnDashboardMonthDateChanged(DateTime value) => _ = LoadDashboardCommand.ExecuteAsync(null);
+    partial void OnDashboardYearChanged(int value) => _ = LoadDashboardCommand.ExecuteAsync(null);
+
+    [RelayCommand]
+    private async Task SetDashboardViewModeAsync(string mode)
+    {
+        DashboardViewMode = mode;
+        await LoadDashboardAsync();
+    }
 
     public ObservableCollection<BillStatusOption> StatusOptions { get; } = new(StatusOptionsSeed);
 
     [ObservableProperty] private BillStatusOption selectedStatusOption = StatusOptionsSeed[0];
     [ObservableProperty] private DateTime billMonthFilterDate = DateTime.Today;
     [ObservableProperty] private bool hasMonthFilter = true;
-    [ObservableProperty] private DateTime generateBillMonth = DateTime.Today;
     [ObservableProperty] private string billSearch = string.Empty;
+    [ObservableProperty] private BillsBalanceSummaryDto? billsBalanceSummary;
 
     partial void OnSelectedStatusOptionChanged(BillStatusOption value) => _ = LoadBillsCommand.ExecuteAsync(null);
 
@@ -113,8 +141,24 @@ public partial class MaintenanceViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            var response = await _dashboardClient.DashboardAsync(societyId, DateTime.Today, null);
-            Kpis = response.Data?.Kpis;
+            DateTimeOffset? month = DashboardViewMode == "Month" ? DashboardMonthDate : null;
+            int? year = DashboardViewMode == "Year" ? DashboardYear : null;
+            var response = await _dashboardClient.DashboardAsync(societyId, month, year);
+            var dashboard = response.Data;
+            Kpis = dashboard?.Kpis;
+
+            MonthlyTrendChart = ChartFactory.BuildTrendLine(
+                (dashboard?.MonthlyCollectionTrend ?? new()).Select(p => (p.MonthLabel, p.Amount ?? 0)).ToList(),
+                ChartFactory.ColorInfo);
+
+            var paid = dashboard?.PaidVsPending?.PaidAmount ?? 0;
+            var outstanding = dashboard?.PaidVsPending?.OutstandingAmount ?? 0;
+            PaidVsPendingChart = ChartFactory.BuildProportionDonut(
+                "Paid", paid, ChartFactory.ColorSuccess,
+                "Outstanding", outstanding, ChartFactory.ColorMuted);
+
+            OutstandingByWingChart = ChartFactory.BuildCategoryBar(
+                (dashboard?.OutstandingByWing ?? new()).Select(w => (w.WingName, w.Outstanding ?? 0)).ToList());
         }
         catch (Exception ex)
         {
@@ -136,11 +180,17 @@ public partial class MaintenanceViewModel : ObservableObject
         ErrorMessage = null;
         try
         {
-            var response = await _billsClient.BillsAsync(
-                societyId, null, SelectedStatusOption.Value,
-                HasMonthFilter ? BillMonthFilterDate : null,
-                string.IsNullOrWhiteSpace(BillSearch) ? null : BillSearch, 1, 50);
+            var statuses = SelectedStatusOption.Value is { } status
+                ? new List<BillStatus> { status }
+                : null;
+            var billMonth = HasMonthFilter ? BillMonthFilterDate : (DateTime?)null;
+            var search = string.IsNullOrWhiteSpace(BillSearch) ? null : BillSearch;
+
+            var response = await _billsClient.BillsAsync(societyId, null, statuses, billMonth, search, 1, 50);
             Bills = new ObservableCollection<MaintenanceBillDto>(response.Data?.Items ?? new());
+
+            var summaryResponse = await _billsClient.BalanceSummaryAsync(societyId, null, statuses, billMonth, search);
+            BillsBalanceSummary = summaryResponse.Data;
         }
         catch (Exception ex)
         {
@@ -181,18 +231,19 @@ public partial class MaintenanceViewModel : ObservableObject
         if (societyId is null) { ErrorMessage = "No society available for this account."; return; }
         if (Shell.Current is null) return;
 
+        var generateMonth = HasMonthFilter ? BillMonthFilterDate : DateTime.Today;
         var confirmed = await Shell.Current.DisplayAlert(
-            "Generate Bills", $"Generate bills for {GenerateBillMonth:MMMM yyyy}?", "Generate", "Cancel");
+            "Generate Bills", $"Generate bills for {generateMonth:MMMM yyyy}?", "Generate", "Cancel");
         if (!confirmed) return;
 
         IsBusy = true;
         ErrorMessage = null;
         try
         {
-            var response = await _billsClient.GenerateAsync(new GenerateBillsRequest
+            var response = await _billsClient.Generate2Async(new GenerateBillsRequest
             {
                 SocietyId = societyId,
-                BillMonth = GenerateBillMonth
+                BillMonth = generateMonth
             });
             await Shell.Current.DisplayAlert("Generate Bills", $"{response.Data} bill(s) generated.", "OK");
             await LoadBillsAsync();

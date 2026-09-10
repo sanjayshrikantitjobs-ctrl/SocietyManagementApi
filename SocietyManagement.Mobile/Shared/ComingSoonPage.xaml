@@ -4,9 +4,12 @@
              x:Class="SocietyManagement.Mobile.Shared.ComingSoonPage"
              Title="{Binding PageTitle}">
 
-    <VerticalStackLayout Padding="32" VerticalOptions="Center" Spacing="8">
-        <Label Text="{Binding PageTitle}" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" />
-        <Label Text="This module is coming soon." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" />
+    <VerticalStackLayout Padding="32" VerticalOptions="Center" Spacing="10">
+        <Border Style="{StaticResource kpiIconBadge}" WidthRequest="56" HeightRequest="56" HorizontalOptions="Center" BackgroundColor="{StaticResource PurpleLight}">
+            <Label Text="🚧" Style="{StaticResource kpiIconGlyph}" FontSize="26" />
+        </Border>
+        <Label Style="{StaticResource PageTitle}" Text="{Binding PageTitle}" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+        <Label Style="{StaticResource PageSubtitle}" Text="This module is coming soon." HorizontalOptions="Center" HorizontalTextAlignment="Center" />
     </VerticalStackLayout>
 
 </ContentPage>

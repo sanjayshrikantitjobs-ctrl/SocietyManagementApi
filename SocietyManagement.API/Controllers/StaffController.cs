@@ -13,6 +13,7 @@ public class StaffController : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Staff.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<StaffDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int societyId, [FromQuery] string? search, [FromQuery] StaffCategory? category,
         [FromQuery] bool? isActive, [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,

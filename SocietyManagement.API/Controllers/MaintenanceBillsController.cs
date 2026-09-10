@@ -23,6 +23,17 @@ public class MaintenanceBillsController : ApiControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
+    [HttpGet("bills/balance-summary")]
+    [HasPermission(Permissions.Maintenance.View)]
+    [ProducesResponseType(typeof(ApiResponse<BillsBalanceSummaryDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetBillsBalanceSummary(
+        [FromQuery] int societyId, [FromQuery] int? flatId, [FromQuery] List<BillStatus>? statuses,
+        [FromQuery] DateTime? billMonth, [FromQuery] string? search = null)
+    {
+        var result = await Mediator.Send(new GetBillsBalanceSummaryQuery(societyId, flatId, statuses, billMonth, search));
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
     [HttpGet("bills/{id:int}")]
     [HasPermission(Permissions.Maintenance.View)]
     [ProducesResponseType(typeof(ApiResponse<MaintenanceBillDetailDto>), StatusCodes.Status200OK)]

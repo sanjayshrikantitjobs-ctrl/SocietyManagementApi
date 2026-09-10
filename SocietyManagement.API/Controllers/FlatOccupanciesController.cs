@@ -14,6 +14,7 @@ public class FlatOccupanciesController : ApiControllerBase
 {
     [HttpGet("overview")]
     [HasPermission(Permissions.Occupancy.View)]
+    [ProducesResponseType(typeof(ApiResponse<FlatOccupancyOverviewDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetOverview([FromQuery] int flatId)
     {
         var result = await Mediator.Send(new GetFlatOccupancyOverviewQuery(flatId));
@@ -22,6 +23,7 @@ public class FlatOccupanciesController : ApiControllerBase
 
     [HttpGet("owners-grid")]
     [HasPermission(Permissions.Occupancy.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<FlatOwnershipGridDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetOwnersGrid(
         [FromQuery] int societyId, [FromQuery] string? search, [FromQuery] string? sortBy = null,
         [FromQuery] bool sortDescending = false, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
@@ -32,6 +34,7 @@ public class FlatOccupanciesController : ApiControllerBase
 
     [HttpGet("tenants-grid")]
     [HasPermission(Permissions.Occupancy.View)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<FlatTenancyGridDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetTenantsGrid(
         [FromQuery] int societyId, [FromQuery] string? search, [FromQuery] string? sortBy = null,
         [FromQuery] bool sortDescending = false, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
@@ -42,6 +45,7 @@ public class FlatOccupanciesController : ApiControllerBase
 
     [HttpGet("{id:int}/members")]
     [HasPermission(Permissions.Occupancy.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<OccupancyMemberDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMembers(int id)
     {
         var result = await Mediator.Send(new GetOccupancyMembersQuery(id));
@@ -50,6 +54,7 @@ public class FlatOccupanciesController : ApiControllerBase
 
     [HttpGet("mine/members")]
     [HasPermission(Permissions.Occupancy.ManageOwn)]
+    [ProducesResponseType(typeof(ApiResponse<List<OccupancyMemberDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMyMembers()
     {
         var result = await Mediator.Send(new GetMyFamilyMembersQuery());
@@ -58,6 +63,7 @@ public class FlatOccupanciesController : ApiControllerBase
 
     [HttpGet("history")]
     [HasPermission(Permissions.Occupancy.ViewHistory)]
+    [ProducesResponseType(typeof(ApiResponse<List<FlatOccupancyDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetHistory([FromQuery] int flatId, [FromQuery] OccupancyType? type)
     {
         var result = await Mediator.Send(new GetOccupancyHistoryQuery(flatId, type));
@@ -66,6 +72,7 @@ public class FlatOccupanciesController : ApiControllerBase
 
     [HttpPost("owner-member")]
     [HasPermission(Permissions.Occupancy.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
     public async Task<IActionResult> AddOwnerMember(AddOwnerMemberCommand command)
     {
         var id = await Mediator.Send(command);
@@ -74,6 +81,7 @@ public class FlatOccupanciesController : ApiControllerBase
 
     [HttpPost("tenant")]
     [HasPermission(Permissions.Occupancy.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
     public async Task<IActionResult> AddTenant(AddTenantOccupancyCommand command)
     {
         var id = await Mediator.Send(command);
@@ -82,6 +90,7 @@ public class FlatOccupanciesController : ApiControllerBase
 
     [HttpPost("{id:int}/family-member")]
     [HasPermission(Permissions.Occupancy.Manage)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
     public async Task<IActionResult> AddFamilyMember(int id, [FromBody] AddFamilyMemberRequest request)
     {
         var command = new AddTenantFamilyMemberCommand(
@@ -94,6 +103,7 @@ public class FlatOccupanciesController : ApiControllerBase
 
     [HttpPost("mine/members")]
     [HasPermission(Permissions.Occupancy.ManageOwn)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
     public async Task<IActionResult> AddMyFamilyMember(AddMyFamilyMemberCommand command)
     {
         var memberId = await Mediator.Send(command);
@@ -102,6 +112,7 @@ public class FlatOccupanciesController : ApiControllerBase
 
     [HttpPost("{id:int}/end")]
     [HasPermission(Permissions.Occupancy.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> End(int id, [FromBody] EndOccupancyRequest request)
     {
         await Mediator.Send(new EndOccupancyCommand(id, request.EndDate));
@@ -110,6 +121,7 @@ public class FlatOccupanciesController : ApiControllerBase
 
     [HttpPost("members/{memberId:int}/remove")]
     [HasPermission(Permissions.Occupancy.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> RemoveMember(int memberId, [FromBody] RemoveOccupancyMemberRequest request)
     {
         await Mediator.Send(new RemoveOccupancyMemberCommand(memberId, request.LeftDate));
@@ -118,6 +130,7 @@ public class FlatOccupanciesController : ApiControllerBase
 
     [HttpPut("members/{memberId:int}")]
     [HasPermission(Permissions.Occupancy.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateMember(int memberId, [FromBody] UpdateOccupancyMemberRequest request)
     {
         await Mediator.Send(new UpdateOccupancyMemberCommand(memberId, request.Relationship, request.ResidentStatus));

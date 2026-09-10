@@ -11,46 +11,54 @@
     <Grid RowDefinitions="Auto,Auto,Auto,*">
 
         <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
-        <Label Grid.Row="0" Margin="16,4" Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+        <Label Grid.Row="0" Style="{StaticResource ErrorText}" Margin="16,4" Text="{Binding ErrorMessage}"
                IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
-        <Grid Grid.Row="1" Padding="16,8" ColumnDefinitions="*,*,*" IsVisible="{Binding Summary, Converter={StaticResource IsNotNullConverter}}">
-            <VerticalStackLayout Grid.Column="0">
-                <Label Text="Target" FontSize="11" TextColor="{StaticResource Gray500}" />
-                <Label Text="{Binding Summary.TargetAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" />
-            </VerticalStackLayout>
-            <VerticalStackLayout Grid.Column="1">
-                <Label Text="Paid" FontSize="11" TextColor="{StaticResource Gray500}" />
-                <Label Text="{Binding Summary.PaidAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" TextColor="#15803D" />
-            </VerticalStackLayout>
-            <VerticalStackLayout Grid.Column="2">
-                <Label Text="Outstanding" FontSize="11" TextColor="{StaticResource Gray500}" />
-                <Label Text="{Binding Summary.OutstandingAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" TextColor="#DC2626" />
-            </VerticalStackLayout>
+        <Grid Grid.Row="1" Padding="16,8" ColumnDefinitions="*,*,*" ColumnSpacing="8" IsVisible="{Binding Summary, Converter={StaticResource IsNotNullConverter}}">
+            <Border Grid.Column="0" Style="{StaticResource Card}" Padding="10">
+                <VerticalStackLayout>
+                    <Label Text="Target" Style="{StaticResource kpiLabel}" FontSize="11" />
+                    <Label Text="{Binding Summary.TargetAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" />
+                </VerticalStackLayout>
+            </Border>
+            <Border Grid.Column="1" Style="{StaticResource Card}" Padding="10">
+                <VerticalStackLayout>
+                    <Label Text="Paid" Style="{StaticResource kpiLabel}" FontSize="11" />
+                    <Label Text="{Binding Summary.PaidAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" TextColor="{StaticResource Success}" />
+                </VerticalStackLayout>
+            </Border>
+            <Border Grid.Column="2" Style="{StaticResource Card}" Padding="10">
+                <VerticalStackLayout>
+                    <Label Text="Outstanding" Style="{StaticResource kpiLabel}" FontSize="11" />
+                    <Label Text="{Binding Summary.OutstandingAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" TextColor="{StaticResource Danger}" />
+                </VerticalStackLayout>
+            </Border>
         </Grid>
 
         <HorizontalStackLayout Grid.Row="2" Padding="16,4" Spacing="8">
-            <Button Text="Edit Target" Command="{Binding EditTargetCommand}" FontSize="12" />
+            <Button Style="{StaticResource OutlineButton}" Text="Edit Target" Command="{Binding EditTargetCommand}" FontSize="12" />
             <Button Text="Add Contribution" Command="{Binding AddContributionCommand}" FontSize="12" />
         </HorizontalStackLayout>
 
         <CollectionView Grid.Row="3" ItemsSource="{Binding Contributions}">
             <CollectionView.EmptyView>
                 <VerticalStackLayout Padding="32" VerticalOptions="Center">
-                    <Label Text="No contributions recorded yet for this flat." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" />
+                    <Label Style="{StaticResource Muted}" Text="No contributions recorded yet for this flat." HorizontalOptions="Center" />
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="gen:FestivalContributionDto">
-                    <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                        <Grid.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowContributionActionsCommand}" CommandParameter="{Binding .}" />
-                        </Grid.GestureRecognizers>
-                        <Label Grid.Row="0" Grid.Column="0" Text="{Binding MemberName}" FontAttributes="Bold" />
-                        <Label Grid.Row="1" Grid.Column="0" Text="{Binding ReceiptNumber}" FontSize="12" TextColor="{StaticResource Gray500}" />
-                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" />
-                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding PaymentDate, StringFormat='{0:MMM d, yyyy}'}" FontSize="12" TextColor="{StaticResource Gray500}" HorizontalOptions="End" />
-                    </Grid>
+                    <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowContributionActionsCommand}" CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding MemberName}" FontAttributes="Bold" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding ReceiptNumber}" Style="{StaticResource Muted}" />
+                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding Amount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" HorizontalOptions="End" TextColor="{StaticResource Success}" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding PaymentDate, StringFormat='{0:MMM d, yyyy}'}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                        </Grid>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

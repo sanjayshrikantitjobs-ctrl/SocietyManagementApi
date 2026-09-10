@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:forms="clr-namespace:SocietyManagement.Mobile.Features.Residents.Forms"
+             x:Class="SocietyManagement.Mobile.Features.Residents.Forms.OccupancyMemberFormPage"
+             x:DataType="forms:OccupancyMemberFormViewModel"
+             Title="Member">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource FieldLabel}" Text="First Name" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding FirstName}" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Last Name" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding LastName}" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Phone" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Phone}" Keyboard="Telephone" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Email (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Email}" Keyboard="Email" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="WhatsApp Number (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding WhatsAppNumber}" Keyboard="Telephone" /></Border>
+
+                    <VerticalStackLayout Spacing="14" IsVisible="{Binding ShowRelationshipFields}">
+                        <Label Style="{StaticResource FieldLabel}" Text="Relationship" />
+                        <Border Style="{StaticResource FieldFrame}">
+                            <Picker ItemsSource="{Binding RelationshipOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedRelationship}" />
+                        </Border>
+
+                        <HorizontalStackLayout Spacing="8" IsVisible="{Binding IsEditMode, Converter={StaticResource InvertedBoolConverter}}">
+                            <CheckBox IsChecked="{Binding IsPrimary}" />
+                            <Label Text="Primary member" VerticalOptions="Center" FontSize="13" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="14" IsVisible="{Binding IsEditMode, Converter={StaticResource InvertedBoolConverter}}">
+                        <Label Style="{StaticResource FieldLabel}" Text="Move-in Date" />
+                        <Border Style="{StaticResource FieldFrame}"><DatePicker Date="{Binding MoveInDate}" /></Border>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

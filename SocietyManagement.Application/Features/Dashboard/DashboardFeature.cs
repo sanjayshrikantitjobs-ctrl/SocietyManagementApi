@@ -124,22 +124,26 @@ public class GetAdminDashboardSummaryQueryHandler : IRequestHandler<GetAdminDash
     }
 }
 
-public class MonthlyCollectionPointDto
+/// <summary>Named distinctly from Maintenance's own MonthlyCollectionPointDto
+/// (MaintenanceDashboardFeature.cs) — Swashbuckle's default schemaId is just
+/// the bare class name, so two same-named DTOs in different namespaces both
+/// reachable from Swagger-documented actions collide at spec-generation time.</summary>
+public class AdminMonthlyCollectionPointDto
 {
     public string MonthLabel { get; set; } = default!;
     public decimal Collected { get; set; }
     public decimal Pending { get; set; }
 }
 
-public record GetMonthlyCollectionTrendQuery(int SocietyId, int Months = 6) : IRequest<List<MonthlyCollectionPointDto>>;
+public record GetMonthlyCollectionTrendQuery(int SocietyId, int Months = 6) : IRequest<List<AdminMonthlyCollectionPointDto>>;
 
-public class GetMonthlyCollectionTrendQueryHandler : IRequestHandler<GetMonthlyCollectionTrendQuery, List<MonthlyCollectionPointDto>>
+public class GetMonthlyCollectionTrendQueryHandler : IRequestHandler<GetMonthlyCollectionTrendQuery, List<AdminMonthlyCollectionPointDto>>
 {
     private readonly IApplicationDbContext _context;
 
     public GetMonthlyCollectionTrendQueryHandler(IApplicationDbContext context) => _context = context;
 
-    public async Task<List<MonthlyCollectionPointDto>> Handle(GetMonthlyCollectionTrendQuery request, CancellationToken ct)
+    public async Task<List<AdminMonthlyCollectionPointDto>> Handle(GetMonthlyCollectionTrendQuery request, CancellationToken ct)
     {
         var today = DateTime.UtcNow.Date;
         var months = Enumerable.Range(0, request.Months)
@@ -160,7 +164,7 @@ public class GetMonthlyCollectionTrendQueryHandler : IRequestHandler<GetMonthlyC
             .Select(b => new { b.BillMonth, Balance = b.TotalAmount - b.AmountPaid })
             .ToListAsync(ct);
 
-        return months.Select(m => new MonthlyCollectionPointDto
+        return months.Select(m => new AdminMonthlyCollectionPointDto
         {
             MonthLabel = m.ToString("MMM"),
             Collected = payments.Where(p => p.PaymentDate.Year == m.Year && p.PaymentDate.Month == m.Month).Sum(p => p.Amount),

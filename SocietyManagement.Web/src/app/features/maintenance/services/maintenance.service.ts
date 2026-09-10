@@ -4,7 +4,7 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse, PaginatedResult } from '../../../core/models/api-response.model';
 import {
-  BulkRecordPaymentResultDto, BulkSetBillsUnpaidResultDto, FineRecordDto, MaintenanceBillDetailDto, MaintenanceBillDto,
+  BillsBalanceSummaryDto, BulkRecordPaymentResultDto, BulkSetBillsUnpaidResultDto, FineRecordDto, MaintenanceBillDetailDto, MaintenanceBillDto,
   MaintenanceCategoryDto, MaintenanceDashboardDto, MaintenanceSettingsDto, SpecialChargeDto, WaterTankerCollectionDto,
   WaterTankerLogDto, WaterTankerLogMonthSummaryDto, WaterTankerLogPayload, WaterTankerMonthSummaryDto
 } from '../models/maintenance.model';
@@ -95,6 +95,12 @@ export class MaintenanceService {
     societyId: number; flatId?: number; statuses?: number[]; billMonth?: string; pageNumber?: number; pageSize?: number;
   }): Observable<PaginatedResult<MaintenanceBillDto>> {
     return this.http.get<ApiResponse<PaginatedResult<MaintenanceBillDto>>>(`${this.baseUrl}/maintenance/bills`, { params: toHttpParams(params) })
+      .pipe(map((r) => r.data!));
+  }
+  getBillsBalanceSummary(params: {
+    societyId: number; flatId?: number; statuses?: number[]; billMonth?: string;
+  }): Observable<BillsBalanceSummaryDto> {
+    return this.http.get<ApiResponse<BillsBalanceSummaryDto>>(`${this.baseUrl}/maintenance/bills/balance-summary`, { params: toHttpParams(params) })
       .pipe(map((r) => r.data!));
   }
   getBillById(id: number): Observable<MaintenanceBillDetailDto> {

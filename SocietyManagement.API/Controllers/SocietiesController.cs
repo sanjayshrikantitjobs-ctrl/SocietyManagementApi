@@ -25,6 +25,7 @@ public class SocietiesController : ApiControllerBase
 
     [HttpGet("{id:int}")]
     [HasPermission(Permissions.Society.View)]
+    [ProducesResponseType(typeof(ApiResponse<SocietyDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await Mediator.Send(new GetSocietyByIdQuery(id));
@@ -33,6 +34,7 @@ public class SocietiesController : ApiControllerBase
 
     [HttpPost]
     [HasPermission(Permissions.Society.Create)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create(CreateSocietyCommand command)
     {
         var id = await Mediator.Send(command);
@@ -41,6 +43,7 @@ public class SocietiesController : ApiControllerBase
 
     [HttpPut("{id:int}")]
     [HasPermission(Permissions.Society.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(int id, UpdateSocietyCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
@@ -50,6 +53,7 @@ public class SocietiesController : ApiControllerBase
 
     [HttpDelete("{id:int}")]
     [HasPermission(Permissions.Society.Manage)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(int id)
     {
         await Mediator.Send(new DeleteSocietyCommand(id));
@@ -61,6 +65,7 @@ public class SocietiesController : ApiControllerBase
     /// own inline check, same belt-and-suspenders pattern used elsewhere.</summary>
     [HttpPut("{id:int}/subscription")]
     [HasPermission(Permissions.Society.Create)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> SetSubscription(int id, SetSocietySubscriptionCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));
@@ -72,6 +77,7 @@ public class SocietiesController : ApiControllerBase
     /// window above — same Super Admin-only gating.</summary>
     [HttpPut("{id:int}/suspension")]
     [HasPermission(Permissions.Society.Create)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> SetSuspension(int id, SetSocietySuspensionCommand command)
     {
         if (id != command.Id) return BadRequest(ApiResponse.FailureResponse("Route id does not match payload id."));

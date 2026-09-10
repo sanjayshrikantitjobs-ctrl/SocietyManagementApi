@@ -14,6 +14,7 @@ public class SupportTicketsController : ApiControllerBase
 {
     [HttpGet("mine")]
     [HasPermission(Permissions.SupportTickets.Create)]
+    [ProducesResponseType(typeof(ApiResponse<List<SupportTicketDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMine()
     {
         var result = await Mediator.Send(new GetMyTicketsQuery());
@@ -30,6 +31,7 @@ public class SupportTicketsController : ApiControllerBase
 
     [HttpGet]
     [HasPermission(Permissions.SupportTickets.ManageAll)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedResult<SupportTicketDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] SupportTicketStatus? status, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {

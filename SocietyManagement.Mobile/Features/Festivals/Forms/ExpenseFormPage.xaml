@@ -9,32 +9,42 @@
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="14">
 
-            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
-            <Label Text="Budget Category" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Picker ItemsSource="{Binding CategoryOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedCategory}" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource FieldLabel}" Text="Budget Category" />
+                    <Border Style="{StaticResource FieldFrame}">
+                        <Picker ItemsSource="{Binding CategoryOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedCategory}" />
+                    </Border>
 
-            <Label Text="Vendor (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Picker ItemsSource="{Binding VendorOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedVendor}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Vendor (optional)" />
+                    <Border Style="{StaticResource FieldFrame}">
+                        <Picker ItemsSource="{Binding VendorOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedVendor}" />
+                    </Border>
 
-            <Label Text="Amount" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding Amount}" Keyboard="Numeric" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Amount" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Amount}" Keyboard="Numeric" /></Border>
 
-            <Label Text="Expense Date" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <DatePicker Date="{Binding ExpenseDate}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Expense Date" />
+                    <Border Style="{StaticResource FieldFrame}"><DatePicker Date="{Binding ExpenseDate}" /></Border>
 
-            <Label Text="Payment Method" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Picker ItemsSource="{Binding PaymentModeOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedPaymentMode}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Payment Method" />
+                    <Border Style="{StaticResource FieldFrame}">
+                        <Picker ItemsSource="{Binding PaymentModeOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedPaymentMode}" />
+                    </Border>
 
-            <Label Text="Invoice Number (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding InvoiceNumber}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Invoice Number (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding InvoiceNumber}" /></Border>
 
-            <Label Text="Description (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Editor Text="{Binding Description}" AutoSize="TextChanges" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Description (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Editor Text="{Binding Description}" AutoSize="TextChanges" /></Border>
 
-            <Label Text="Bill Image URL (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding BillImageUrl}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Bill Image URL (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding BillImageUrl}" /></Border>
+                </VerticalStackLayout>
+            </Border>
 
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />

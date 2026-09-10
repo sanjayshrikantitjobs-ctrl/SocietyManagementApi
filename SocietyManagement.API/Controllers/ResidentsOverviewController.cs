@@ -13,6 +13,7 @@ public class ResidentsOverviewController : ApiControllerBase
 {
     [HttpGet("summary")]
     [HasPermission(Permissions.Occupancy.View)]
+    [ProducesResponseType(typeof(ApiResponse<ResidentsOverviewSummaryDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSummary([FromQuery] int societyId)
     {
         var result = await Mediator.Send(new GetResidentsOverviewSummaryQuery(societyId));
@@ -21,6 +22,7 @@ public class ResidentsOverviewController : ApiControllerBase
 
     [HttpGet("recent-changes")]
     [HasPermission(Permissions.Occupancy.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<RecentOccupancyChangeDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetRecentChanges([FromQuery] int societyId, [FromQuery] int take = 10)
     {
         var result = await Mediator.Send(new GetRecentOccupancyChangesQuery(societyId, take));

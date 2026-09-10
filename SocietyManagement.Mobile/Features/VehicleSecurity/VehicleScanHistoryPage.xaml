@@ -11,16 +11,18 @@
         <CollectionView ItemsSource="{Binding History}">
             <CollectionView.EmptyView>
                 <VerticalStackLayout Padding="32" VerticalOptions="Center">
-                    <Label Text="No scans logged yet." HorizontalOptions="Center" TextColor="{StaticResource Gray500}" />
+                    <Label Style="{StaticResource Muted}" Text="No scans logged yet." HorizontalOptions="Center" />
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="gen:VehicleScanHistoryDto">
-                    <Grid Padding="16,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                        <Label Grid.Row="0" Grid.Column="0" Text="{Binding NormalizedRegistrationNumber}" FontAttributes="Bold" FontSize="16" />
-                        <Label Grid.Row="1" Grid.Column="0" Text="{Binding ScannedAt, StringFormat='{0:g}'}" FontSize="12" TextColor="{StaticResource Gray500}" />
-                        <Label Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Text="{Binding Result}" VerticalOptions="Center" FontAttributes="Bold" />
-                    </Grid>
+                    <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding NormalizedRegistrationNumber}" FontAttributes="Bold" FontSize="16" />
+                            <Label Grid.Row="1" Grid.Column="0" Text="{Binding ScannedAt, StringFormat='{0:g}'}" Style="{StaticResource Muted}" />
+                            <Label Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Text="{Binding Result}" VerticalOptions="Center" FontAttributes="Bold" TextColor="{StaticResource Info}" />
+                        </Grid>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

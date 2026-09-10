@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:sup="clr-namespace:SocietyManagement.Mobile.Features.Support"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Support.SupportTicketsPage"
+             x:DataType="sup:SupportTicketsViewModel"
+             Title="Support Tickets">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,12,12,4">
+            <Picker ItemsSource="{Binding StatusOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedStatus}" />
+        </Border>
+
+        <Label Grid.Row="1" Style="{StaticResource ErrorText}" Margin="16,0" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Tickets}">
+            <CollectionView.EmptyView>
+                <Label Style="{StaticResource Muted}" Text="No support tickets found." HorizontalOptions="Center" Margin="0,24" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="gen:SupportTicketDto">
+                    <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                            <Label Grid.Row="0" Grid.Column="0" Text="{Binding Subject}" FontAttributes="Bold" />
+                            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource chipBase}" HorizontalOptions="End">
+                                <Label Text="{Binding Status}" FontSize="12" FontAttributes="Bold" />
+                            </Border>
+                            <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Description}" Style="{StaticResource Muted}" LineBreakMode="TailTruncation" />
+                            <Label Grid.Row="2" Grid.Column="0" Text="{Binding SocietyName}" Style="{StaticResource Muted}" FontSize="12" />
+                            <Label Grid.Row="2" Grid.Column="1" Text="{Binding CreatedAt, StringFormat='{0:MMM d, yyyy}'}" Style="{StaticResource Muted}" FontSize="12" HorizontalOptions="End" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+
+</ContentPage>

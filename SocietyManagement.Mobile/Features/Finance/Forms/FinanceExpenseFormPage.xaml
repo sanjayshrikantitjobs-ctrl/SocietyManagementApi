@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:forms="clr-namespace:SocietyManagement.Mobile.Features.Finance.Forms"
+             x:Class="SocietyManagement.Mobile.Features.Finance.Forms.FinanceExpenseFormPage"
+             x:DataType="forms:FinanceExpenseFormViewModel"
+             Title="Expense">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource FieldLabel}" Text="Category" />
+                    <Border Style="{StaticResource FieldFrame}">
+                        <Picker ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding SelectedCategory}" />
+                    </Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Title" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Title}" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Amount" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Amount}" Keyboard="Numeric" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Expense Date" />
+                    <Border Style="{StaticResource FieldFrame}"><DatePicker Date="{Binding ExpenseDate}" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Payment Method" />
+                    <Border Style="{StaticResource FieldFrame}">
+                        <Picker ItemsSource="{Binding PaymentMethodOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedPaymentMethod}" />
+                    </Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Paid To (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding PaidTo}" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Notes (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Editor Text="{Binding Notes}" AutoSize="TextChanges" /></Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

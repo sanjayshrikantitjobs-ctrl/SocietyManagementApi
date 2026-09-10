@@ -9,16 +9,19 @@
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="14">
 
-            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
-            <Label Text="Approval Request Expiry (minutes)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding ApprovalRequestExpiryMinutes}" Keyboard="Numeric" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource FieldLabel}" Text="Approval Request Expiry (minutes)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding ApprovalRequestExpiryMinutes}" Keyboard="Numeric" /></Border>
 
-            <Label Text="Keep Visitor History (days)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding RetentionDays}" Keyboard="Numeric" />
-            <Label Text="Visitor gate-entry records and photos older than this are automatically deleted. Default 30 days."
-                   FontSize="11" TextColor="{StaticResource Gray400}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Keep Visitor History (days)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding RetentionDays}" Keyboard="Numeric" /></Border>
+                    <Label Style="{StaticResource Muted}" Text="Visitor gate-entry records and photos older than this are automatically deleted. Default 30 days." />
+                </VerticalStackLayout>
+            </Border>
 
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <Button Text="Save Settings" Command="{Binding SaveCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />

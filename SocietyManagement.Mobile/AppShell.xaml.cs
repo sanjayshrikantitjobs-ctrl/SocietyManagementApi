@@ -2,10 +2,15 @@ using SocietyManagement.Mobile.Core.Auth;
 using SocietyManagement.Mobile.Features.Auth;
 using SocietyManagement.Mobile.Features.Dashboard;
 using SocietyManagement.Mobile.Features.Festivals;
+using SocietyManagement.Mobile.Features.Finance;
+using SocietyManagement.Mobile.Features.Finance.Forms;
 using SocietyManagement.Mobile.Features.Festivals.Forms;
 using SocietyManagement.Mobile.Features.Maintenance;
 using SocietyManagement.Mobile.Features.Maintenance.Forms;
 using SocietyManagement.Mobile.Features.Maintenance.Payments;
+using SocietyManagement.Mobile.Features.Residents;
+using SocietyManagement.Mobile.Features.Residents.Forms;
+using SocietyManagement.Mobile.Features.Societies;
 using SocietyManagement.Mobile.Features.Visitors.Forms;
 using SocietyManagement.Mobile.Shared;
 
@@ -50,6 +55,21 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(WaterTankerLogFormPage), typeof(WaterTankerLogFormPage));
         Routing.RegisterRoute(nameof(GateFormPage), typeof(GateFormPage));
         Routing.RegisterRoute(nameof(PurposeFormPage), typeof(PurposeFormPage));
+        // Reachable only via query-parameter navigation from FinancePage's
+        // Expenses tab — not a flyout destination.
+        Routing.RegisterRoute(nameof(FinanceExpenseFormPage), typeof(FinanceExpenseFormPage));
+        // Reachable only from SocietiesPage's row actions (Structure/
+        // Parking icons, Edit/Delete menu) — not flyout destinations.
+        Routing.RegisterRoute(nameof(SocietyFormPage), typeof(SocietyFormPage));
+        Routing.RegisterRoute(nameof(SocietyStructurePage), typeof(SocietyStructurePage));
+        Routing.RegisterRoute(nameof(ParkingSlotsPage), typeof(ParkingSlotsPage));
+        // Reachable only from ResidentsPage's Owner/Tenant grid rows (tap to
+        // open a flat's full detail) — not a flyout destination.
+        Routing.RegisterRoute(nameof(FlatResidentDetailPage), typeof(FlatResidentDetailPage));
+        Routing.RegisterRoute(nameof(OccupancyMemberFormPage), typeof(OccupancyMemberFormPage));
+        Routing.RegisterRoute(nameof(EmergencyContactFormPage), typeof(EmergencyContactFormPage));
+        Routing.RegisterRoute(nameof(VehicleFormPage), typeof(VehicleFormPage));
+        Routing.RegisterRoute(nameof(ResaleListingFormPage), typeof(ResaleListingFormPage));
         // Drives every FlyoutItem's role-based IsVisible binding (see
         // AppShell.xaml) — the same AuthState instance login/logout update,
         // so the flyout refreshes itself the moment the signed-in role changes.

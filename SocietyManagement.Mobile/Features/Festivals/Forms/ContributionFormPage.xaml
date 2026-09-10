@@ -9,41 +9,49 @@
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="14">
 
-            <Label Text="{Binding ErrorMessage}" TextColor="#DC2626" FontSize="13"
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
-            <Label Text="{Binding LockedFlatNumber, StringFormat='Flat {0}'}" FontSize="14" FontAttributes="Bold"
+            <Label Style="{StaticResource SectionTitle}" Text="{Binding LockedFlatNumber, StringFormat='Flat {0}'}"
                    IsVisible="{Binding ShowLockedFlat}" />
 
-            <VerticalStackLayout IsVisible="{Binding ShowFlatPicker}" Spacing="14">
-                <Label Text="Flat" FontSize="12" TextColor="{StaticResource Gray500}" />
-                <Picker ItemsSource="{Binding FlatOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedFlat}" />
-            </VerticalStackLayout>
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <VerticalStackLayout IsVisible="{Binding ShowFlatPicker}" Spacing="14">
+                        <Label Style="{StaticResource FieldLabel}" Text="Flat" />
+                        <Border Style="{StaticResource FieldFrame}">
+                            <Picker ItemsSource="{Binding FlatOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedFlat}" />
+                        </Border>
+                    </VerticalStackLayout>
 
-            <Label Text="Donor Name" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding MemberName}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Donor Name" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding MemberName}" /></Border>
 
-            <Label Text="Amount" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding Amount}" Keyboard="Numeric" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Amount" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Amount}" Keyboard="Numeric" /></Border>
 
-            <Label Text="Payment Mode" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Picker ItemsSource="{Binding PaymentModeOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedPaymentMode}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Payment Mode" />
+                    <Border Style="{StaticResource FieldFrame}">
+                        <Picker ItemsSource="{Binding PaymentModeOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedPaymentMode}" />
+                    </Border>
 
-            <Label Text="Payment Date" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <DatePicker Date="{Binding PaymentDate}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Payment Date" />
+                    <Border Style="{StaticResource FieldFrame}"><DatePicker Date="{Binding PaymentDate}" /></Border>
 
-            <Label Text="Transaction Reference (optional)" FontSize="12" TextColor="{StaticResource Gray500}" />
-            <Entry Text="{Binding TransactionId}" />
+                    <Label Style="{StaticResource FieldLabel}" Text="Transaction Reference (optional)" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding TransactionId}" /></Border>
 
-            <VerticalStackLayout IsVisible="{Binding ShowWhatsApp}" Spacing="14">
-                <Label Text="WhatsApp Number (optional — defaults to flat's number on file)" FontSize="12" TextColor="{StaticResource Gray500}" />
-                <Entry Text="{Binding WhatsAppNumber}" Keyboard="Telephone" />
-            </VerticalStackLayout>
+                    <VerticalStackLayout IsVisible="{Binding ShowWhatsApp}" Spacing="14">
+                        <Label Style="{StaticResource FieldLabel}" Text="WhatsApp Number (optional — defaults to flat's number on file)" />
+                        <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding WhatsAppNumber}" Keyboard="Telephone" /></Border>
+                    </VerticalStackLayout>
 
-            <HorizontalStackLayout Spacing="8">
-                <CheckBox IsChecked="{Binding IsAnonymous}" />
-                <Label Text="Keep donor anonymous on public displays" VerticalOptions="Center" />
-            </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="8">
+                        <CheckBox IsChecked="{Binding IsAnonymous}" />
+                        <Label Text="Keep donor anonymous on public displays" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
 
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
             <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />

@@ -59,6 +59,10 @@ const NO_FLAT_OPTION_VALUE = 0;
           <mat-button-toggle value="all">All Contributions</mat-button-toggle>
         </mat-button-toggle-group>
         <div class="actions">
+          @if (view() === 'flats') {
+            <button mat-stroked-button (click)="exportFlatsPdf()"><mat-icon>picture_as_pdf</mat-icon> Export PDF</button>
+            <button mat-stroked-button (click)="exportFlatsExcel()"><mat-icon>grid_on</mat-icon> Export Excel</button>
+          }
           @if (canManage()) {
             <button mat-stroked-button (click)="setTargetsForAllFlats()"><mat-icon>flag</mat-icon> Set Target for All Flats</button>
           }
@@ -440,6 +444,36 @@ export class FestivalContributionTabComponent implements OnInit {
         this.loadFlats();
         this.loadKpis();
       });
+    });
+  }
+
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  /** Exports exactly what's on screen — the current search term and
+   * Status filter — matching every matching flat, not just the current page. */
+  private flatsExportParams() {
+    return {
+      festivalId: this.festivalId(), search: this.flatsSearchTerm() || undefined,
+      statuses: this.statusFilter.length > 0 ? this.statusFilter : undefined
+    };
+  }
+
+  exportFlatsPdf(): void {
+    this.festivalService.exportFlatContributionsPdf(this.flatsExportParams()).subscribe((blob) => {
+      this.downloadBlob(blob, 'contributions-by-flat.pdf');
+    });
+  }
+
+  exportFlatsExcel(): void {
+    this.festivalService.exportFlatContributionsExcel(this.flatsExportParams()).subscribe((blob) => {
+      this.downloadBlob(blob, 'contributions-by-flat.xlsx');
     });
   }
 

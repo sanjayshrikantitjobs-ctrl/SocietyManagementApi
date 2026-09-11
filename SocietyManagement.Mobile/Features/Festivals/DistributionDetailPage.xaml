@@ -101,15 +101,28 @@
             <Border Style="{StaticResource Card}" IsVisible="{Binding Distribution.VariantBreakdown.Count, Converter={StaticResource CountToBoolConverter}}">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Requirement by Variant" Style="{StaticResource SectionTitle}" FontSize="14" />
+
+                    <!-- Column headers — fixed widths shared with each data row below so
+                         the numbers line up under the label that explains them, instead of
+                         the old unexplained "P 0  C 16  D 0  Σ 16" shorthand. -->
+                    <Grid ColumnDefinitions="*,50,58,58,50" ColumnSpacing="6">
+                        <Label Grid.Column="0" Text="Variant" Style="{StaticResource kpiLabel}" FontSize="10" />
+                        <Label Grid.Column="1" Text="Pending" Style="{StaticResource kpiLabel}" FontSize="10" HorizontalTextAlignment="End" />
+                        <Label Grid.Column="2" Text="Confirmed" Style="{StaticResource kpiLabel}" FontSize="10" HorizontalTextAlignment="End" />
+                        <Label Grid.Column="3" Text="Distributed" Style="{StaticResource kpiLabel}" FontSize="10" HorizontalTextAlignment="End" />
+                        <Label Grid.Column="4" Text="Total" Style="{StaticResource kpiLabel}" FontSize="10" HorizontalTextAlignment="End" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light={StaticResource BorderColor}, Dark={StaticResource Gray600}}" />
+
                     <CollectionView ItemsSource="{Binding Distribution.VariantBreakdown}">
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="gen:DistributionVariantBreakdownDto">
-                                <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" Padding="0,6" ColumnSpacing="8">
-                                    <Label Text="{Binding VariantLabel}" FontSize="12" FontAttributes="Bold" />
-                                    <Label Grid.Column="1" Text="{Binding PendingCount, StringFormat='P {0}'}" Style="{StaticResource Muted}" FontSize="11" />
-                                    <Label Grid.Column="2" Text="{Binding ConfirmedCount, StringFormat='C {0}'}" Style="{StaticResource Muted}" FontSize="11" />
-                                    <Label Grid.Column="3" Text="{Binding DistributedCount, StringFormat='D {0}'}" Style="{StaticResource Muted}" FontSize="11" />
-                                    <Label Grid.Column="4" Text="{Binding TotalCount, StringFormat='Σ {0}'}" FontSize="11" FontAttributes="Bold" />
+                                <Grid ColumnDefinitions="*,50,58,58,50" ColumnSpacing="6" Padding="0,6">
+                                    <Label Grid.Column="0" Text="{Binding VariantLabel}" FontSize="12" FontAttributes="Bold" />
+                                    <Label Grid.Column="1" Text="{Binding PendingCount}" Style="{StaticResource Muted}" FontSize="12" HorizontalTextAlignment="End" />
+                                    <Label Grid.Column="2" Text="{Binding ConfirmedCount}" Style="{StaticResource Muted}" FontSize="12" HorizontalTextAlignment="End" />
+                                    <Label Grid.Column="3" Text="{Binding DistributedCount}" Style="{StaticResource Muted}" FontSize="12" HorizontalTextAlignment="End" />
+                                    <Label Grid.Column="4" Text="{Binding TotalCount}" FontSize="12" FontAttributes="Bold" HorizontalTextAlignment="End" />
                                 </Grid>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>

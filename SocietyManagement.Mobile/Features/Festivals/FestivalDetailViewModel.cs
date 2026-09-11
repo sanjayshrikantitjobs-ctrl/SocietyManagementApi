@@ -777,4 +777,42 @@ public partial class FestivalDetailViewModel : ObservableObject
             ErrorMessage = $"Couldn't complete that action ({ex.Message}).";
         }
     }
+
+    [RelayCommand]
+    private Task ExportContributionsPdfAsync() => ExportContributionsAsync(pdf: true);
+
+    [RelayCommand]
+    private Task ExportContributionsExcelAsync() => ExportContributionsAsync(pdf: false);
+
+    /// <summary>"By Flat" export only — mirrors exactly what's on screen
+    /// (search + the currently selected Status filter), same pattern as
+    /// MaintenanceViewModel's bill export.</summary>
+    private async Task ExportContributionsAsync(bool pdf)
+    {
+        IsBusy = true;
+        ErrorMessage = null;
+        try
+        {
+            var search = string.IsNullOrWhiteSpace(ContributionSearch) ? null : ContributionSearch;
+            var statuses = SelectedContributionStatus.Value is { } status
+                ? new List<FlatContributionStatus> { status }
+                : null;
+
+            var file = pdf
+                ? await _contributionsClient.PdfAsync(FestivalId, search, statuses)
+                : await _contributionsClient.ExcelAsync(FestivalId, search, statuses);
+            var fileName = pdf ? "contributions-by-flat.pdf" : "contributions-by-flat.xlsx";
+            var path = Path.Combine(FileSystem.CacheDirectory, fileName);
+            using (file) { await using var output = File.Create(path); await file.Stream.CopyToAsync(output); }
+            await Share.Default.RequestAsync(new ShareFileRequest { Title = fileName, File = new ShareFile(path) });
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Couldn't export contributions ({ex.Message}).";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
 }

@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SocietyManagement.Application.Common.Interfaces;
+using SocietyManagement.Application.Common.Models;
 using SocietyManagement.Domain.Entities;
 using SocietyManagement.Domain.Enums;
 using SocietyManagement.Shared.Constants;
@@ -239,17 +240,44 @@ public class ContributableFlatDto
     public string FlatNumber { get; set; } = default!;
 }
 
+/// <summary>Same filters as GetFlatContributionsQuery, unpaginated — every
+/// matching flat is exported, not just the current page. Mirrors
+/// GetBillsExportPdfQuery/GetBillsExportExcelQuery's shape on the
+/// Maintenance side.</summary>
+public record GetFlatContributionsExportPdfQuery(int FestivalId, string? Search, List<FlatContributionStatus>? Statuses) : IRequest<byte[]>;
+
+public record GetFlatContributionsExportExcelQuery(int FestivalId, string? Search, List<FlatContributionStatus>? Statuses) : IRequest<byte[]>;
+
 public class FlatContributionQueryHandlers :
     IRequestHandler<GetFlatContributionsQuery, PaginatedResult<FlatContributionDto>>,
     IRequestHandler<GetFlatContributionKpisQuery, FlatContributionKpisDto>,
     IRequestHandler<GetFlatContributionsSumQuery, FlatContributionsSumDto>,
-    IRequestHandler<GetContributableFlatsQuery, List<ContributableFlatDto>>
+    IRequestHandler<GetContributableFlatsQuery, List<ContributableFlatDto>>,
+    IRequestHandler<GetFlatContributionsExportPdfQuery, byte[]>,
+    IRequestHandler<GetFlatContributionsExportExcelQuery, byte[]>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IFlatContributionsExportService _exportService;
 
-    public FlatContributionQueryHandlers(IApplicationDbContext context)
+    private static readonly Dictionary<FlatContributionStatus, string> StatusLabels = new()
+    {
+        [FlatContributionStatus.NoTarget] = "No Target",
+        [FlatContributionStatus.Pending] = "Pending",
+        [FlatContributionStatus.PartiallyPaid] = "Partially Paid",
+        [FlatContributionStatus.Paid] = "Paid"
+    };
+
+    private static readonly Dictionary<ContributionPaymentMethod, string> PaymentMethodLabels = new()
+    {
+        [ContributionPaymentMethod.Cash] = "Cash",
+        [ContributionPaymentMethod.UPI] = "UPI",
+        [ContributionPaymentMethod.BankTransfer] = "Bank Transfer"
+    };
+
+    public FlatContributionQueryHandlers(IApplicationDbContext context, IFlatContributionsExportService exportService)
     {
         _context = context;
+        _exportService = exportService;
     }
 
     private async Task<List<FlatContributionDto>> BuildFlatContributionsAsync(int festivalId, CancellationToken ct)
@@ -392,5 +420,46 @@ public class FlatContributionQueryHandlers :
             .OrderBy(f => f.FlatId)
             .Select(f => new ContributableFlatDto { FlatId = f.FlatId, FlatNumber = f.FlatNumber })
             .ToList();
+    }
+
+    /// <summary>Shared by both export formats — same filters, same rows,
+    /// just handed to a different renderer.</summary>
+    private async Task<FlatContributionsExportData> BuildExportDataAsync(
+        int festivalId, string? search, List<FlatContributionStatus>? statuses, CancellationToken ct)
+    {
+        var festival = await _context.Festivals.FirstOrDefaultAsync(f => f.Id == festivalId && !f.IsDeleted, ct)
+            ?? throw new NotFoundException(nameof(Festival), festivalId);
+        var society = await _context.Societies.FirstOrDefaultAsync(s => s.Id == festival.SocietyId, ct);
+
+        var all = await BuildFlatContributionsAsync(festivalId, ct);
+        all = ApplyFilters(all, search, statuses);
+
+        var statusLabel = statuses is { Count: > 0 } ? string.Join(" + ", statuses.Select(s => StatusLabels[s])) : "All Statuses";
+
+        return new FlatContributionsExportData
+        {
+            SocietyName = society?.Name ?? "Society",
+            FestivalName = festival.Name,
+            FilterLabel = statusLabel,
+            Rows = all.Select(f => new FlatContributionExportRow
+            {
+                FlatNumber = f.FlatNumber, TargetAmount = f.TargetAmount, PaidAmount = f.PaidAmount,
+                OutstandingAmount = f.OutstandingAmount, StatusLabel = StatusLabels[f.Status],
+                LastPaymentMethodLabel = f.LastPaymentMethod is { } method ? PaymentMethodLabels[method] : null,
+                DeclineReason = f.DeclineReason
+            }).ToList()
+        };
+    }
+
+    public async Task<byte[]> Handle(GetFlatContributionsExportPdfQuery request, CancellationToken ct)
+    {
+        var data = await BuildExportDataAsync(request.FestivalId, request.Search, request.Statuses, ct);
+        return _exportService.GeneratePdf(data);
+    }
+
+    public async Task<byte[]> Handle(GetFlatContributionsExportExcelQuery request, CancellationToken ct)
+    {
+        var data = await BuildExportDataAsync(request.FestivalId, request.Search, request.Statuses, ct);
+        return _exportService.GenerateExcel(data);
     }
 }

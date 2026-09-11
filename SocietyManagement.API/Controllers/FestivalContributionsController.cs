@@ -138,6 +138,26 @@ public class FestivalContributionsController : ApiControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
+    [HttpGet("flat-summary/export/pdf")]
+    [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExportFlatSummaryPdf(
+        [FromQuery] int festivalId, [FromQuery] string? search, [FromQuery] List<FlatContributionStatus>? statuses)
+    {
+        var pdfBytes = await Mediator.Send(new GetFlatContributionsExportPdfQuery(festivalId, search, statuses));
+        return File(pdfBytes, "application/pdf", "contributions-by-flat.pdf");
+    }
+
+    [HttpGet("flat-summary/export/excel")]
+    [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExportFlatSummaryExcel(
+        [FromQuery] int festivalId, [FromQuery] string? search, [FromQuery] List<FlatContributionStatus>? statuses)
+    {
+        var excelBytes = await Mediator.Send(new GetFlatContributionsExportExcelQuery(festivalId, search, statuses));
+        return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "contributions-by-flat.xlsx");
+    }
+
     [HttpPost("targets")]
     [HasPermission(Permissions.Festivals.Manage)]
     [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]

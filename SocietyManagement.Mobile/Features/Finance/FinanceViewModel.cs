@@ -350,7 +350,7 @@ public partial class FinanceViewModel : ObservableObject
         ErrorMessage = null;
         try
         {
-            var file = await _client.PdfAsync(source, id);
+            var file = await _client.Pdf2Async(source, id);
             await SaveAndShareAsync(file, $"{receipt.ReceiptNumber}.pdf");
         }
         catch (Exception ex)
@@ -426,7 +426,7 @@ public partial class FinanceViewModel : ObservableObject
         {
             var from = HasReportDateFilter ? (DateTimeOffset?)ReportFromDate : null;
             var to = HasReportDateFilter ? (DateTimeOffset?)ReportToDate : null;
-            var file = pdf ? await _client.Pdf2Async(societyId, from, to) : await _client.ExcelAsync(societyId, from, to);
+            var file = pdf ? await _client.Pdf3Async(societyId, from, to) : await _client.Excel2Async(societyId, from, to);
             await SaveAndShareAsync(file, pdf ? "financial-report.pdf" : "financial-report.xlsx");
         }
         catch (Exception ex)

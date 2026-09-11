@@ -69,7 +69,7 @@ public partial class MaintenanceBillDetailViewModel : ObservableObject
         ErrorMessage = null;
         try
         {
-            var file = await _billsClient.Pdf3Async(BillId);
+            var file = await _billsClient.Pdf4Async(BillId);
             var path = Path.Combine(FileSystem.CacheDirectory, $"{Bill.InvoiceNumber}.pdf");
             using (file)
             {

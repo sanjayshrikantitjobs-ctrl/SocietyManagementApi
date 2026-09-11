@@ -279,8 +279,8 @@ public partial class MaintenanceViewModel : ObservableObject
             var billMonth = HasMonthFilter ? (DateTimeOffset?)BillMonthFilterDate : null;
 
             var file = pdf
-                ? await _billsClient.Pdf4Async(societyId, statuses, billMonth)
-                : await _billsClient.Excel2Async(societyId, statuses, billMonth);
+                ? await _billsClient.Pdf5Async(societyId, statuses, billMonth)
+                : await _billsClient.Excel3Async(societyId, statuses, billMonth);
             await SaveAndShareAsync(file, pdf ? "maintenance-bills.pdf" : "maintenance-bills.xlsx");
         }
         catch (Exception ex)
@@ -336,7 +336,7 @@ public partial class MaintenanceViewModel : ObservableObject
         ErrorMessage = null;
         try
         {
-            var file = await _billsClient.Pdf3Async(billId);
+            var file = await _billsClient.Pdf4Async(billId);
             await SaveAndShareAsync(file, $"{bill.InvoiceNumber}.pdf");
         }
         catch (Exception ex)

@@ -131,6 +131,12 @@ export class FestivalService {
     return this.http.get<ApiResponse<ContributableFlatDto[]>>(`${this.baseUrl}/festival-contributions/contributable-flats`, { params: { festivalId } })
       .pipe(map((r) => r.data!));
   }
+  exportFlatContributionsPdf(params: { festivalId: number; search?: string; statuses?: FlatContributionStatus[] }): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/festival-contributions/flat-summary/export/pdf`, { params: toHttpParams(params), responseType: 'blob' });
+  }
+  exportFlatContributionsExcel(params: { festivalId: number; search?: string; statuses?: FlatContributionStatus[] }): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/festival-contributions/flat-summary/export/excel`, { params: toHttpParams(params), responseType: 'blob' });
+  }
   setContributionTargets(festivalId: number, targetAmount: number): Observable<number> {
     return this.http.post<ApiResponse<number>>(`${this.baseUrl}/festival-contributions/targets`, { festivalId, targetAmount })
       .pipe(map((r) => r.data!));

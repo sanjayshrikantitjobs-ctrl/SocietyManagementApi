@@ -6388,6 +6388,16 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<FileResponse> PdfAsync(int? festivalId = null, string? search = null, System.Collections.Generic.IEnumerable<FlatContributionStatus>? statuses = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<FileResponse> ExcelAsync(int? festivalId = null, string? search = null, System.Collections.Generic.IEnumerable<FlatContributionStatus>? statuses = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
         System.Threading.Tasks.Task<Int32ApiResponse> TargetsPOSTAsync(SetContributionTargetsCommand? body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -7488,6 +7498,172 @@ namespace SocietyManagement.Mobile.Api.Generated
                                 throw new FestivalContributionsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
                             }
                             return objectResponse_.Object;
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new FestivalContributionsApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<FileResponse> PdfAsync(int? festivalId = null, string? search = null, System.Collections.Generic.IEnumerable<FlatContributionStatus>? statuses = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                
+                    // Operation Path: "api/festival-contributions/flat-summary/export/pdf"
+                    urlBuilder_.Append("api/festival-contributions/flat-summary/export/pdf");
+                    urlBuilder_.Append('?');
+                    if (festivalId != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("festivalId")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(festivalId, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (search != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("search")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(search, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (statuses != null)
+                    {
+                            foreach (var item_ in statuses) { urlBuilder_.Append(System.Uri.EscapeDataString("statuses")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(item_, System.Globalization.CultureInfo.InvariantCulture))).Append('&'); }
+                    }
+                    urlBuilder_.Length--;
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200 || status_ == 206)
+                        {
+                            var responseStream_ = response_.Content == null ? System.IO.Stream.Null : await ReadAsStreamAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            var fileResponse_ = new FileResponse(status_, headers_, responseStream_, null, response_);
+                            disposeClient_ = false; disposeResponse_ = false; // response and client are disposed by FileResponse
+                            return fileResponse_;
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new FestivalContributionsApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="FestivalContributionsApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<FileResponse> ExcelAsync(int? festivalId = null, string? search = null, System.Collections.Generic.IEnumerable<FlatContributionStatus>? statuses = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                
+                    // Operation Path: "api/festival-contributions/flat-summary/export/excel"
+                    urlBuilder_.Append("api/festival-contributions/flat-summary/export/excel");
+                    urlBuilder_.Append('?');
+                    if (festivalId != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("festivalId")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(festivalId, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (search != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("search")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(search, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (statuses != null)
+                    {
+                            foreach (var item_ in statuses) { urlBuilder_.Append(System.Uri.EscapeDataString("statuses")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(item_, System.Globalization.CultureInfo.InvariantCulture))).Append('&'); }
+                    }
+                    urlBuilder_.Length--;
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200 || status_ == 206)
+                        {
+                            var responseStream_ = response_.Content == null ? System.IO.Stream.Null : await ReadAsStreamAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            var fileResponse_ = new FileResponse(status_, headers_, responseStream_, null, response_);
+                            disposeClient_ = false; disposeResponse_ = false; // response and client are disposed by FileResponse
+                            return fileResponse_;
                         }
                         else
                         {
@@ -13875,7 +14051,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FinanceApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<FileResponse> PdfAsync(FinanceSource source, int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FileResponse> Pdf2Async(FinanceSource source, int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
@@ -13920,12 +14096,12 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FinanceApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<FileResponse> Pdf2Async(int? societyId = null, System.DateTimeOffset? dateFrom = null, System.DateTimeOffset? dateTo = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FileResponse> Pdf3Async(int? societyId = null, System.DateTimeOffset? dateFrom = null, System.DateTimeOffset? dateTo = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FinanceApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<FileResponse> ExcelAsync(int? societyId = null, System.DateTimeOffset? dateFrom = null, System.DateTimeOffset? dateTo = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FileResponse> Excel2Async(int? societyId = null, System.DateTimeOffset? dateFrom = null, System.DateTimeOffset? dateTo = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -14142,7 +14318,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FinanceApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<FileResponse> PdfAsync(FinanceSource source, int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FileResponse> Pdf2Async(FinanceSource source, int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (source == null)
                 throw new System.ArgumentNullException("source");
@@ -14901,7 +15077,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FinanceApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<FileResponse> Pdf2Async(int? societyId = null, System.DateTimeOffset? dateFrom = null, System.DateTimeOffset? dateTo = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FileResponse> Pdf3Async(int? societyId = null, System.DateTimeOffset? dateFrom = null, System.DateTimeOffset? dateTo = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -14984,7 +15160,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="FinanceApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<FileResponse> ExcelAsync(int? societyId = null, System.DateTimeOffset? dateFrom = null, System.DateTimeOffset? dateTo = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FileResponse> Excel2Async(int? societyId = null, System.DateTimeOffset? dateFrom = null, System.DateTimeOffset? dateTo = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -20493,17 +20669,17 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<FileResponse> Pdf3Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FileResponse> Pdf4Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<FileResponse> Pdf4Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FileResponse> Pdf5Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<FileResponse> Excel2Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<FileResponse> Excel3Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
@@ -20841,7 +21017,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<FileResponse> Pdf3Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FileResponse> Pdf4Async(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -20915,7 +21091,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<FileResponse> Pdf4Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FileResponse> Pdf5Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -20998,7 +21174,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="MaintenanceBillsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<FileResponse> Excel2Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FileResponse> Excel3Async(int? societyId = null, System.Collections.Generic.IEnumerable<BillStatus>? statuses = null, System.DateTimeOffset? billMonth = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;

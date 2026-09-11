@@ -214,7 +214,7 @@
         </VerticalStackLayout>
 
         <!-- Contribution panel -->
-        <Grid Grid.Row="4" RowDefinitions="Auto,Auto,Auto,Auto,*"
+        <Grid Grid.Row="4" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*"
               IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Contribution}">
 
             <Grid Grid.Row="0" Padding="16,10" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="10"
@@ -288,7 +288,16 @@
                 </Border>
             </Grid>
 
-            <CollectionView Grid.Row="4" ItemsSource="{Binding FlatContributions}"
+            <!-- Export "By Flat" report (whatever Status filter is currently
+                 active) as PDF/Excel — the "All Contributions" ledger view
+                 doesn't have this, matching what was asked for. -->
+            <Grid Grid.Row="4" Padding="16,4,16,8" ColumnDefinitions="*,*" ColumnSpacing="8"
+                  IsVisible="{Binding ContributionView, Converter={StaticResource EqualsConverter}, ConverterParameter=Flats}">
+                <Button Grid.Column="0" Style="{StaticResource OutlineButton}" Text="Export PDF" FontSize="12" Command="{Binding ExportContributionsPdfCommand}" />
+                <Button Grid.Column="1" Style="{StaticResource OutlineButton}" Text="Export Excel" FontSize="12" Command="{Binding ExportContributionsExcelCommand}" />
+            </Grid>
+
+            <CollectionView Grid.Row="5" ItemsSource="{Binding FlatContributions}"
                             IsVisible="{Binding ContributionView, Converter={StaticResource EqualsConverter}, ConverterParameter=Flats}">
                 <CollectionView.EmptyView>
                     <Label Style="{StaticResource Muted}" Text="No flats found." HorizontalOptions="Center" Margin="0,24" />
@@ -312,7 +321,7 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <CollectionView Grid.Row="4" ItemsSource="{Binding AllContributions}"
+            <CollectionView Grid.Row="5" ItemsSource="{Binding AllContributions}"
                             IsVisible="{Binding ContributionView, Converter={StaticResource EqualsConverter}, ConverterParameter=All}">
                 <CollectionView.EmptyView>
                     <Label Style="{StaticResource Muted}" Text="No contributions recorded yet." HorizontalOptions="Center" Margin="0,24" />

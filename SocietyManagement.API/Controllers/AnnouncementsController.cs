@@ -99,4 +99,13 @@ public class AnnouncementsController : ApiControllerBase
         await Mediator.Send(new MarkAnnouncementReadCommand(id));
         return Ok(ApiResponse.SuccessResponse("Marked as read."));
     }
+
+    [HttpPost("{id:int}/toggle-saved")]
+    [HasPermission(Permissions.Notices.View)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ToggleSaved(int id)
+    {
+        var isSaved = await Mediator.Send(new ToggleAnnouncementSavedCommand(id));
+        return Ok(ApiResponse<bool>.SuccessResponse(isSaved, isSaved ? "Saved." : "Removed from saved."));
+    }
 }

@@ -9,8 +9,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { PageEvent } from '@angular/material/paginator';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../core/services/auth.service';
 import { SignalrService } from '../../core/services/signalr.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -24,7 +26,7 @@ import { StatCardComponent } from '../../shared/components/stat-card/stat-card.c
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
 import { SocietyService } from '../society-setup/services/society.service';
 import { AssetUrlPipe } from '../../shared/pipes/asset-url.pipe';
-import { VISIT_STATUS_LABELS, VisitorVisitDto } from './models/visitor.model';
+import { VISIT_STATUS_LABELS, VisitorPurpose, VisitorVisitDto } from './models/visitor.model';
 import { VisitorService } from './services/visitor.service';
 import { VisitorApprovalCardComponent } from './visitor-approval-card.component';
 import { VisitorVisitDetailDialogComponent } from './visitor-visit-detail-dialog.component';
@@ -39,8 +41,8 @@ import { VisitorVisitDetailDialogComponent } from './visitor-visit-detail-dialog
   standalone: true,
   imports: [
     CommonModule, FormsModule, RouterLink, MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatIconModule,
-    MatInputModule, MatSortModule, MatTableModule, AssetUrlPipe, PageHeaderComponent, StatCardComponent,
-    SkeletonLoaderComponent, EmptyStateComponent, VisitorApprovalCardComponent, DataTableComponent
+    MatInputModule, MatSelectModule, MatSortModule, MatTableModule, MatTooltipModule, AssetUrlPipe, PageHeaderComponent,
+    StatCardComponent, SkeletonLoaderComponent, EmptyStateComponent, VisitorApprovalCardComponent, DataTableComponent
   ],
   template: `
     <div class="app-page">
@@ -98,6 +100,13 @@ import { VisitorVisitDetailDialogComponent } from './visitor-visit-detail-dialog
               <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
               <mat-datepicker #toPicker></mat-datepicker>
             </mat-form-field>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="purpose-filter">
+              <mat-label>Purpose</mat-label>
+              <mat-select [value]="purposeFilter()" (selectionChange)="onPurposeFilterChange($event.value)">
+                <mat-option [value]="null">All</mat-option>
+                @for (p of purposes(); track p.id) { <mat-option [value]="p.id">{{ p.name }}</mat-option> }
+              </mat-select>
+            </mat-form-field>
           </div>
           <table mat-table [dataSource]="recent()" matSort (matSortChange)="onSort($event)" table>
             <ng-container matColumnDef="photo">
@@ -130,6 +139,20 @@ import { VisitorVisitDetailDialogComponent } from './visitor-visit-detail-dialog
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
               <td mat-cell *matCellDef="let v">{{ statusLabels[v.status] }}</td>
             </ng-container>
+            <ng-container matColumnDef="duration">
+              <th mat-header-cell *matHeaderCellDef>Duration</th>
+              <td mat-cell *matCellDef="let v">{{ duration(v) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let v">
+                @if (isWatchman() || auth.isAdmin()) {
+                  <button mat-icon-button matTooltip="Re-invite this visitor" (click)="$event.stopPropagation(); reinvite(v)">
+                    <mat-icon>repeat</mat-icon>
+                  </button>
+                }
+              </td>
+            </ng-container>
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="clickable-row" (click)="openDetail(row)"></tr>
           </table>
@@ -146,6 +169,7 @@ import { VisitorVisitDetailDialogComponent } from './visitor-visit-detail-dialog
     .pending-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 8px; }
     .date-filters { display: flex; gap: 12px; }
     .date-filters mat-form-field { width: 160px; }
+    .date-filters .purpose-filter { width: 180px; }
     table { width: 100%; }
     .thumb { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
     .thumb-placeholder { display: flex; align-items: center; justify-content: center; background: var(--app-primary-light); color: var(--app-primary); }
@@ -167,7 +191,9 @@ export class VisitorsLandingComponent implements OnInit {
   readonly recent = signal<VisitorVisitDto[]>([]);
   readonly currentlyInsideCount = signal(0);
   readonly statusLabels: Record<number, string> = VISIT_STATUS_LABELS;
-  readonly displayedColumns = ['photo', 'visitorName', 'flatNumber', 'purposeName', 'requestedAt', 'status'];
+  readonly displayedColumns = ['photo', 'visitorName', 'flatNumber', 'purposeName', 'requestedAt', 'duration', 'status', 'actions'];
+  readonly purposes = signal<VisitorPurpose[]>([]);
+  readonly purposeFilter = signal<number | null>(null);
 
   readonly totalCount = signal(0);
   readonly pageIndex = signal(0);
@@ -203,6 +229,8 @@ export class VisitorsLandingComponent implements OnInit {
         this.visitorService.getCurrentlyInside(this.societyId).subscribe((rows) => this.currentlyInsideCount.set(rows.length));
       }
 
+      this.visitorService.getPurposes(this.societyId, true).subscribe((purposes) => this.purposes.set(purposes));
+
       this.loadTable();
       this.initialLoading.set(false);
     });
@@ -215,6 +243,7 @@ export class VisitorsLandingComponent implements OnInit {
       fromDate: toDateOnlyString(this.fromDate) ?? undefined,
       toDate: toDateOnlyString(this.toDate) ?? undefined,
       search: this.searchTerm() || undefined,
+      purposeId: this.purposeFilter() ?? undefined,
       sortBy: sort?.direction ? sort.active : undefined,
       sortDescending: sort?.direction ? sort.direction === 'desc' : true,
       pageNumber: this.pageIndex() + 1,
@@ -257,6 +286,38 @@ export class VisitorsLandingComponent implements OnInit {
   onDateChange(): void {
     this.pageIndex.set(0);
     this.loadTable();
+  }
+
+  onPurposeFilterChange(purposeId: number | null): void {
+    this.purposeFilter.set(purposeId);
+    this.pageIndex.set(0);
+    this.loadTable();
+  }
+
+  /** CheckIn→CheckOut is the visitor's actual time inside, distinct from
+   * RequestedAt (when the request was raised) — blank until check-out is logged. */
+  duration(v: VisitorVisitDto): string {
+    if (!v.checkInTime || !v.checkOutTime) return '—';
+    const minutes = Math.round((new Date(v.checkOutTime).getTime() - new Date(v.checkInTime).getTime()) / 60000);
+    if (minutes < 60) return `${minutes}m`;
+    return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+  }
+
+  /** Re-sends the same visitor/flat/purpose/gate as a brand new request
+   * rather than mutating the old one — a repeat guest gets a fresh
+   * approval cycle, same as if the resident had filled the form again. */
+  reinvite(v: VisitorVisitDto): void {
+    this.visitorService.createVisit({
+      visitorId: v.visitorId, flatId: v.flatId, purposeId: v.purposeId, gateId: v.gateId,
+      numberOfVisitors: v.numberOfVisitors
+    }).subscribe({
+      next: () => {
+        this.toast.success(`${v.visitorName} re-invited.`);
+        this.loadPending();
+        this.loadTable();
+      },
+      error: (err) => this.toast.error(err?.error?.message || 'Could not re-invite this visitor.')
+    });
   }
 
   approveVisit(id: number): void {

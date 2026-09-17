@@ -48,3 +48,25 @@ public class AnnouncementReadConfiguration : IEntityTypeConfiguration<Announceme
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
+
+public class AnnouncementSaveConfiguration : IEntityTypeConfiguration<AnnouncementSave>
+{
+    public void Configure(EntityTypeBuilder<AnnouncementSave> builder)
+    {
+        builder.ToTable("AnnouncementSaves");
+
+        // One bookmark row per (announcement, user) — ToggleAnnouncementSavedCommand
+        // adds/removes this row rather than flipping a boolean.
+        builder.HasIndex(s => new { s.AnnouncementId, s.UserId }).IsUnique();
+
+        builder.HasOne(s => s.Announcement)
+            .WithMany(a => a.Saves)
+            .HasForeignKey(s => s.AnnouncementId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(s => s.User)
+            .WithMany()
+            .HasForeignKey(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}

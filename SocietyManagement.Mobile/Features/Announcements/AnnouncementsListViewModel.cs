@@ -30,9 +30,15 @@ public partial class AnnouncementsListViewModel : ObservableObject
 
     public AuthState Auth { get; }
 
+    private List<AnnouncementDto> _allAnnouncements = new();
+
     [ObservableProperty] private ObservableCollection<AnnouncementDto> announcements = new();
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? errorMessage;
+    /// <summary>"All" | "Unread" | "Saved" — mirrors announcements-list.
+    /// component.ts's readFilter; only meaningful for a resident's own feed,
+    /// since the admin list never resolves IsRead/IsSaved per-user.</summary>
+    [ObservableProperty] private string readFilter = "All";
 
     [RelayCommand]
     private async Task LoadAsync()
@@ -47,7 +53,8 @@ public partial class AnnouncementsListViewModel : ObservableObject
             var response = Auth.IsAdmin
                 ? await _client.AnnouncementsGETAsync(societyId, null, null, null, 1, 100)
                 : await _client.PublishedAsync(societyId, 1, 100);
-            Announcements = new ObservableCollection<AnnouncementDto>(response.Data?.Items ?? new());
+            _allAnnouncements = response.Data?.Items?.ToList() ?? new();
+            ApplyFilter();
         }
         catch (Exception ex)
         {
@@ -56,6 +63,45 @@ public partial class AnnouncementsListViewModel : ObservableObject
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private void SetFilter(string filter)
+    {
+        ReadFilter = filter;
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        IEnumerable<AnnouncementDto> filtered = ReadFilter switch
+        {
+            "Unread" => _allAnnouncements.Where(a => a.IsRead != true),
+            "Saved" => _allAnnouncements.Where(a => a.IsSaved == true),
+            _ => _allAnnouncements
+        };
+        Announcements = new ObservableCollection<AnnouncementDto>(filtered);
+    }
+
+    [RelayCommand]
+    private async Task ToggleSavedAsync(AnnouncementDto announcement)
+    {
+        if (announcement.Id is not int id) return;
+        try
+        {
+            var isSaved = (await _client.ToggleSavedAsync(id)).Data;
+            announcement.IsSaved = isSaved;
+            // Re-run the current filter so toggling off "Saved" while that
+            // filter is active removes the row immediately, matching the
+            // web's computed-signal behavior.
+            var index = _allAnnouncements.FindIndex(a => a.Id == id);
+            if (index >= 0) _allAnnouncements[index] = announcement;
+            ApplyFilter();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Couldn't update saved status ({ex.Message}).";
         }
     }
 

@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using SocietyManagement.Mobile.Api.Generated;
 using SocietyManagement.Mobile.Core;
 using SocietyManagement.Mobile.Core.Auth;
+using SocietyManagement.Mobile.Features.Facilities.Forms;
 
 namespace SocietyManagement.Mobile.Features.Facilities;
 
@@ -48,5 +49,23 @@ public partial class FacilitiesListViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    /// <summary>Same target FacilityDetailViewModel.BookAsync navigates
+    /// to — lets a resident book straight from the list without an extra
+    /// navigation hop through the detail page first.</summary>
+    [RelayCommand]
+    private async Task BookAsync(FacilityDto facility)
+    {
+        if (Shell.Current is null) return;
+        await Shell.Current.GoToAsync(nameof(FacilityBookingFormPage),
+            new Dictionary<string, object> { ["facility"] = facility, ["bookingDate"] = DateTime.Today });
+    }
+
+    [RelayCommand]
+    private async Task GoToMyBookingsAsync()
+    {
+        if (Shell.Current is null) return;
+        await Shell.Current.GoToAsync($"//{nameof(MyFacilityBookingsPage)}");
     }
 }

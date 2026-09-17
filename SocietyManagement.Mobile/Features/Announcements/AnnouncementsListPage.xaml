@@ -8,14 +8,23 @@
              x:Name="Root"
              Title="Announcements">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
         <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
         <Label Grid.Row="1" Style="{StaticResource ErrorText}" Margin="16,0" Text="{Binding ErrorMessage}"
                IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
         <Button Grid.Row="2" Margin="16,10" Text="New Announcement" Command="{Binding AddAnnouncementCommand}"
                 HorizontalOptions="Start" IsVisible="{Binding Auth.IsAdmin}" />
 
-        <RefreshView Grid.Row="3" Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+        <HorizontalStackLayout Grid.Row="3" Margin="16,0,16,8" Spacing="8" IsVisible="{Binding Auth.IsAdmin, Converter={StaticResource InvertedBoolConverter}}">
+            <Button Text="All" Style="{StaticResource OutlineButton}" Padding="14,6"
+                    Command="{Binding SetFilterCommand}" CommandParameter="All" />
+            <Button Text="Unread" Style="{StaticResource OutlineButton}" Padding="14,6"
+                    Command="{Binding SetFilterCommand}" CommandParameter="Unread" />
+            <Button Text="🔖 Saved" Style="{StaticResource OutlineButton}" Padding="14,6"
+                    Command="{Binding SetFilterCommand}" CommandParameter="Saved" />
+        </HorizontalStackLayout>
+
+        <RefreshView Grid.Row="4" Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
             <CollectionView ItemsSource="{Binding Announcements}" SelectionMode="Single" SelectionChanged="OnAnnouncementSelected">
                 <CollectionView.EmptyView>
                     <VerticalStackLayout Margin="0,24" Spacing="4">
@@ -47,6 +56,10 @@
                                 <Button Grid.Row="0" Grid.Column="1" Grid.RowSpan="3" Text="⋮" Style="{StaticResource TextButton}"
                                         IsVisible="{Binding Source={x:Reference Root}, Path=BindingContext.Auth.IsAdmin}"
                                         Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowActionsCommand}" CommandParameter="{Binding .}" />
+                                <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource TextButton}"
+                                        Text="{Binding IsSaved, Converter={StaticResource SavedIconConverter}}"
+                                        IsVisible="{Binding Source={x:Reference Root}, Path=BindingContext.Auth.IsAdmin, Converter={StaticResource InvertedBoolConverter}}"
+                                        Command="{Binding Source={x:Reference Root}, Path=BindingContext.ToggleSavedCommand}" CommandParameter="{Binding .}" />
                             </Grid>
                         </Border>
                     </DataTemplate>

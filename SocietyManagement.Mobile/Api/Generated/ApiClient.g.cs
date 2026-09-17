@@ -75,6 +75,11 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <exception cref="AnnouncementsApiException">A server side error occurred.</exception>
         System.Threading.Tasks.Task<ApiResponse> MarkReadAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="AnnouncementsApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<BooleanApiResponse> ToggleSavedAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -800,6 +805,83 @@ namespace SocietyManagement.Mobile.Api.Generated
                         if (status_ == 200)
                         {
                             var objectResponse_ = await ReadObjectResponseAsync<ApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new AnnouncementsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new AnnouncementsApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="AnnouncementsApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<BooleanApiResponse> ToggleSavedAsync(int id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            if (id == null)
+                throw new System.ArgumentNullException("id");
+
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Content = new System.Net.Http.StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
+                    request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                
+                    // Operation Path: "api/announcements/{id}/toggle-saved"
+                    urlBuilder_.Append("api/announcements/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(id, System.Globalization.CultureInfo.InvariantCulture)));
+                    urlBuilder_.Append("/toggle-saved");
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<BooleanApiResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new AnnouncementsApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -38431,7 +38513,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="VisitorVisitsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<VisitorVisitDtoPaginatedResultApiResponse> VisitorVisitsGETAsync(int? societyId = null, VisitorVisitStatus? status = null, int? gateId = null, int? flatId = null, System.DateTimeOffset? fromDate = null, System.DateTimeOffset? toDate = null, string? search = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<VisitorVisitDtoPaginatedResultApiResponse> VisitorVisitsGETAsync(int? societyId = null, VisitorVisitStatus? status = null, int? gateId = null, int? flatId = null, System.DateTimeOffset? fromDate = null, System.DateTimeOffset? toDate = null, string? search = null, int? purposeId = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
@@ -38446,7 +38528,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="VisitorVisitsApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<VisitorVisitDtoPaginatedResultApiResponse> Mine7Async(System.DateTimeOffset? fromDate = null, System.DateTimeOffset? toDate = null, string? search = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<VisitorVisitDtoPaginatedResultApiResponse> Mine7Async(System.DateTimeOffset? fromDate = null, System.DateTimeOffset? toDate = null, string? search = null, int? purposeId = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
@@ -38515,7 +38597,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="VisitorVisitsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<VisitorVisitDtoPaginatedResultApiResponse> VisitorVisitsGETAsync(int? societyId = null, VisitorVisitStatus? status = null, int? gateId = null, int? flatId = null, System.DateTimeOffset? fromDate = null, System.DateTimeOffset? toDate = null, string? search = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<VisitorVisitDtoPaginatedResultApiResponse> VisitorVisitsGETAsync(int? societyId = null, VisitorVisitStatus? status = null, int? gateId = null, int? flatId = null, System.DateTimeOffset? fromDate = null, System.DateTimeOffset? toDate = null, string? search = null, int? purposeId = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -38558,6 +38640,10 @@ namespace SocietyManagement.Mobile.Api.Generated
                     if (search != null)
                     {
                         urlBuilder_.Append(System.Uri.EscapeDataString("search")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(search, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (purposeId != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("purposeId")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(purposeId, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
                     }
                     if (sortBy != null)
                     {
@@ -38778,7 +38864,7 @@ namespace SocietyManagement.Mobile.Api.Generated
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="VisitorVisitsApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<VisitorVisitDtoPaginatedResultApiResponse> Mine7Async(System.DateTimeOffset? fromDate = null, System.DateTimeOffset? toDate = null, string? search = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<VisitorVisitDtoPaginatedResultApiResponse> Mine7Async(System.DateTimeOffset? fromDate = null, System.DateTimeOffset? toDate = null, string? search = null, int? purposeId = null, string? sortBy = null, bool? sortDescending = null, int? pageNumber = null, int? pageSize = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -38805,6 +38891,10 @@ namespace SocietyManagement.Mobile.Api.Generated
                     if (search != null)
                     {
                         urlBuilder_.Append(System.Uri.EscapeDataString("search")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(search, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (purposeId != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("purposeId")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(purposeId, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
                     }
                     if (sortBy != null)
                     {
@@ -41974,6 +42064,9 @@ namespace SocietyManagement.Mobile.Api.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("isRead")]
         public bool? IsRead { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("isSaved")]
+        public bool? IsSaved { get; set; } = default!;
 
     }
 

@@ -444,6 +444,46 @@
         }
       }
     },
+    "/api/announcements/{id}/toggle-saved": {
+      "post": {
+        "tags": [
+          "Announcements"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanApiResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanApiResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BooleanApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/asset-bookings": {
       "get": {
         "tags": [
@@ -15528,6 +15568,14 @@
             }
           },
           {
+            "name": "purposeId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
             "name": "sortBy",
             "in": "query",
             "schema": {
@@ -15687,6 +15735,14 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "purposeId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           },
           {
@@ -17204,6 +17260,9 @@
             "format": "date-time"
           },
           "isRead": {
+            "type": "boolean"
+          },
+          "isSaved": {
             "type": "boolean"
           }
         },

@@ -60,4 +60,8 @@ export class AnnouncementService {
   markRead(id: number): Observable<void> {
     return this.http.post<ApiResponse<void>>(`${this.baseUrl}/announcements/${id}/mark-read`, {}).pipe(map(() => void 0));
   }
+
+  toggleSaved(id: number): Observable<boolean> {
+    return this.http.post<ApiResponse<boolean>>(`${this.baseUrl}/announcements/${id}/toggle-saved`, {}).pipe(map((r) => r.data!));
+  }
 }

@@ -5,7 +5,12 @@
              xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
              x:Class="SocietyManagement.Mobile.Features.Facilities.FacilitiesListPage"
              x:DataType="facilities:FacilitiesListViewModel"
+             x:Name="Root"
              Title="Facilities">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="My Bookings" Command="{Binding GoToMyBookingsCommand}" />
+    </ContentPage.ToolbarItems>
 
     <Grid RowDefinitions="Auto,Auto,*">
         <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
@@ -20,7 +25,7 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="gen:FacilityDto">
                         <Border Style="{StaticResource RowCard}" Margin="14,7">
-                            <Grid RowDefinitions="Auto,Auto,Auto">
+                            <Grid RowDefinitions="Auto,Auto,Auto,Auto">
                                 <Label Grid.Row="0" Text="{Binding Name}" FontAttributes="Bold" />
                                 <Label Grid.Row="1" Style="{StaticResource Muted}">
                                     <Label.FormattedText>
@@ -40,6 +45,9 @@
                                         </FormattedString>
                                     </Label.FormattedText>
                                 </Label>
+                                <Button Grid.Row="3" Text="Book" Margin="0,8,0,0" Padding="0,6"
+                                        Command="{Binding Source={x:Reference Root}, Path=BindingContext.BookCommand}"
+                                        CommandParameter="{Binding .}" />
                             </Grid>
                         </Border>
                     </DataTemplate>

@@ -36,6 +36,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<AnnouncementRead> AnnouncementReads => Set<AnnouncementRead>();
+    public DbSet<AnnouncementSave> AnnouncementSaves => Set<AnnouncementSave>();
 
     public DbSet<Facility> Facilities => Set<Facility>();
     public DbSet<FacilityBlackoutDate> FacilityBlackoutDates => Set<FacilityBlackoutDate>();

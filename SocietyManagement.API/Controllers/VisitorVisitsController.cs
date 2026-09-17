@@ -18,11 +18,11 @@ public class VisitorVisitsController : ApiControllerBase
     public async Task<IActionResult> GetAll(
         [FromQuery] int societyId, [FromQuery] VisitorVisitStatus? status, [FromQuery] int? gateId,
         [FromQuery] int? flatId, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate,
-        [FromQuery] string? search = null, [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = true,
-        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
+        [FromQuery] string? search = null, [FromQuery] int? purposeId = null, [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = true, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
         var result = await Mediator.Send(new GetVisitsQuery(
-            societyId, status, gateId, flatId, fromDate, toDate, search, sortBy, sortDescending, pageNumber, pageSize));
+            societyId, status, gateId, flatId, fromDate, toDate, search, purposeId, sortBy, sortDescending, pageNumber, pageSize));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
@@ -40,10 +40,10 @@ public class VisitorVisitsController : ApiControllerBase
     [ProducesResponseType(typeof(ApiResponse<PaginatedResult<VisitorVisitDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMine(
         [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null, [FromQuery] string? search = null,
-        [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = true,
+        [FromQuery] int? purposeId = null, [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = true,
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = AppConstants.DefaultPageSize)
     {
-        var result = await Mediator.Send(new GetMyVisitsQuery(fromDate, toDate, search, sortBy, sortDescending, pageNumber, pageSize));
+        var result = await Mediator.Send(new GetMyVisitsQuery(fromDate, toDate, search, purposeId, sortBy, sortDescending, pageNumber, pageSize));
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 

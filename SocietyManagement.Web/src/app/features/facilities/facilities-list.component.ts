@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -16,6 +16,7 @@ import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
 import { Society } from '../../core/models/society.model';
 import { SocietyService } from '../society-setup/services/society.service';
+import { FacilityBookingFormDialogComponent } from './facility-booking-form-dialog.component';
 import { FacilityFormDialogComponent } from './facility-form-dialog.component';
 import { FACILITY_PRICING_TYPE_LABELS, FACILITY_TYPE_LABELS, FacilityDto } from './models/facility.model';
 import { FacilityService } from './services/facility.service';
@@ -24,7 +25,7 @@ import { FacilityService } from './services/facility.service';
   selector: 'app-facilities-list',
   standalone: true,
   imports: [
-    CommonModule, MatButtonModule, MatFormFieldModule, MatIconModule, MatMenuModule, MatSelectModule,
+    CommonModule, RouterLink, MatButtonModule, MatFormFieldModule, MatIconModule, MatMenuModule, MatSelectModule,
     AssetUrlPipe, EmptyStateComponent, PageHeaderComponent, SkeletonLoaderComponent
   ],
   template: `
@@ -37,6 +38,7 @@ import { FacilityService } from './services/facility.service';
           </mat-select>
         </mat-form-field>
       }
+      <button mat-stroked-button routerLink="/my-facility-bookings"><mat-icon>event_available</mat-icon> My Bookings</button>
       @if (canManage()) {
         <button mat-flat-button color="primary" (click)="createFacility()">
           <mat-icon>add</mat-icon> New Facility
@@ -69,6 +71,9 @@ import { FacilityService } from './services/facility.service';
               <div class="meta">{{ typeLabel(f) }} &middot; Capacity {{ f.capacity }}</div>
               <div class="price">{{ f.pricePerUnit | currency: 'INR' }} / {{ pricingLabel(f) }}</div>
               @if (!f.isActive) { <span class="badge">Inactive</span> }
+              @if (f.isActive) {
+                <button mat-stroked-button color="primary" class="book-btn" (click)="$event.stopPropagation(); bookFacility(f)">Book</button>
+              }
             </div>
           </div>
         }
@@ -89,6 +94,7 @@ import { FacilityService } from './services/facility.service';
     .meta { font-size: 12px; color: var(--app-text-muted); margin-top: 4px; }
     .price { font-size: 13px; font-weight: 600; margin-top: 6px; }
     .badge { display: inline-block; margin-top: 6px; font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #f0f0f0; color: #888; }
+    .book-btn { display: block; width: 100%; margin-top: 10px; }
     .danger { color: #c0392b; }
   `]
 })
@@ -140,6 +146,21 @@ export class FacilitiesListComponent implements OnInit {
 
   openFacility(f: FacilityDto): void {
     this.router.navigate(['/facilities', f.id]);
+  }
+
+  /** Same dialog + create flow as the detail page's "Book This Facility"
+   * button — lets a resident book straight from the list without an extra
+   * navigation hop, defaulting to today the way the detail page defaults
+   * to whatever date is selected there. */
+  bookFacility(f: FacilityDto): void {
+    const ref = this.dialog.open(FacilityBookingFormDialogComponent, { width: '520px', data: { facility: f, date: new Date() } });
+    ref.afterClosed().subscribe((result) => {
+      if (!result) return;
+      this.facilityService.createBooking(result).subscribe({
+        next: () => this.toast.success('Facility booked.'),
+        error: (err) => this.toast.error(err?.error?.message || 'Could not complete the booking.')
+      });
+    });
   }
 
   createFacility(): void {

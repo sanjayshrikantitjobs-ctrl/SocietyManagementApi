@@ -84,6 +84,7 @@ public interface IApplicationDbContext
 
     DbSet<Announcement> Announcements { get; }
     DbSet<AnnouncementRead> AnnouncementReads { get; }
+    DbSet<AnnouncementSave> AnnouncementSaves { get; }
 
     DbSet<Facility> Facilities { get; }
     DbSet<FacilityBlackoutDate> FacilityBlackoutDates { get; }

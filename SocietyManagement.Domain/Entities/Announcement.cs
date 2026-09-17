@@ -31,4 +31,5 @@ public class Announcement : BaseAuditableEntity
     public AnnouncementStatus Status { get; set; } = AnnouncementStatus.Draft;
 
     public ICollection<AnnouncementRead> Reads { get; set; } = new List<AnnouncementRead>();
+    public ICollection<AnnouncementSave> Saves { get; set; } = new List<AnnouncementSave>();
 }

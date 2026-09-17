@@ -27,6 +27,11 @@ public partial class AuthState : ObservableObject
 
     public bool IsMember => RoleName == "Member";
 
+    /// <summary>The two gate-facing roles that see the full visitor history
+    /// (not just their own flat's) and can act on any row — mirrors
+    /// visitors-landing.component.ts's "isWatchman() || auth.isAdmin()" checks.</summary>
+    public bool CanManageVisitors => IsAdmin || IsWatchman;
+
     /// <summary>Mirrors NAV_ITEMS' "Help &amp; Support" entry on the web:
     /// hideForWatchman AND hideForSuperAdmin — visible to Admin and Member only.</summary>
     public bool ShowHelpAndSupport => !IsWatchman && !IsSuperAdmin;

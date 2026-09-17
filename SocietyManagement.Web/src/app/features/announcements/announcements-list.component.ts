@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -53,15 +53,30 @@ import { AnnouncementService } from './services/announcement.service';
       }
     </app-page-header>
 
+    @if (!canManage() && !loading() && announcements().length > 0) {
+      <div class="read-filters">
+        <button mat-stroked-button [class.active]="readFilter() === 'all'" (click)="readFilter.set('all')">All</button>
+        <button mat-stroked-button [class.active]="readFilter() === 'unread'" (click)="readFilter.set('unread')">
+          Unread @if (unreadCount() > 0) { <span class="count-pill">{{ unreadCount() }}</span> }
+        </button>
+        <button mat-stroked-button [class.active]="readFilter() === 'saved'" (click)="readFilter.set('saved')">
+          <mat-icon inline>bookmark</mat-icon> Saved
+        </button>
+      </div>
+    }
+
     @if (loading()) {
       <app-skeleton-loader [rows]="4" />
     } @else if (announcements().length === 0) {
       <app-empty-state icon="campaign" title="No announcements yet"
         message="Society notices, festival reminders and important updates will show up here."
         [actionLabel]="canManage() ? 'New Announcement' : null" (action)="createAnnouncement()" />
+    } @else if (visibleAnnouncements().length === 0) {
+      <app-empty-state icon="campaign" title="Nothing here"
+        [message]="readFilter() === 'unread' ? 'You\\'re all caught up.' : 'You haven\\'t saved any announcements yet.'" />
     } @else {
       <div class="list">
-        @for (a of announcements(); track a.id) {
+        @for (a of visibleAnnouncements(); track a.id) {
           <div class="card" [class.unread]="!canManage() && !a.isRead" (click)="openAnnouncement(a)">
             <div class="card-main">
               <div class="card-title-row">
@@ -80,6 +95,13 @@ import { AnnouncementService } from './services/announcement.service';
               </div>
               <p class="excerpt">{{ a.description }}</p>
             </div>
+            @if (!canManage()) {
+              <button mat-icon-button class="save-btn" [class.saved]="a.isSaved"
+                [attr.aria-label]="a.isSaved ? 'Remove from saved' : 'Save for later'"
+                (click)="$event.stopPropagation(); toggleSaved(a)">
+                <mat-icon>{{ a.isSaved ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+              </button>
+            }
             @if (canManage()) {
               <button mat-icon-button [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()">
                 <mat-icon>more_vert</mat-icon>
@@ -101,7 +123,14 @@ import { AnnouncementService } from './services/announcement.service';
   styles: [`
     .society-picker { width: 200px; margin-right: 8px; }
     .status-filter { width: 160px; margin-right: 8px; }
+    .read-filters { display: flex; gap: 8px; margin-bottom: 16px; }
+    .read-filters button { border-radius: 20px; }
+    .read-filters button.active { background: var(--app-primary-light, #eef1fe); color: var(--app-primary, #4f6ef7); border-color: var(--app-primary, #4f6ef7); }
+    .read-filters mat-icon[inline] { font-size: 16px; height: 16px; width: 16px; vertical-align: -2px; margin-right: 2px; }
+    .count-pill { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 8px; background: var(--app-primary, #4f6ef7); color: #fff; font-size: 11px; line-height: 16px; }
     .list { display: flex; flex-direction: column; gap: 12px; }
+    .save-btn mat-icon { color: var(--app-text-muted); }
+    .save-btn.saved mat-icon { color: var(--app-primary, #4f6ef7); }
     .card {
       display: flex; align-items: flex-start; gap: 8px; padding: 16px; border-radius: 10px;
       border: 1px solid var(--app-border); background: var(--app-surface); cursor: pointer; transition: box-shadow .15s;
@@ -139,6 +168,15 @@ export class AnnouncementsListComponent implements OnInit {
   readonly societyId = signal(0);
   readonly announcements = signal<AnnouncementDto[]>([]);
   readonly statusFilter = signal<AnnouncementStatus | null>(null);
+  readonly readFilter = signal<'all' | 'unread' | 'saved'>('all');
+
+  readonly unreadCount = computed(() => this.announcements().filter((a) => !a.isRead).length);
+  readonly visibleAnnouncements = computed(() => {
+    const filter = this.readFilter();
+    if (filter === 'unread') return this.announcements().filter((a) => !a.isRead);
+    if (filter === 'saved') return this.announcements().filter((a) => a.isSaved);
+    return this.announcements();
+  });
 
   readonly statusOptions = Object.entries(ANNOUNCEMENT_STATUS_LABELS).map(([value, label]) => ({ value: Number(value), label }));
 
@@ -192,6 +230,12 @@ export class AnnouncementsListComponent implements OnInit {
 
   openAnnouncement(a: AnnouncementDto): void {
     this.router.navigate(['/announcements', a.id]);
+  }
+
+  toggleSaved(a: AnnouncementDto): void {
+    this.announcementService.toggleSaved(a.id).subscribe((isSaved) => {
+      this.announcements.update((list) => list.map((x) => (x.id === a.id ? { ...x, isSaved } : x)));
+    });
   }
 
   createAnnouncement(): void {

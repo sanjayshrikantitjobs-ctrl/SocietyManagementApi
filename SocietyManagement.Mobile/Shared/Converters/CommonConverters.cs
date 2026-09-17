@@ -99,6 +99,18 @@ public class EqualsConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+/// <summary>Bookmark toggle affordance — filled vs. outline glyph, same
+/// emoji-as-icon convention as every other Mobile icon (see AppShell.xaml's
+/// FlyoutItem titles).</summary>
+public class SavedIconConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is true ? "🔖" : "🏷️";
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
 public class IsNullConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>

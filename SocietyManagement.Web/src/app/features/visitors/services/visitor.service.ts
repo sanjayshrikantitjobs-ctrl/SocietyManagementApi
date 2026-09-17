@@ -60,7 +60,7 @@ export class VisitorService {
 
   // ---- Visitor Visits ----------------------------------------------------------
   getVisits(params: {
-    societyId: number; status?: number; gateId?: number; flatId?: number;
+    societyId: number; status?: number; gateId?: number; flatId?: number; purposeId?: number;
     fromDate?: string; toDate?: string; search?: string; sortBy?: string; sortDescending?: boolean;
     pageNumber?: number; pageSize?: number;
   }): Observable<PaginatedResult<VisitorVisitDto>> {
@@ -72,7 +72,7 @@ export class VisitorService {
       .pipe(map((r) => r.data!));
   }
   getMyVisits(params: {
-    fromDate?: string; toDate?: string; search?: string; sortBy?: string; sortDescending?: boolean;
+    fromDate?: string; toDate?: string; search?: string; purposeId?: number; sortBy?: string; sortDescending?: boolean;
     pageNumber?: number; pageSize?: number;
   }): Observable<PaginatedResult<VisitorVisitDto>> {
     return this.http.get<ApiResponse<PaginatedResult<VisitorVisitDto>>>(`${this.baseUrl}/visitor-visits/mine`, { params: toHttpParams(params) })

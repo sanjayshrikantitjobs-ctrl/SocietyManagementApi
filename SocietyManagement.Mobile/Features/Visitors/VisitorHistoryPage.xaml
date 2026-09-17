@@ -8,7 +8,7 @@
              x:DataType="visitors:VisitorHistoryViewModel"
              Title="Visitor History">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
 
         <Border Grid.Row="0" Style="{StaticResource FieldFrame}" Margin="12,8">
             <SearchBar Placeholder="Search visitor, mobile or flat..." Text="{Binding Search}" SearchCommand="{Binding LoadCommand}" />
@@ -31,10 +31,14 @@
             </Border>
         </Grid>
 
-        <Label Grid.Row="2" Style="{StaticResource ErrorText}" Margin="16,0,16,8" Text="{Binding ErrorMessage}"
+        <Border Grid.Row="2" Style="{StaticResource FieldFrame}" Margin="12,0,12,4">
+            <Picker Title="All Purposes" ItemsSource="{Binding Purposes}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedPurpose}" />
+        </Border>
+
+        <Label Grid.Row="3" Style="{StaticResource ErrorText}" Margin="16,0,16,8" Text="{Binding ErrorMessage}"
                IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
-        <RefreshView Grid.Row="3" Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+        <RefreshView Grid.Row="4" Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
             <CollectionView ItemsSource="{Binding Visits}">
                 <CollectionView.EmptyView>
                     <VerticalStackLayout Padding="32" VerticalOptions="Center">
@@ -66,6 +70,10 @@
                                         <Label Text="{Binding Status}" Style="{StaticResource chipTextInfo}" FontSize="11" />
                                     </Border>
                                     <Label Text="{Binding RequestedAt, StringFormat='{0:MMM d, h:mm tt}'}" Style="{StaticResource Muted}" FontSize="11" HorizontalOptions="End" />
+                                    <Label Text="{Binding ., Converter={StaticResource VisitDurationConverter}}" Style="{StaticResource Muted}" FontSize="11" HorizontalOptions="End" />
+                                    <Button Text="↻ Re-invite" Style="{StaticResource TextButton}" FontSize="11" Padding="0"
+                                            IsVisible="{Binding Source={x:Reference RootPage}, Path=BindingContext.Auth.CanManageVisitors}"
+                                            Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.ReinviteCommand}" CommandParameter="{Binding .}" />
                                 </VerticalStackLayout>
                             </Grid>
                         </Border>

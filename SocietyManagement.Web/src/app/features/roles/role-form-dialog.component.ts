@@ -6,9 +6,27 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { forkJoin } from 'rxjs';
 import { PermissionItem, RoleListItem } from '../../core/models/user.model';
 import { RoleService } from './role.service';
+
+/** Starting points for a new custom role — the RBAC system already supports
+ * fully custom, admin-created roles (confirmed by the live "Flat Owner"
+ * custom role this app already has), so a "Committee Member" tier needs no
+ * backend work, just a sensible default permission set an admin can start
+ * from and adjust. View/act on Announcements + Festivals + Complaints,
+ * nothing on Finance/Users/Roles. */
+const ROLE_PRESETS: { label: string; codes: string[] }[] = [
+  {
+    label: 'Committee Member',
+    codes: [
+      'notices.view', 'notices.manage',
+      'festivals.view', 'festivals.manage', 'festivals.expense.approve',
+      'complaints.view', 'complaints.manage'
+    ]
+  }
+];
 
 /**
  * Dynamic role editor with a Module x Action permission matrix — this is the
@@ -21,12 +39,20 @@ import { RoleService } from './role.service';
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, MatButtonModule, MatCheckboxModule, MatDialogModule,
-    MatFormFieldModule, MatInputModule
+    MatFormFieldModule, MatInputModule, MatSelectModule
   ],
   template: `
     <h2 mat-dialog-title>{{ data ? 'Edit Role' : 'Create Role' }}</h2>
     <form [formGroup]="form" (ngSubmit)="submit()">
       <mat-dialog-content class="content">
+        @if (!data) {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Start from a preset (optional)</mat-label>
+            <mat-select (selectionChange)="applyPreset($event.value)">
+              @for (preset of presets; track preset.label) { <mat-option [value]="preset">{{ preset.label }}</mat-option> }
+            </mat-select>
+          </mat-form-field>
+        }
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Role Name</mat-label>
           <input matInput formControlName="name" [readonly]="data?.isSystemRole" />
@@ -73,6 +99,7 @@ export class RoleFormDialogComponent implements OnInit {
 
   readonly permissionsByModule = signal<Record<string, PermissionItem[]>>({});
   readonly selectedIds = signal<Set<number>>(new Set());
+  readonly presets = ROLE_PRESETS;
 
   form = this.fb.nonNullable.group({
     name: [this.data?.name ?? '', Validators.required],
@@ -99,6 +126,13 @@ export class RoleFormDialogComponent implements OnInit {
     const current = new Set(this.selectedIds());
     if (checked) current.add(permissionId); else current.delete(permissionId);
     this.selectedIds.set(current);
+  }
+
+  applyPreset(preset: { label: string; codes: string[] }): void {
+    const allPerms = Object.values(this.permissionsByModule()).flat();
+    const ids = allPerms.filter((p) => preset.codes.includes(p.code)).map((p) => p.id);
+    this.selectedIds.set(new Set(ids));
+    if (!this.form.get('name')?.value) this.form.patchValue({ name: preset.label });
   }
 
   submit(): void {

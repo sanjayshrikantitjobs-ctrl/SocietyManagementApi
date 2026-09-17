@@ -454,13 +454,13 @@ public class VisitorVisitCommandHandlers :
 // ---- Queries -------------------------------------------------------------------
 public record GetVisitsQuery(
     int SocietyId, VisitorVisitStatus? Status, int? GateId, int? FlatId, DateTime? FromDate, DateTime? ToDate,
-    string? Search = null, string? SortBy = null, bool SortDescending = true,
+    string? Search = null, int? PurposeId = null, string? SortBy = null, bool SortDescending = true,
     int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<VisitorVisitDto>>;
 
 public record GetPendingApprovalsQuery : IRequest<List<VisitorVisitDto>>;
 
 public record GetMyVisitsQuery(
-    DateTime? FromDate = null, DateTime? ToDate = null, string? Search = null,
+    DateTime? FromDate = null, DateTime? ToDate = null, string? Search = null, int? PurposeId = null,
     string? SortBy = null, bool SortDescending = true,
     int PageNumber = 1, int PageSize = AppConstants.DefaultPageSize) : IRequest<PaginatedResult<VisitorVisitDto>>;
 
@@ -529,6 +529,7 @@ public class VisitorVisitQueryHandlers :
         if (request.Status.HasValue) query = query.Where(v => v.Status == request.Status);
         if (request.GateId.HasValue) query = query.Where(v => v.GateId == request.GateId);
         if (request.FlatId.HasValue) query = query.Where(v => v.FlatId == request.FlatId);
+        if (request.PurposeId.HasValue) query = query.Where(v => v.PurposeId == request.PurposeId);
         if (request.FromDate.HasValue) query = query.Where(v => v.RequestedAt >= request.FromDate);
         if (request.ToDate.HasValue) query = query.Where(v => v.RequestedAt <= request.ToDate);
         query = ApplySearch(query, request.Search);
@@ -566,6 +567,7 @@ public class VisitorVisitQueryHandlers :
 
         if (request.FromDate.HasValue) query = query.Where(v => v.RequestedAt >= request.FromDate);
         if (request.ToDate.HasValue) query = query.Where(v => v.RequestedAt <= request.ToDate);
+        if (request.PurposeId.HasValue) query = query.Where(v => v.PurposeId == request.PurposeId);
         query = ApplySearch(query, request.Search);
 
         var totalCount = await query.CountAsync(ct);

@@ -28,6 +28,9 @@ public class AnnouncementDto
     /// current user's own AnnouncementRead rows, always false on the admin
     /// list (which isn't per-user).</summary>
     public bool IsRead { get; set; }
+    /// <summary>Resolved the same way as IsRead — only meaningful for the
+    /// caller it was resolved for.</summary>
+    public bool IsSaved { get; set; }
 }
 
 // ==================== Commands ====================
@@ -80,6 +83,10 @@ public record PublishAnnouncementCommand(int Id) : IRequest;
 /// a no-op, not an error, since the UI fires this on every detail-view open.</summary>
 public record MarkAnnouncementReadCommand(int Id) : IRequest;
 
+/// <summary>Adds the save if absent, removes it if present — returns the
+/// resulting state so the caller doesn't need a separate read afterward.</summary>
+public record ToggleAnnouncementSavedCommand(int Id) : IRequest<bool>;
+
 // ==================== Queries ====================
 
 public record GetAnnouncementsQuery(
@@ -102,7 +109,8 @@ public class AnnouncementCommandHandlers :
     IRequestHandler<UpdateAnnouncementCommand>,
     IRequestHandler<DeleteAnnouncementCommand>,
     IRequestHandler<PublishAnnouncementCommand>,
-    IRequestHandler<MarkAnnouncementReadCommand>
+    IRequestHandler<MarkAnnouncementReadCommand>,
+    IRequestHandler<ToggleAnnouncementSavedCommand, bool>
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
@@ -252,6 +260,27 @@ public class AnnouncementCommandHandlers :
             new AnnouncementRead { AnnouncementId = request.Id, UserId = userId, ReadAt = DateTime.UtcNow }, ct);
         await _context.SaveChangesAsync(ct);
     }
+
+    public async Task<bool> Handle(ToggleAnnouncementSavedCommand request, CancellationToken ct)
+    {
+        var userId = _currentUser.UserId ?? throw new ForbiddenAccessException();
+        await LoadOwnedAsync(request.Id, ct);
+
+        var existing = await _context.AnnouncementSaves
+            .FirstOrDefaultAsync(s => s.AnnouncementId == request.Id && s.UserId == userId, ct);
+
+        if (existing is not null)
+        {
+            _context.AnnouncementSaves.Remove(existing);
+            await _context.SaveChangesAsync(ct);
+            return false;
+        }
+
+        await _context.AnnouncementSaves.AddAsync(
+            new AnnouncementSave { AnnouncementId = request.Id, UserId = userId, SavedAt = DateTime.UtcNow }, ct);
+        await _context.SaveChangesAsync(ct);
+        return true;
+    }
 }
 
 public class AnnouncementQueryHandlers :
@@ -315,16 +344,23 @@ public class AnnouncementQueryHandlers :
             .ToListAsync(ct);
 
         var userId = _currentUser.UserId;
+        var itemIds = items.Select(a => a.Id).ToList();
         var readIds = userId is null
             ? new HashSet<int>()
             : (await _context.AnnouncementReads
-                .Where(r => r.UserId == userId.Value && items.Select(a => a.Id).Contains(r.AnnouncementId))
+                .Where(r => r.UserId == userId.Value && itemIds.Contains(r.AnnouncementId))
                 .Select(r => r.AnnouncementId).ToListAsync(ct)).ToHashSet();
+        var savedIds = userId is null
+            ? new HashSet<int>()
+            : (await _context.AnnouncementSaves
+                .Where(s => s.UserId == userId.Value && itemIds.Contains(s.AnnouncementId))
+                .Select(s => s.AnnouncementId).ToListAsync(ct)).ToHashSet();
 
         var dtos = items.Select(a =>
         {
             var dto = Project(a);
             dto.IsRead = readIds.Contains(a.Id);
+            dto.IsSaved = savedIds.Contains(a.Id);
             return dto;
         }).ToList();
 
@@ -345,6 +381,7 @@ public class AnnouncementQueryHandlers :
         if (_currentUser.UserId is { } userId)
         {
             dto.IsRead = await _context.AnnouncementReads.AnyAsync(r => r.AnnouncementId == request.Id && r.UserId == userId, ct);
+            dto.IsSaved = await _context.AnnouncementSaves.AnyAsync(s => s.AnnouncementId == request.Id && s.UserId == userId, ct);
         }
 
         return dto;

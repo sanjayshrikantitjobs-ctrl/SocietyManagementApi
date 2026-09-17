@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:SocietyManagement.Mobile"
              xmlns:conv="clr-namespace:SocietyManagement.Mobile.Shared.Converters"
+             xmlns:visitors="clr-namespace:SocietyManagement.Mobile.Features.Visitors"
              x:Class="SocietyManagement.Mobile.App">
     <Application.Resources>
         <ResourceDictionary>
@@ -19,6 +20,8 @@
             <conv:EqualsConverter x:Key="EqualsConverter" />
             <conv:AssetUrlConverter x:Key="AssetUrlConverter" />
             <conv:PascalCaseToWordsConverter x:Key="PascalCaseToWordsConverter" />
+            <conv:SavedIconConverter x:Key="SavedIconConverter" />
+            <visitors:VisitDurationConverter x:Key="VisitDurationConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -28,4 +28,5 @@ export interface AnnouncementDto {
   status: AnnouncementStatus;
   createdAt: string;
   isRead: boolean;
+  isSaved: boolean;
 }

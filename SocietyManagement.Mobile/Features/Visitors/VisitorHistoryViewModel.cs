@@ -87,7 +87,7 @@ public partial class VisitorHistoryViewModel : ObservableObject
             }
             else
             {
-                var response = await _visitsClient.Mine5Async(from, to, search, null, true, 1, 50);
+                var response = await _visitsClient.Mine7Async(from, to, search, null, true, 1, 50);
                 Visits = new ObservableCollection<VisitorVisitDto>(response.Data?.Items ?? new());
             }
         }

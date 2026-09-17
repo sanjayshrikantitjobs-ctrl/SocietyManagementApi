@@ -167,7 +167,7 @@ public partial class FestivalDetailViewModel : ObservableObject
         IsStatusMenuOpen = false;
         try
         {
-            await _festivalsClient.StatusAsync(FestivalId, status);
+            await _festivalsClient.Status3Async(FestivalId, status);
             await LoadAsync();
         }
         catch (Exception ex)

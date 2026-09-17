@@ -32,6 +32,7 @@ public class FlatsController : ApiControllerBase
 
     [HttpGet("mine")]
     [HasPermission(Permissions.Society.View)]
+    [ProducesResponseType(typeof(ApiResponse<List<FlatDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMine()
     {
         var result = await Mediator.Send(new GetMyFlatsQuery());

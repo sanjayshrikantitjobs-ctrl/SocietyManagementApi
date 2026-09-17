@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using SocietyManagement.Domain.Entities;
 
 namespace SocietyManagement.Application.Common.Interfaces;
@@ -80,6 +81,27 @@ public interface IApplicationDbContext
     DbSet<Expense> Expenses { get; }
     DbSet<Complaint> Complaints { get; }
     DbSet<CommitteeMember> CommitteeMembers { get; }
+
+    DbSet<Announcement> Announcements { get; }
+    DbSet<AnnouncementRead> AnnouncementReads { get; }
+
+    DbSet<Facility> Facilities { get; }
+    DbSet<FacilityBlackoutDate> FacilityBlackoutDates { get; }
+    DbSet<FacilityBooking> FacilityBookings { get; }
+    DbSet<Asset> Assets { get; }
+    DbSet<AssetBooking> AssetBookings { get; }
+    DbSet<AssetBookingItem> AssetBookingItems { get; }
+
+    /// <summary>Serializable isolation makes SQL Server take a range lock
+    /// covering the predicate a query runs inside this transaction — two
+    /// concurrent callers checking overlapping facility/date or asset/date
+    /// windows will have one block until the other commits, then correctly
+    /// see its just-inserted row. This is the DB-level guard behind the
+    /// facility double-booking and asset over-quantity prevention rules
+    /// (see FacilityBookingFeature/AssetBookingFeature's create handlers) —
+    /// there is no native SQL Server exclusion constraint for overlapping
+    /// ranges, so the transaction itself is the mutex.</summary>
+    Task<IDbContextTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken = default);
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

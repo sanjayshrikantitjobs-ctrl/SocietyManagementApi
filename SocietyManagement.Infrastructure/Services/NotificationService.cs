@@ -18,4 +18,7 @@ public class NotificationService : INotificationService
 
     public Task SendToAllAsync(string eventName, object payload, CancellationToken ct = default) =>
         _hubContext.Clients.All.SendAsync(eventName, payload, ct);
+
+    public Task SendToSocietyAsync(int societyId, string eventName, object payload, CancellationToken ct = default) =>
+        _hubContext.Clients.Group($"society-{societyId}").SendAsync(eventName, payload, ct);
 }

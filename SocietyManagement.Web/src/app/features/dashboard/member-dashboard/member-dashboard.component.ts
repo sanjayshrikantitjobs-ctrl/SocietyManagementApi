@@ -31,10 +31,10 @@ import { DashboardService } from '../dashboard.service';
         <app-skeleton-loader [rows]="4" [height]="90" />
       } @else if (summary(); as s) {
         <div class="stats-grid">
-          <app-stat-card label="My Maintenance Due" [value]="'₹' + (s.myMaintenanceDue | number)" icon="payments" />
-          <app-stat-card label="Unread Notices" value="Coming soon" subtext="Notice Board module" icon="campaign" />
+          <app-stat-card label="My Maintenance Due" [value]="'₹' + (s.myMaintenanceDue | number)" icon="payments" routerLink="/my-bills" />
+          <app-stat-card label="Unread Notices" [value]="s.unreadNoticesCount" icon="campaign" routerLink="/announcements" />
           <app-stat-card label="Upcoming Events" [value]="s.upcomingEventsCount" icon="event" iconColor="#16a34a" iconBg="#ecfdf5" />
-          <app-stat-card label="Open Complaints" value="Coming soon" subtext="Complaint Management module" icon="support_agent" />
+          <app-stat-card label="Open Complaints" [value]="s.myOpenComplaintsCount" icon="support_agent" routerLink="/my-complaints" />
         </div>
 
         @if (pendingVisitors().length > 0) {

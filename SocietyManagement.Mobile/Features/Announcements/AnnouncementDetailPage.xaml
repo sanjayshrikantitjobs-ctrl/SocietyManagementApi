@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:announcements="clr-namespace:SocietyManagement.Mobile.Features.Announcements"
+             x:Class="SocietyManagement.Mobile.Features.Announcements.AnnouncementDetailPage"
+             x:DataType="announcements:AnnouncementDetailViewModel"
+             Title="Announcement">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <VerticalStackLayout Spacing="10" IsVisible="{Binding Announcement, Converter={StaticResource IsNotNullConverter}}">
+                <Label Text="{Binding Announcement.Title}" FontSize="20" FontAttributes="Bold" />
+
+                <Label Style="{StaticResource Muted}">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="{Binding Announcement.Type}" />
+                            <Span Text=" · " />
+                            <Span Text="{Binding Announcement.Priority}" />
+                            <Span Text=" · " />
+                            <Span Text="{Binding Announcement.Status}" />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+                <Label Style="{StaticResource Muted}" Text="{Binding Announcement.PublishAt, StringFormat='Published {0:MMM d, yyyy h:mm tt}'}" />
+                <Label Style="{StaticResource Muted}" Text="{Binding Announcement.ExpiryAt, StringFormat='Expires {0:MMM d, yyyy h:mm tt}'}"
+                       IsVisible="{Binding Announcement.ExpiryAt, Converter={StaticResource IsNotNullConverter}}" />
+
+                <Image Source="{Binding Announcement.AttachmentUrl, Converter={StaticResource AssetUrlConverter}}"
+                       IsVisible="{Binding Announcement.AttachmentUrl, Converter={StaticResource StringToBoolConverter}}"
+                       Aspect="AspectFit" MaximumHeightRequest="280" />
+
+                <Label Text="{Binding Announcement.Description}" Margin="0,6,0,0" />
+
+                <HorizontalStackLayout Spacing="10" IsVisible="{Binding Auth.IsAdmin}" Margin="0,10,0,0">
+                    <Button Text="Edit" Command="{Binding EditCommand}" />
+                    <Button Text="Publish Now" Command="{Binding PublishCommand}" />
+                    <Button Text="Delete" Style="{StaticResource OutlineButton}" TextColor="{StaticResource Danger}" Command="{Binding DeleteCommand}" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

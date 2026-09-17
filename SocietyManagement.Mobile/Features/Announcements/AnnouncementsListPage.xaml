@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:announcements="clr-namespace:SocietyManagement.Mobile.Features.Announcements"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Announcements.AnnouncementsListPage"
+             x:DataType="announcements:AnnouncementsListViewModel"
+             x:Name="Root"
+             Title="Announcements">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+        <Label Grid.Row="1" Style="{StaticResource ErrorText}" Margin="16,0" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <Button Grid.Row="2" Margin="16,10" Text="New Announcement" Command="{Binding AddAnnouncementCommand}"
+                HorizontalOptions="Start" IsVisible="{Binding Auth.IsAdmin}" />
+
+        <RefreshView Grid.Row="3" Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+            <CollectionView ItemsSource="{Binding Announcements}" SelectionMode="Single" SelectionChanged="OnAnnouncementSelected">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Margin="0,24" Spacing="4">
+                        <Label Text="No announcements yet." Style="{StaticResource Muted}" HorizontalOptions="Center" />
+                        <Label Text="Society notices, festival reminders and important updates will show up here."
+                               Style="{StaticResource Muted}" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:AnnouncementDto">
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding Title}" FontAttributes="Bold" />
+                                <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource Muted}">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding Type}" />
+                                            <Span Text=" · " />
+                                            <Span Text="{Binding Priority}" />
+                                            <Span Text=" · " />
+                                            <Span Text="{Binding PublishAt, StringFormat='{0:MMM d, yyyy}'}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                                <Label Grid.Row="2" Grid.Column="0" Text="{Binding Description}" MaxLines="2" LineBreakMode="TailTruncation"
+                                       Style="{StaticResource Muted}" Margin="0,4,0,0" />
+                                <Label Grid.Row="0" Grid.Column="1" Text="●" TextColor="{StaticResource Primary}"
+                                       IsVisible="{Binding IsRead, Converter={StaticResource EqualsConverter}, ConverterParameter=False}" />
+                                <Button Grid.Row="0" Grid.Column="1" Grid.RowSpan="3" Text="⋮" Style="{StaticResource TextButton}"
+                                        IsVisible="{Binding Source={x:Reference Root}, Path=BindingContext.Auth.IsAdmin}"
+                                        Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowActionsCommand}" CommandParameter="{Binding .}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+
+</ContentPage>

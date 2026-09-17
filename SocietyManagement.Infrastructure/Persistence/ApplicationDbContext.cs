@@ -1,5 +1,7 @@
+using System.Data;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using SocietyManagement.Application.Common.Interfaces;
 using SocietyManagement.Domain.Entities;
 
@@ -8,6 +10,9 @@ namespace SocietyManagement.Infrastructure.Persistence;
 public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
+
+    public Task<IDbContextTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken = default) =>
+        Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Role> Roles => Set<Role>();
@@ -28,6 +33,16 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<Complaint> Complaints => Set<Complaint>();
     public DbSet<CommitteeMember> CommitteeMembers => Set<CommitteeMember>();
+
+    public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<AnnouncementRead> AnnouncementReads => Set<AnnouncementRead>();
+
+    public DbSet<Facility> Facilities => Set<Facility>();
+    public DbSet<FacilityBlackoutDate> FacilityBlackoutDates => Set<FacilityBlackoutDate>();
+    public DbSet<FacilityBooking> FacilityBookings => Set<FacilityBooking>();
+    public DbSet<Asset> Assets => Set<Asset>();
+    public DbSet<AssetBooking> AssetBookings => Set<AssetBooking>();
+    public DbSet<AssetBookingItem> AssetBookingItems => Set<AssetBookingItem>();
 
     public DbSet<Festival> Festivals => Set<Festival>();
     public DbSet<FestivalBudgetCategory> FestivalBudgetCategories => Set<FestivalBudgetCategory>();

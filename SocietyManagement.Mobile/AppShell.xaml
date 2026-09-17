@@ -12,6 +12,9 @@
     xmlns:res="clr-namespace:SocietyManagement.Mobile.Features.Residents"
     xmlns:maint="clr-namespace:SocietyManagement.Mobile.Features.Maintenance"
     xmlns:fest="clr-namespace:SocietyManagement.Mobile.Features.Festivals"
+    xmlns:ann="clr-namespace:SocietyManagement.Mobile.Features.Announcements"
+    xmlns:facil="clr-namespace:SocietyManagement.Mobile.Features.Facilities"
+    xmlns:ast="clr-namespace:SocietyManagement.Mobile.Features.Assets"
     xmlns:fin="clr-namespace:SocietyManagement.Mobile.Features.Finance"
     xmlns:staff="clr-namespace:SocietyManagement.Mobile.Features.Staff"
     xmlns:svc="clr-namespace:SocietyManagement.Mobile.Features.Services"
@@ -27,17 +30,16 @@
     FlyoutBackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource OffBlack}}"
     Title="Apna Society Board">
 
-    <!-- Matches the web sidebar's own brand block at the top of the nav. -->
+    <!-- Matches the web sidebar's own brand block at the top of the nav.
+         app_logo_full.png is baked onto an opaque white canvas (no
+         transparency), so this is a full-bleed white banner rather than a
+         floating card — filling the whole header edge to edge avoids any
+         mismatched gap around it in either theme, and the larger
+         HeightRequest lets the (wide, ~2.25:1) logo render noticeably bigger. -->
     <Shell.FlyoutHeader>
-        <Grid Padding="20,28,20,18"
-              BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource OffBlack}}">
-            <!-- app_logo_full.png is baked onto an opaque white canvas (no
-                 transparency), so it's wrapped in its own white card here —
-                 otherwise it would show as a stray white rectangle in dark mode. -->
-            <Border BackgroundColor="White" StrokeShape="RoundRectangle 10" Padding="10,8" HorizontalOptions="Start">
-                <Image Source="app_logo_full.png" HeightRequest="40" Aspect="AspectFit" />
-            </Border>
-        </Grid>
+        <Border BackgroundColor="White" StrokeThickness="0" Padding="20,24" HorizontalOptions="Fill">
+            <Image Source="app_logo_full.png" HeightRequest="90" HorizontalOptions="Fill" Aspect="AspectFit" />
+        </Border>
     </Shell.FlyoutHeader>
 
     <!-- Every FlyoutItem's selected/unselected row look — a light-lavender
@@ -124,6 +126,18 @@
         <ShellContent ContentTemplate="{DataTemplate fest:FestivalsListPage}" Route="FestivalsListPage" />
     </FlyoutItem>
 
+    <FlyoutItem Title="📢 Announcements">
+        <ShellContent ContentTemplate="{DataTemplate ann:AnnouncementsListPage}" Route="AnnouncementsListPage" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="🏛️ Facilities" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
+        <ShellContent ContentTemplate="{DataTemplate facil:FacilitiesListPage}" Route="FacilitiesListPage" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="🪑 Assets" IsVisible="{Binding IsWatchman, Converter={StaticResource InvertedBoolConverter}}">
+        <ShellContent ContentTemplate="{DataTemplate ast:AssetsListPage}" Route="AssetsListPage" />
+    </FlyoutItem>
+
     <FlyoutItem Title="🚶 Visitors">
         <Tab Title="New Visitor">
             <ShellContent ContentTemplate="{DataTemplate visitors:NewVisitorPage}" Route="NewVisitorPage" />
@@ -194,6 +208,12 @@
     </FlyoutItem>
     <FlyoutItem Title="💬 My Complaints" IsVisible="{Binding IsMember}">
         <ShellContent ContentTemplate="{DataTemplate comp:MyComplaintsPage}" Route="MyComplaintsPage" />
+    </FlyoutItem>
+    <FlyoutItem Title="🏛️ My Bookings" IsVisible="{Binding IsMember}">
+        <ShellContent ContentTemplate="{DataTemplate facil:MyFacilityBookingsPage}" Route="MyFacilityBookingsPage" />
+    </FlyoutItem>
+    <FlyoutItem Title="🪑 My Rentals" IsVisible="{Binding IsMember}">
+        <ShellContent ContentTemplate="{DataTemplate ast:MyAssetRentalsPage}" Route="MyAssetRentalsPage" />
     </FlyoutItem>
     <FlyoutItem Title="👨‍👩‍👧 My Family" IsVisible="{Binding IsMember}">
         <ShellContent ContentTemplate="{DataTemplate res:MyFamilyPage}" Route="MyFamilyPage" />

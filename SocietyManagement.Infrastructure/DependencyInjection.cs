@@ -94,6 +94,7 @@ public static class DependencyInjection
         services.AddHostedService<MaintenanceBillGenerationService>();
         services.AddHostedService<VisitorRequestExpiryService>();
         services.AddHostedService<VisitorDataRetentionService>();
+        services.AddHostedService<AnnouncementLifecycleService>();
 
         services.AddScoped<DbSeeder>();
 

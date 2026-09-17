@@ -1,6 +1,11 @@
 using SocietyManagement.Mobile.Core.Auth;
+using SocietyManagement.Mobile.Features.Announcements;
+using SocietyManagement.Mobile.Features.Announcements.Forms;
+using SocietyManagement.Mobile.Features.Assets;
 using SocietyManagement.Mobile.Features.Auth;
 using SocietyManagement.Mobile.Features.Dashboard;
+using SocietyManagement.Mobile.Features.Facilities;
+using SocietyManagement.Mobile.Features.Facilities.Forms;
 using SocietyManagement.Mobile.Features.Festivals;
 using SocietyManagement.Mobile.Features.Finance;
 using SocietyManagement.Mobile.Features.Finance.Forms;
@@ -30,6 +35,10 @@ public partial class AppShell : Shell
         // Reachable only via query-parameter navigation from FestivalsListPage
         // (a festival "detail push", not a flyout destination of its own).
         Routing.RegisterRoute(nameof(FestivalDetailPage), typeof(FestivalDetailPage));
+        Routing.RegisterRoute(nameof(AnnouncementDetailPage), typeof(AnnouncementDetailPage));
+        Routing.RegisterRoute(nameof(AnnouncementFormPage), typeof(AnnouncementFormPage));
+        Routing.RegisterRoute(nameof(FacilityDetailPage), typeof(FacilityDetailPage));
+        Routing.RegisterRoute(nameof(FacilityBookingFormPage), typeof(FacilityBookingFormPage));
         // Reachable only from TopBarView's user menu (Change Password) —
         // not a flyout destination of its own, same as the web app's own
         // avatar-dropdown-only /profile route.

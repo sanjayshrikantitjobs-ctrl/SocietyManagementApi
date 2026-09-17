@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:forms="clr-namespace:SocietyManagement.Mobile.Features.Announcements.Forms"
+             x:Class="SocietyManagement.Mobile.Features.Announcements.Forms.AnnouncementFormPage"
+             x:DataType="forms:AnnouncementFormViewModel"
+             Title="Announcement">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Style="{StaticResource FieldLabel}" Text="Title" />
+                    <Border Style="{StaticResource FieldFrame}"><Entry Text="{Binding Title}" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Description" />
+                    <Border Style="{StaticResource FieldFrame}"><Editor Text="{Binding Description}" AutoSize="TextChanges" /></Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Type" />
+                    <Border Style="{StaticResource FieldFrame}">
+                        <Picker ItemsSource="{Binding TypeOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedType}" />
+                    </Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Priority" />
+                    <Border Style="{StaticResource FieldFrame}">
+                        <Picker ItemsSource="{Binding PriorityOptions}" ItemDisplayBinding="{Binding Label}" SelectedItem="{Binding SelectedPriority}" />
+                    </Border>
+
+                    <Grid ColumnDefinitions="2*,Auto" ColumnSpacing="8">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Style="{StaticResource FieldLabel}" Text="Publish Date (optional — leave off to save as Draft)" />
+                            <Border Style="{StaticResource FieldFrame}"><DatePicker Date="{Binding PublishDate}" /></Border>
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1" Style="{StaticResource TextButton}" Text="Clear" Command="{Binding ClearPublishAtCommand}" VerticalOptions="End" />
+                    </Grid>
+                    <Border Style="{StaticResource FieldFrame}" IsVisible="{Binding HasPublishAt}">
+                        <TimePicker Time="{Binding PublishTime}" />
+                    </Border>
+
+                    <Grid ColumnDefinitions="2*,Auto" ColumnSpacing="8">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Style="{StaticResource FieldLabel}" Text="Expiry Date (optional)" />
+                            <Border Style="{StaticResource FieldFrame}"><DatePicker Date="{Binding ExpiryDate}" /></Border>
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1" Style="{StaticResource TextButton}" Text="Clear" Command="{Binding ClearExpiryAtCommand}" VerticalOptions="End" />
+                    </Grid>
+                    <Border Style="{StaticResource FieldFrame}" IsVisible="{Binding HasExpiryAt}">
+                        <TimePicker Time="{Binding ExpiryTime}" />
+                    </Border>
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Attachment (optional)" />
+                    <Button Text="Pick Image" Style="{StaticResource OutlineButton}" HorizontalOptions="Start"
+                            Command="{Binding PickAttachmentCommand}" IsEnabled="{Binding IsUploadingAttachment, Converter={StaticResource InvertedBoolConverter}}" />
+                    <ActivityIndicator IsRunning="{Binding IsUploadingAttachment}" IsVisible="{Binding IsUploadingAttachment}" />
+                    <Image Source="{Binding AttachmentUrl, Converter={StaticResource AssetUrlConverter}}"
+                           IsVisible="{Binding AttachmentUrl, Converter={StaticResource StringToBoolConverter}}"
+                           HeightRequest="120" Aspect="AspectFit" HorizontalOptions="Start" />
+
+                    <HorizontalStackLayout Spacing="8" IsVisible="{Binding IsEditMode, Converter={StaticResource InvertedBoolConverter}}">
+                        <CheckBox IsChecked="{Binding PublishNow}" />
+                        <Label Text="Publish immediately (notify residents now)" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Button Text="Save" Command="{Binding SubmitCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

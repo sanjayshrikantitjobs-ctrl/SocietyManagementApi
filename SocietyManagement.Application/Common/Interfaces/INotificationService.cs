@@ -8,4 +8,9 @@ public interface INotificationService
     Task SendToUserAsync(int userId, string eventName, object payload, CancellationToken ct = default);
     Task SendToRoleAsync(string roleName, string eventName, object payload, CancellationToken ct = default);
     Task SendToAllAsync(string eventName, object payload, CancellationToken ct = default);
+    /// <summary>Every connection whose JWT carries this society_id — unlike
+    /// SendToRoleAsync, which spans every society for that role, this is the
+    /// one that respects tenant isolation for society-scoped broadcasts
+    /// (e.g. a published Announcement).</summary>
+    Task SendToSocietyAsync(int societyId, string eventName, object payload, CancellationToken ct = default);
 }

@@ -25,7 +25,7 @@ public partial class MyComplaintsViewModel : ObservableObject
         ErrorMessage = null;
         try
         {
-            var response = await _client.MineAsync();
+            var response = await _client.Mine2Async();
             Complaints = new ObservableCollection<ComplaintDto>(response.Data ?? new());
         }
         catch (Exception ex)

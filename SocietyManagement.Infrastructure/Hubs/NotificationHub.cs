@@ -8,8 +8,10 @@ namespace SocietyManagement.Infrastructure.Hubs;
 /// update, payment success, festival reminder, ...). Clients connect to
 /// /hubs/notifications with the JWT access token as a query-string bearer
 /// (see API/Program.cs OnMessageReceived) and are auto-joined to a per-user
-/// group ("user-{id}") and a per-role group ("role-{RoleName}") so
-/// INotificationService can target either.
+/// group ("user-{id}"), a per-role group ("role-{RoleName}"), and — for
+/// anyone scoped to one society (everyone except Super Admin, who carries no
+/// society_id claim) — a per-society group ("society-{id}") so
+/// INotificationService can target any of the three.
 /// </summary>
 [Authorize]
 public class NotificationHub : Hub
@@ -18,6 +20,7 @@ public class NotificationHub : Hub
     {
         var userId = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var role = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+        var societyId = Context.User?.FindFirst("society_id")?.Value;
 
         if (!string.IsNullOrEmpty(userId))
         {
@@ -26,6 +29,10 @@ public class NotificationHub : Hub
         if (!string.IsNullOrEmpty(role))
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, $"role-{role}");
+        }
+        if (!string.IsNullOrEmpty(societyId))
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"society-{societyId}");
         }
 
         await base.OnConnectedAsync();

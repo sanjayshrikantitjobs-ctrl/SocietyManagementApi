@@ -50,6 +50,9 @@ public static class ApiClientsRegistration
         services.AddHttpClient(RawClientName, client => client.BaseAddress = new Uri(ApiConfig.ApiBaseUrl))
             .ConfigurePrimaryHttpMessageHandler(CreatePlatformHandler);
 
+        services.AddHttpClientWithAuth<AnnouncementsClient>();
+        services.AddHttpClientWithAuth<AssetBookingsClient>();
+        services.AddHttpClientWithAuth<AssetsClient>();
         services.AddHttpClientWithAuth<AuthClient>();
         services.AddHttpClientWithAuth<BuildingsClient>();
         services.AddHttpClientWithAuth<CommitteeClient>();
@@ -68,6 +71,8 @@ public static class ApiClientsRegistration
         services.AddHttpClientWithAuth<FestivalVendorsClient>();
         services.AddHttpClientWithAuth<FestivalVolunteersClient>();
         services.AddHttpClientWithAuth<FestivalsClient>();
+        services.AddHttpClientWithAuth<FacilitiesClient>();
+        services.AddHttpClientWithAuth<FacilityBookingsClient>();
         services.AddHttpClientWithAuth<FilesClient>();
         services.AddHttpClientWithAuth<FinanceClient>();
         services.AddHttpClientWithAuth<FineRecordsClient>();

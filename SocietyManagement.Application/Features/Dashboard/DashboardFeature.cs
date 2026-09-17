@@ -312,7 +312,7 @@ public class GetRecentActivityQueryHandler : IRequestHandler<GetRecentActivityQu
 public class MemberDashboardSummaryDto
 {
     public decimal MyMaintenanceDue { get; set; }
-    public int UnreadNoticesCount { get; set; } // TODO(Notice Board module)
+    public int UnreadNoticesCount { get; set; }
     public int UpcomingEventsCount { get; set; }
     public int MyOpenComplaintsCount { get; set; }
 }
@@ -324,11 +324,13 @@ public class GetMemberDashboardSummaryQueryHandler
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
+    private readonly ISender _sender;
 
-    public GetMemberDashboardSummaryQueryHandler(IApplicationDbContext context, ICurrentUserService currentUser)
+    public GetMemberDashboardSummaryQueryHandler(IApplicationDbContext context, ICurrentUserService currentUser, ISender sender)
     {
         _context = context;
         _currentUser = currentUser;
+        _sender = sender;
     }
 
     public async Task<MemberDashboardSummaryDto> Handle(GetMemberDashboardSummaryQuery request, CancellationToken ct)
@@ -353,9 +355,18 @@ public class GetMemberDashboardSummaryQueryHandler
                 .SumAsync(b => (decimal?)(b.TotalAmount - b.AmountPaid), ct) ?? 0;
         }
 
+        // Reuses Announcements' own unread-count query rather than
+        // re-deriving the Published-and-not-expired-and-not-yet-read logic
+        // here — 0 for a caller with no SocietyId (shouldn't happen for a
+        // Member, but mirrors MyMaintenanceDue's own defensive fallback).
+        var unreadNoticesCount = _currentUser.SocietyId is { } societyId
+            ? await _sender.Send(new SocietyManagement.Application.Features.Announcements.GetUnreadAnnouncementCountQuery(societyId), ct)
+            : 0;
+
         return new MemberDashboardSummaryDto
         {
             MyMaintenanceDue = myMaintenanceDue,
+            UnreadNoticesCount = unreadNoticesCount,
             // No SocietyId scoping available yet — matches AdminDashboardSummaryDto's
             // existing system-wide counts.
             UpcomingEventsCount = await _context.Festivals

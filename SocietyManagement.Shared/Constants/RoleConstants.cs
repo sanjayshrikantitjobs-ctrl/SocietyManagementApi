@@ -85,6 +85,25 @@ public static class Permissions
         public const string Manage = "notices.manage";
     }
 
+    /// <summary>Facility/Room Booking — View covers browsing facilities and
+    /// booking one for the caller's own flat; Manage covers admin facility
+    /// setup and the approve/reject/cancel workflow over every booking.</summary>
+    public static class Facilities
+    {
+        public const string View = "facilities.view";
+        public const string Book = "facilities.book";
+        public const string Manage = "facilities.manage";
+    }
+
+    /// <summary>Society Asset Rental — same View/Book/Manage split as
+    /// Facilities.*.</summary>
+    public static class Assets
+    {
+        public const string View = "assets.view";
+        public const string Rent = "assets.rent";
+        public const string Manage = "assets.manage";
+    }
+
     public static class Complaints
     {
         public const string View = "complaints.view";

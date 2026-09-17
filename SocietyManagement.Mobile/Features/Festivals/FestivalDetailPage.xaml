@@ -213,38 +213,45 @@
             </CollectionView>
         </VerticalStackLayout>
 
-        <!-- Contribution panel -->
-        <Grid Grid.Row="4" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*"
+        <!-- Contribution panel — the Flat list below is the primary,
+             most-used surface here, so every row above it is kept as
+             lean as possible (one compact KPI strip, one compact actions
+             row) specifically to maximize the "*" row's share of the
+             screen. Still 5 rows total (same count as before the export
+             row was added), just denser. -->
+        <Grid Grid.Row="4" RowDefinitions="Auto,Auto,Auto,Auto,*"
               IsVisible="{Binding SelectedTab, Converter={StaticResource EqualsConverter}, ConverterParameter=Contribution}">
 
-            <Grid Grid.Row="0" Padding="16,10" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="10"
+            <!-- Compact summary strip: one row of 4 instead of a 2x2 card
+                 grid — same 4 figures, roughly half the height. -->
+            <Grid Grid.Row="0" Padding="12,8,12,4" ColumnDefinitions="*,*,*,*" ColumnSpacing="6"
                   IsVisible="{Binding ContributionKpis, Converter={StaticResource IsNotNullConverter}}">
-                <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Card}" Padding="12">
-                    <VerticalStackLayout>
-                        <Label Text="Target (All Flats)" Style="{StaticResource kpiLabel}" FontSize="11" />
-                        <Label Text="{Binding ContributionKpis.TotalTargetAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" />
+                <Border Style="{StaticResource Card}" Padding="8,6">
+                    <VerticalStackLayout Spacing="0">
+                        <Label Text="Target" Style="{StaticResource kpiLabel}" FontSize="9" LineBreakMode="TailTruncation" />
+                        <Label Text="{Binding ContributionKpis.TotalTargetAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" FontSize="13" LineBreakMode="TailTruncation" />
                     </VerticalStackLayout>
                 </Border>
-                <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource Card}" Padding="12">
-                    <VerticalStackLayout>
-                        <Label Text="Collected" Style="{StaticResource kpiLabel}" FontSize="11" />
-                        <Label Text="{Binding ContributionKpis.TotalPaidAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" TextColor="{StaticResource Success}" />
+                <Border Grid.Column="1" Style="{StaticResource Card}" Padding="8,6">
+                    <VerticalStackLayout Spacing="0">
+                        <Label Text="Collected" Style="{StaticResource kpiLabel}" FontSize="9" LineBreakMode="TailTruncation" />
+                        <Label Text="{Binding ContributionKpis.TotalPaidAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" FontSize="13" TextColor="{StaticResource Success}" LineBreakMode="TailTruncation" />
                     </VerticalStackLayout>
                 </Border>
-                <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource Card}" Padding="12">
-                    <VerticalStackLayout>
-                        <Label Text="Outstanding" Style="{StaticResource kpiLabel}" FontSize="11" />
-                        <Label Text="{Binding ContributionKpis.TotalOutstandingAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" TextColor="{StaticResource Danger}" />
+                <Border Grid.Column="2" Style="{StaticResource Card}" Padding="8,6">
+                    <VerticalStackLayout Spacing="0">
+                        <Label Text="Outstanding" Style="{StaticResource kpiLabel}" FontSize="9" LineBreakMode="TailTruncation" />
+                        <Label Text="{Binding ContributionKpis.TotalOutstandingAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" FontSize="13" TextColor="{StaticResource Danger}" LineBreakMode="TailTruncation" />
                     </VerticalStackLayout>
                 </Border>
-                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}" Padding="12">
-                    <VerticalStackLayout>
-                        <Label Text="Flats Fully Paid" Style="{StaticResource kpiLabel}" FontSize="11" />
-                        <Label FontAttributes="Bold">
+                <Border Grid.Column="3" Style="{StaticResource Card}" Padding="8,6">
+                    <VerticalStackLayout Spacing="0">
+                        <Label Text="Fully Paid" Style="{StaticResource kpiLabel}" FontSize="9" LineBreakMode="TailTruncation" />
+                        <Label FontAttributes="Bold" FontSize="13">
                             <Label.FormattedText>
                                 <FormattedString>
                                     <Span Text="{Binding ContributionKpis.FlatsPaidCount}" />
-                                    <Span Text=" / " />
+                                    <Span Text="/" />
                                     <Span Text="{Binding ContributionKpis.TotalFlats}" />
                                 </FormattedString>
                             </Label.FormattedText>
@@ -253,7 +260,7 @@
                 </Border>
             </Grid>
 
-            <Grid Grid.Row="1" Padding="16,4" ColumnDefinitions="*,*" ColumnSpacing="8">
+            <Grid Grid.Row="1" Padding="16,2" ColumnDefinitions="*,*" ColumnSpacing="8">
                 <Button Grid.Column="0" Text="By Flat" Style="{StaticResource segmentTab}"
                         Command="{Binding SwitchContributionViewCommand}" CommandParameter="Flats">
                     <Button.Triggers>
@@ -272,12 +279,7 @@
                 </Button>
             </Grid>
 
-            <Grid Grid.Row="2" Padding="16,4" ColumnDefinitions="*,*" ColumnSpacing="8">
-                <Button Grid.Column="0" Style="{StaticResource OutlineButton}" Text="Set Target for All Flats" FontSize="12" Command="{Binding SetTargetForAllCommand}" />
-                <Button Grid.Column="1" Text="Record Contribution" FontSize="12" Command="{Binding RecordContributionCommand}" />
-            </Grid>
-
-            <Grid Grid.Row="3" Padding="8,4" ColumnDefinitions="2*,2*" ColumnSpacing="8">
+            <Grid Grid.Row="2" Padding="8,4" ColumnDefinitions="2*,2*" ColumnSpacing="8">
                 <Border Grid.Column="0" Style="{StaticResource FieldFrame}">
                     <SearchBar Placeholder="Search flat / donor..." Text="{Binding ContributionSearch}" SearchCommand="{Binding LoadContributionCommand}" />
                 </Border>
@@ -288,47 +290,80 @@
                 </Border>
             </Grid>
 
-            <!-- Export "By Flat" report (whatever Status filter is currently
-                 active) as PDF/Excel — the "All Contributions" ledger view
-                 doesn't have this, matching what was asked for. -->
-            <Grid Grid.Row="4" Padding="16,4,16,8" ColumnDefinitions="*,*" ColumnSpacing="8"
-                  IsVisible="{Binding ContributionView, Converter={StaticResource EqualsConverter}, ConverterParameter=Flats}">
-                <Button Grid.Column="0" Style="{StaticResource OutlineButton}" Text="Export PDF" FontSize="12" Command="{Binding ExportContributionsPdfCommand}" />
-                <Button Grid.Column="1" Style="{StaticResource OutlineButton}" Text="Export Excel" FontSize="12" Command="{Binding ExportContributionsExcelCommand}" />
+            <!-- Every action collapsed into one compact row (was 2 separate
+                 full-height button rows) — Set Target/Export stay Flats-view
+                 only (matching what backs them), Record Contribution stays
+                 visible in both views, same visibility rules as before. -->
+            <Grid Grid.Row="3" Padding="12,2,12,6" ColumnDefinitions="*,*,*,*" ColumnSpacing="6">
+                <Button Grid.Column="0" Style="{StaticResource OutlineButton}" Text="Target" FontSize="11" Padding="4,6"
+                        MinimumHeightRequest="34" MinimumWidthRequest="0" Command="{Binding SetTargetForAllCommand}" />
+                <Button Grid.Column="1" Text="Contribute" FontSize="11" Padding="4,6"
+                        MinimumHeightRequest="34" MinimumWidthRequest="0" Command="{Binding RecordContributionCommand}" />
+                <Button Grid.Column="2" Style="{StaticResource OutlineButton}" Text="PDF" FontSize="11" Padding="4,6"
+                        MinimumHeightRequest="34" MinimumWidthRequest="0" Command="{Binding ExportContributionsPdfCommand}"
+                        IsVisible="{Binding ContributionView, Converter={StaticResource EqualsConverter}, ConverterParameter=Flats}" />
+                <Button Grid.Column="3" Style="{StaticResource OutlineButton}" Text="Excel" FontSize="11" Padding="4,6"
+                        MinimumHeightRequest="34" MinimumWidthRequest="0" Command="{Binding ExportContributionsExcelCommand}"
+                        IsVisible="{Binding ContributionView, Converter={StaticResource EqualsConverter}, ConverterParameter=Flats}" />
             </Grid>
 
-            <CollectionView Grid.Row="5" ItemsSource="{Binding FlatContributions}"
+            <!-- The primary surface of this screen — every row above exists
+                 only to feed this list, so it takes 100% of the remaining
+                 height ("*") and scrolls independently of everything else. -->
+            <CollectionView Grid.Row="4" ItemsSource="{Binding FlatContributions}" HorizontalOptions="Fill"
                             IsVisible="{Binding ContributionView, Converter={StaticResource EqualsConverter}, ConverterParameter=Flats}">
                 <CollectionView.EmptyView>
                     <Label Style="{StaticResource Muted}" Text="No flats found." HorizontalOptions="Center" Margin="0,24" />
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="gen:FlatContributionDto">
-                        <Border Style="{StaticResource RowCard}" Margin="14,7">
-                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenFlatDetailCommand}" CommandParameter="{Binding .}" />
-                                </Grid.GestureRecognizers>
-                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding FlatNumber, StringFormat='Flat {0}'}" FontAttributes="Bold" />
-                                <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource chipInfo}" HorizontalOptions="Start">
-                                    <Label Text="{Binding Status}" Style="{StaticResource chipTextInfo}" />
-                                </Border>
-                                <Label Grid.Row="0" Grid.Column="1" Text="{Binding OutstandingAmount, StringFormat='₹{0:N0} due'}" FontAttributes="Bold" HorizontalOptions="End" TextColor="{StaticResource Danger}" />
-                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding PaidAmount, StringFormat='₹{0:N0} paid'}" Style="{StaticResource Muted}" HorizontalOptions="End" />
-                            </Grid>
+                        <Border Style="{StaticResource RowCard}" Margin="14,5" Padding="12,10" HorizontalOptions="Fill">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenFlatDetailCommand}" CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="6">
+                                <!-- Flat number + status together, prominent — the two things
+                                     you scan for first when skimming a long list. -->
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="{Binding FlatNumber, StringFormat='Flat {0}'}" FontAttributes="Bold" FontSize="16" VerticalOptions="Center" />
+                                    <Border Grid.Column="1" Style="{StaticResource chipInfo}" HorizontalOptions="End" VerticalOptions="Center">
+                                        <Label Text="{Binding Status}" Style="{StaticResource chipTextInfo}" FontSize="11" />
+                                    </Border>
+                                </Grid>
+                                <!-- Target / Paid side by side (2-column), Paid reflects the
+                                     flat's total across every contribution recorded for it,
+                                     not just the latest one. -->
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                    <VerticalStackLayout Spacing="0">
+                                        <Label Text="Target" Style="{StaticResource kpiLabel}" FontSize="10" />
+                                        <Label Text="{Binding TargetAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" FontSize="14" />
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="0">
+                                        <Label Text="Paid" Style="{StaticResource kpiLabel}" FontSize="10" />
+                                        <Label Text="{Binding PaidAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" FontSize="14" TextColor="{StaticResource Success}" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                                <!-- Outstanding gets its own row — the one figure that answers
+                                     "does this flat still owe anything", worth a beat of its own. -->
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="Outstanding" Style="{StaticResource kpiLabel}" FontSize="10" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding OutstandingAmount, StringFormat='₹{0:N0}'}" FontAttributes="Bold" FontSize="14"
+                                           TextColor="{StaticResource Danger}" HorizontalOptions="End" />
+                                </Grid>
+                            </VerticalStackLayout>
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <CollectionView Grid.Row="5" ItemsSource="{Binding AllContributions}"
+            <CollectionView Grid.Row="4" ItemsSource="{Binding AllContributions}" HorizontalOptions="Fill"
                             IsVisible="{Binding ContributionView, Converter={StaticResource EqualsConverter}, ConverterParameter=All}">
                 <CollectionView.EmptyView>
                     <Label Style="{StaticResource Muted}" Text="No contributions recorded yet." HorizontalOptions="Center" Margin="0,24" />
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="gen:FestivalContributionDto">
-                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                        <Border Style="{StaticResource RowCard}" Margin="14,7" HorizontalOptions="Fill">
                             <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
                                 <Grid.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowContributionActionsCommand}" CommandParameter="{Binding .}" />

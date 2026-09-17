@@ -63,7 +63,8 @@ public class DbSeeder
             Permissions.Polls.View, Permissions.Polls.Vote, Permissions.Events.View, Permissions.Events.Rsvp,
             Permissions.Visitors.View, Permissions.Visitors.Approve, Permissions.Visitors.Reject,
             Permissions.Occupancy.View, Permissions.Committee.View, Permissions.Occupancy.ManageOwn,
-            Permissions.SupportTickets.Create
+            Permissions.SupportTickets.Create, Permissions.Facilities.View, Permissions.Facilities.Book,
+            Permissions.Assets.View, Permissions.Assets.Rent
         };
         await SeedRolePermissionsAsync(
             memberRole, allPermissions.Where(p => memberPermissionCodes.Contains(p.Code)).ToList());
@@ -291,6 +292,12 @@ public class DbSeeder
             ("Expenses", "Manage", Permissions.Expenses.Manage),
             ("Notices", "View", Permissions.Notices.View),
             ("Notices", "Manage", Permissions.Notices.Manage),
+            ("Facilities", "View", Permissions.Facilities.View),
+            ("Facilities", "Book", Permissions.Facilities.Book),
+            ("Facilities", "Manage", Permissions.Facilities.Manage),
+            ("Assets", "View", Permissions.Assets.View),
+            ("Assets", "Rent", Permissions.Assets.Rent),
+            ("Assets", "Manage", Permissions.Assets.Manage),
             ("Complaints", "View", Permissions.Complaints.View),
             ("Complaints", "Create", Permissions.Complaints.Create),
             ("Complaints", "Manage", Permissions.Complaints.Manage),

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:facilities="clr-namespace:SocietyManagement.Mobile.Features.Facilities"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Facilities.FacilitiesListPage"
+             x:DataType="facilities:FacilitiesListViewModel"
+             Title="Facilities">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+        <Label Grid.Row="1" Style="{StaticResource ErrorText}" Margin="16,0" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+        <RefreshView Grid.Row="2" Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+            <CollectionView ItemsSource="{Binding Facilities}" SelectionMode="Single" SelectionChanged="OnFacilitySelected">
+                <CollectionView.EmptyView>
+                    <Label Style="{StaticResource Muted}" Text="No facilities available yet." HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:FacilityDto">
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Grid RowDefinitions="Auto,Auto,Auto">
+                                <Label Grid.Row="0" Text="{Binding Name}" FontAttributes="Bold" />
+                                <Label Grid.Row="1" Style="{StaticResource Muted}">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding Type}" />
+                                            <Span Text=" &#183; Capacity " />
+                                            <Span Text="{Binding Capacity}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                                <Label Grid.Row="2" FontAttributes="Bold">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding PricePerUnit, StringFormat='₹{0:0.00}'}" />
+                                            <Span Text=" / " />
+                                            <Span Text="{Binding PricingType}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+
+</ContentPage>

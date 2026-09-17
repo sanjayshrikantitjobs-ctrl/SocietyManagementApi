@@ -61,7 +61,7 @@ public partial class RecordPaymentViewModel : ObservableObject
         ErrorMessage = null;
         try
         {
-            await _billsClient.PaymentAsync(new RecordPaymentCommand
+            await _billsClient.PaymentPOSTAsync(new RecordPaymentCommand
             {
                 MaintenanceBillId = BillId,
                 Amount = (double)Amount,

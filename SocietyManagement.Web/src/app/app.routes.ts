@@ -30,6 +30,44 @@ export const routes: Routes = [
         loadChildren: () => import('./features/events/events.routes').then((m) => m.EVENTS_ROUTES)
       },
       {
+        path: 'announcements',
+        loadChildren: () => import('./features/announcements/announcements.routes').then((m) => m.ANNOUNCEMENTS_ROUTES)
+      },
+      {
+        path: 'facilities',
+        loadChildren: () => import('./features/facilities/facilities.routes').then((m) => m.FACILITIES_ROUTES)
+      },
+      {
+        path: 'facility-bookings',
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] },
+        loadComponent: () => import('./features/facilities/facility-bookings-admin.component').then((m) => m.FacilityBookingsAdminComponent)
+      },
+      {
+        path: 'my-facility-bookings',
+        loadComponent: () => import('./features/facilities/my-facility-bookings.component').then((m) => m.MyFacilityBookingsComponent)
+      },
+      {
+        path: 'assets',
+        loadChildren: () => import('./features/assets/assets.routes').then((m) => m.ASSETS_ROUTES)
+      },
+      {
+        path: 'asset-rentals',
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] },
+        loadComponent: () => import('./features/assets/asset-rentals-admin.component').then((m) => m.AssetRentalsAdminComponent)
+      },
+      {
+        path: 'asset-returns',
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] },
+        loadComponent: () => import('./features/assets/asset-returns.component').then((m) => m.AssetReturnsComponent)
+      },
+      {
+        path: 'my-rentals',
+        loadComponent: () => import('./features/assets/my-asset-rentals.component').then((m) => m.MyAssetRentalsComponent)
+      },
+      {
         path: 'visitors',
         loadChildren: () => import('./features/visitors/visitors.routes').then((m) => m.VISITORS_ROUTES)
       },

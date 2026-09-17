@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:assets="clr-namespace:SocietyManagement.Mobile.Features.Assets"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Assets.AssetsListPage"
+             x:DataType="assets:AssetsListViewModel"
+             x:Name="Root"
+             Title="Assets">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Style="{StaticResource ErrorText}" Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <VerticalStackLayout Grid.Column="0" Spacing="2">
+                    <Label Style="{StaticResource FieldLabel}" Text="Start Date" />
+                    <Border Style="{StaticResource FieldFrame}"><DatePicker Date="{Binding StartDate}" /></Border>
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="2">
+                    <Label Style="{StaticResource FieldLabel}" Text="End Date" />
+                    <Border Style="{StaticResource FieldFrame}"><DatePicker Date="{Binding EndDate}" /></Border>
+                </VerticalStackLayout>
+            </Grid>
+
+            <CollectionView ItemsSource="{Binding Assets}" HeightRequest="360">
+                <CollectionView.EmptyView>
+                    <Label Style="{StaticResource Muted}" Text="No assets available yet." HorizontalOptions="Center" Margin="0,24" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:AssetDto">
+                        <Border Style="{StaticResource RowCard}" Margin="0,4">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontAttributes="Bold" />
+                                <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource Muted}">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding Category}" />
+                                            <Span Text=" &#183; " />
+                                            <Span Text="{Binding RentalPrice, StringFormat='₹{0:0.00}'}" />
+                                            <Span Text=" / " />
+                                            <Span Text="{Binding PricingType}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                                <Button Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Text="Add" FontSize="12" Padding="10,4"
+                                        Command="{Binding Source={x:Reference Root}, Path=BindingContext.AddToCartCommand}" CommandParameter="{Binding .}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Border Style="{StaticResource Card}" IsVisible="{Binding Cart.Count, Converter={StaticResource CountToBoolConverter}}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Your Rental Request" FontAttributes="Bold" />
+
+                    <Label Style="{StaticResource FieldLabel}" Text="Flat" IsVisible="{Binding Flats.Count, Converter={StaticResource CountToBoolConverter}}" />
+                    <Border Style="{StaticResource FieldFrame}" IsVisible="{Binding Flats.Count, Converter={StaticResource CountToBoolConverter}}">
+                        <Picker ItemsSource="{Binding Flats}" SelectedItem="{Binding SelectedFlat}">
+                            <Picker.ItemDisplayBinding>
+                                <Binding Path="FlatNumber" x:DataType="gen:FlatDto" />
+                            </Picker.ItemDisplayBinding>
+                        </Picker>
+                    </Border>
+
+                    <CollectionView ItemsSource="{Binding Cart}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="assets:AssetCartLine">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto" Padding="0,4">
+                                    <Label Grid.Column="0" Text="{Binding Asset.Name}" VerticalOptions="Center" />
+                                    <Button Grid.Column="1" Text="-" FontSize="12" Padding="8,2"
+                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.DecrementCartLineCommand}" CommandParameter="{Binding .}" />
+                                    <Label Grid.Column="2" Text="{Binding Quantity}" VerticalOptions="Center" Margin="6,0" />
+                                    <Button Grid.Column="3" Text="Remove" FontSize="11" Padding="8,2"
+                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.RemoveFromCartCommand}" CommandParameter="{Binding .}" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <Label Text="{Binding EstimatedTotal, StringFormat='Estimated Total: ₹{0:0.00}'}" FontAttributes="Bold" />
+                    <Label Style="{StaticResource Muted}" FontSize="12" Text="Final total is calculated and confirmed after you submit." />
+                    <Button Text="Submit Rental Request" Command="{Binding SubmitCommand}" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

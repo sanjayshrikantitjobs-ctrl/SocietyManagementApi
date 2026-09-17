@@ -26,13 +26,13 @@
                         </Picker>
                     </Border>
 
-                    <Label Style="{StaticResource FieldLabel}" Text="Date" />
+                    <Label Style="{StaticResource FieldLabel}" Text="📅 Date" />
                     <Border Style="{StaticResource FieldFrame}"><DatePicker Date="{Binding BookingDate}" /></Border>
 
-                    <Label Style="{StaticResource FieldLabel}" Text="Start Time" />
+                    <Label Style="{StaticResource FieldLabel}" Text="🕐 Start Time" />
                     <Border Style="{StaticResource FieldFrame}"><TimePicker Time="{Binding StartTime}" /></Border>
 
-                    <Label Style="{StaticResource FieldLabel}" Text="End Time" />
+                    <Label Style="{StaticResource FieldLabel}" Text="🕐 End Time" />
                     <Border Style="{StaticResource FieldFrame}"><TimePicker Time="{Binding EndTime}" /></Border>
 
                     <Label Style="{StaticResource FieldLabel}" Text="Purpose (optional)" />

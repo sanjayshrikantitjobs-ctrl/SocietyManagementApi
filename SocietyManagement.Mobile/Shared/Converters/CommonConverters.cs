@@ -1,7 +1,37 @@
 using System.Globalization;
+using System.Text;
 using SocietyManagement.Mobile.Core;
 
 namespace SocietyManagement.Mobile.Shared.Converters;
+
+/// <summary>Bound enum values render via ToString() with no separators
+/// ("RefugeRoom", "PerDay", "LostAndFound") — the web app avoids this with
+/// its own per-enum LABEL_* dictionaries, but duplicating one dictionary per
+/// enum in XAML/MAUI has no equivalent shorthand. This does the same job
+/// generically: split the PascalCase member name into words at each
+/// upper-case boundary ("RefugeRoom" -> "Refuge Room"). Safe on any string,
+/// not just enums — a single-word or already-spaced value passes through
+/// unchanged.</summary>
+public class PascalCaseToWordsConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var text = value?.ToString();
+        if (string.IsNullOrEmpty(text)) return string.Empty;
+
+        var sb = new StringBuilder(text.Length + 8);
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (i > 0 && char.IsUpper(c) && !char.IsUpper(text[i - 1])) sb.Append(' ');
+            sb.Append(c);
+        }
+        return sb.ToString();
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
 
 public class StringToBoolConverter : IValueConverter
 {

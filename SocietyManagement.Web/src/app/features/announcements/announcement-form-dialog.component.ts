@@ -69,6 +69,7 @@ export interface AnnouncementFormDialogData {
             <mat-form-field appearance="outline" class="time-part">
               <mat-label>Time</mat-label>
               <input matInput type="time" formControlName="publishAtTime" />
+              <mat-icon matSuffix>schedule</mat-icon>
             </mat-form-field>
           </div>
         </div>
@@ -85,6 +86,7 @@ export interface AnnouncementFormDialogData {
             <mat-form-field appearance="outline" class="time-part">
               <mat-label>Time</mat-label>
               <input matInput type="time" formControlName="expiryAtTime" />
+              <mat-icon matSuffix>schedule</mat-icon>
             </mat-form-field>
           </div>
         </div>

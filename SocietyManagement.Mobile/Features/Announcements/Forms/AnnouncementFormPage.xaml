@@ -32,22 +32,24 @@
 
                     <Grid ColumnDefinitions="2*,Auto" ColumnSpacing="8">
                         <VerticalStackLayout Grid.Column="0" Spacing="4">
-                            <Label Style="{StaticResource FieldLabel}" Text="Publish Date (optional — leave off to save as Draft)" />
+                            <Label Style="{StaticResource FieldLabel}" Text="📅 Publish Date (optional — leave off to save as Draft)" />
                             <Border Style="{StaticResource FieldFrame}"><DatePicker Date="{Binding PublishDate}" /></Border>
                         </VerticalStackLayout>
                         <Button Grid.Column="1" Style="{StaticResource TextButton}" Text="Clear" Command="{Binding ClearPublishAtCommand}" VerticalOptions="End" />
                     </Grid>
+                    <Label Style="{StaticResource FieldLabel}" Text="🕐 Publish Time" IsVisible="{Binding HasPublishAt}" />
                     <Border Style="{StaticResource FieldFrame}" IsVisible="{Binding HasPublishAt}">
                         <TimePicker Time="{Binding PublishTime}" />
                     </Border>
 
                     <Grid ColumnDefinitions="2*,Auto" ColumnSpacing="8">
                         <VerticalStackLayout Grid.Column="0" Spacing="4">
-                            <Label Style="{StaticResource FieldLabel}" Text="Expiry Date (optional)" />
+                            <Label Style="{StaticResource FieldLabel}" Text="📅 Expiry Date (optional)" />
                             <Border Style="{StaticResource FieldFrame}"><DatePicker Date="{Binding ExpiryDate}" /></Border>
                         </VerticalStackLayout>
                         <Button Grid.Column="1" Style="{StaticResource TextButton}" Text="Clear" Command="{Binding ClearExpiryAtCommand}" VerticalOptions="End" />
                     </Grid>
+                    <Label Style="{StaticResource FieldLabel}" Text="🕐 Expiry Time" IsVisible="{Binding HasExpiryAt}" />
                     <Border Style="{StaticResource FieldFrame}" IsVisible="{Binding HasExpiryAt}">
                         <TimePicker Time="{Binding ExpiryTime}" />
                     </Border>

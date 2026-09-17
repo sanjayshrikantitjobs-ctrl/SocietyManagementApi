@@ -25,7 +25,7 @@
                                 <Label Grid.Row="1" Style="{StaticResource Muted}">
                                     <Label.FormattedText>
                                         <FormattedString>
-                                            <Span Text="{Binding Type}" />
+                                            <Span Text="{Binding Type, Converter={StaticResource PascalCaseToWordsConverter}}" />
                                             <Span Text=" &#183; Capacity " />
                                             <Span Text="{Binding Capacity}" />
                                         </FormattedString>
@@ -36,7 +36,7 @@
                                         <FormattedString>
                                             <Span Text="{Binding PricePerUnit, StringFormat='₹{0:0.00}'}" />
                                             <Span Text=" / " />
-                                            <Span Text="{Binding PricingType}" />
+                                            <Span Text="{Binding PricingType, Converter={StaticResource PascalCaseToWordsConverter}}" />
                                         </FormattedString>
                                     </Label.FormattedText>
                                 </Label>

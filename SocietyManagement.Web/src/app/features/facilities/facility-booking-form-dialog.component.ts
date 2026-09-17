@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { AuthService } from '../../core/services/auth.service';
@@ -26,7 +27,7 @@ export interface FacilityBookingFormDialogData {
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, MatButtonModule, MatDatepickerModule, MatDialogModule,
-    MatFormFieldModule, MatInputModule, MatSelectModule
+    MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule
   ],
   template: `
     <h2 mat-dialog-title>Book {{ data.facility.name }}</h2>
@@ -52,10 +53,12 @@ export interface FacilityBookingFormDialogData {
         <mat-form-field appearance="outline">
           <mat-label>Start Time</mat-label>
           <input matInput type="time" formControlName="startTime" />
+          <mat-icon matSuffix>schedule</mat-icon>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>End Time</mat-label>
           <input matInput type="time" formControlName="endTime" />
+          <mat-icon matSuffix>schedule</mat-icon>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="span-2">

@@ -25,6 +25,7 @@ namespace SocietyManagement.Mobile;
 public partial class AppShell : Shell
 {
     private readonly IAuthService _authService;
+    private readonly AppFlyoutMenuView _flyoutMenu;
 
     public AppShell(IAuthService authService, AuthState authState)
     {
@@ -89,7 +90,30 @@ public partial class AppShell : Shell
         // AppShell.xaml) — the same AuthState instance login/logout update,
         // so the flyout refreshes itself the moment the signed-in role changes.
         BindingContext = authState;
+
+        // Replaces the flat, auto-generated flyout list with a grouped one
+        // matching the web sidebar (see main-layout.component.ts) — the
+        // FlyoutItem/ShellContent/Tab tree above is left registered exactly
+        // as-is purely for routing purposes (GoToAsync still targets it),
+        // it's just no longer what's drawn. FlyoutHeader keeps rendering
+        // above this unchanged.
+        _flyoutMenu = new AppFlyoutMenuView(authState);
+        FlyoutContent = _flyoutMenu;
+
         Loaded += OnLoaded;
+    }
+
+    /// <summary>Keeps the custom flyout's active-item highlight and
+    /// auto-expanded group in sync with real navigation, including the very
+    /// first navigation on cold start — mirrors main-layout.component.ts's
+    /// router-events subscription (onNavigationEnd).</summary>
+    protected override void OnNavigated(ShellNavigatedEventArgs args)
+    {
+        base.OnNavigated(args);
+        var location = args.Current?.Location?.OriginalString;
+        if (string.IsNullOrEmpty(location)) return;
+        var routeName = location.Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault()?.Split('?')[0];
+        if (!string.IsNullOrEmpty(routeName)) _flyoutMenu.NotifyNavigated(routeName);
     }
 
     /// <summary>Mirrors app.config.ts's provideAppInitializer — restores a

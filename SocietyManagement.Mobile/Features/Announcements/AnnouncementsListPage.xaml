@@ -32,9 +32,9 @@
                                 <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource Muted}">
                                     <Label.FormattedText>
                                         <FormattedString>
-                                            <Span Text="{Binding Type}" />
+                                            <Span Text="{Binding Type, Converter={StaticResource PascalCaseToWordsConverter}}" />
                                             <Span Text=" · " />
-                                            <Span Text="{Binding Priority}" />
+                                            <Span Text="{Binding Priority, Converter={StaticResource PascalCaseToWordsConverter}}" />
                                             <Span Text=" · " />
                                             <Span Text="{Binding PublishAt, StringFormat='{0:MMM d, yyyy}'}" />
                                         </FormattedString>

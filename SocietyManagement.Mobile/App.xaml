@@ -18,6 +18,7 @@
             <conv:IsNullConverter x:Key="IsNullConverter" />
             <conv:EqualsConverter x:Key="EqualsConverter" />
             <conv:AssetUrlConverter x:Key="AssetUrlConverter" />
+            <conv:PascalCaseToWordsConverter x:Key="PascalCaseToWordsConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -19,11 +19,11 @@
                 <Label Style="{StaticResource Muted}">
                     <Label.FormattedText>
                         <FormattedString>
-                            <Span Text="{Binding Announcement.Type}" />
+                            <Span Text="{Binding Announcement.Type, Converter={StaticResource PascalCaseToWordsConverter}}" />
                             <Span Text=" · " />
-                            <Span Text="{Binding Announcement.Priority}" />
+                            <Span Text="{Binding Announcement.Priority, Converter={StaticResource PascalCaseToWordsConverter}}" />
                             <Span Text=" · " />
-                            <Span Text="{Binding Announcement.Status}" />
+                            <Span Text="{Binding Announcement.Status, Converter={StaticResource PascalCaseToWordsConverter}}" />
                         </FormattedString>
                     </Label.FormattedText>
                 </Label>

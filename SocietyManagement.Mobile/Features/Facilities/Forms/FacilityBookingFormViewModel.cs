@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SocietyManagement.Mobile.Api.Generated;
+using SocietyManagement.Mobile.Core.Auth;
 
 namespace SocietyManagement.Mobile.Features.Facilities.Forms;
 
@@ -12,11 +13,13 @@ public partial class FacilityBookingFormViewModel : ObservableObject
 {
     private readonly FacilityBookingsClient _client;
     private readonly FlatsClient _flatsClient;
+    private readonly AuthState _auth;
 
-    public FacilityBookingFormViewModel(FacilityBookingsClient client, FlatsClient flatsClient)
+    public FacilityBookingFormViewModel(FacilityBookingsClient client, FlatsClient flatsClient, AuthState auth)
     {
         _client = client;
         _flatsClient = flatsClient;
+        _auth = auth;
         BookingDate = DateTime.Today;
         StartTime = new TimeSpan(10, 0, 0);
         EndTime = new TimeSpan(13, 0, 0);
@@ -34,23 +37,39 @@ public partial class FacilityBookingFormViewModel : ObservableObject
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string? errorMessage;
 
+    public bool CanManage => _auth.IsAdmin;
+
     public void LoadFacility(FacilityDto facilityDto, DateTime bookingDate)
     {
         Facility = facilityDto;
         BookingDate = bookingDate;
     }
 
+    // Admin/SuperAdmin can book on behalf of any flat in the society — the
+    // backend already allows this (see CreateFacilityBookingCommandHandler);
+    // a resident only ever sees their own flat(s).
     public async Task LoadFlatsAsync()
     {
         try
         {
-            var response = await _flatsClient.Mine5Async();
-            Flats = new ObservableCollection<FlatDto>(response.Data ?? new());
+            IEnumerable<FlatDto>? flats;
+            if (CanManage)
+            {
+                var response = await _flatsClient.FlatsGETAsync(null, null, null, Facility?.SocietyId, 1, 500);
+                flats = response.Data?.Items;
+            }
+            else
+            {
+                var response = await _flatsClient.Mine5Async();
+                flats = response.Data;
+            }
+
+            Flats = new ObservableCollection<FlatDto>(flats ?? new List<FlatDto>());
             if (Flats.Count > 0) SelectedFlat = Flats[0];
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Couldn't load your flats ({ex.Message}).";
+            ErrorMessage = $"Couldn't load flats ({ex.Message}).";
         }
     }
 

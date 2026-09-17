@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { map } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDialog } from '@angular/material/dialog';
@@ -37,7 +38,7 @@ interface CartLine {
   ],
   template: `
     <div class="app-page">
-    <app-page-header title="Assets" [subtitle]="canManage() ? 'Chairs, tables, speakers and other rentable society equipment.' : 'Pick a date range, choose quantities and submit a rental request.'">
+    <app-page-header title="Assets" subtitle="Pick a date range, choose quantities and submit a rental request — Admins can book on behalf of any flat.">
       @if (societies().length > 1) {
         <mat-form-field appearance="outline" subscriptSizing="dynamic" class="picker">
           <mat-select [value]="societyId()" (selectionChange)="onSocietyChange($event.value)">
@@ -50,22 +51,20 @@ interface CartLine {
       }
     </app-page-header>
 
-    @if (!canManage()) {
-      <div class="rent-bar">
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>Start Date</mat-label>
-          <input matInput [matDatepicker]="startPicker" [value]="startDate()" (dateChange)="onStartDateChange($event.value)" />
-          <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-          <mat-datepicker #startPicker></mat-datepicker>
-        </mat-form-field>
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>End Date</mat-label>
-          <input matInput [matDatepicker]="endPicker" [value]="endDate()" (dateChange)="onEndDateChange($event.value)" />
-          <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-          <mat-datepicker #endPicker></mat-datepicker>
-        </mat-form-field>
-      </div>
-    }
+    <div class="rent-bar">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="startPicker" [value]="startDate()" (dateChange)="onStartDateChange($event.value)" />
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="endPicker" [value]="endDate()" (dateChange)="onEndDateChange($event.value)" />
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+    </div>
 
     @if (loading()) {
       <app-skeleton-loader [rows]="4" />
@@ -73,7 +72,7 @@ interface CartLine {
       <app-empty-state icon="chair" title="No assets yet" message="Add society equipment to make it available for rent."
         [actionLabel]="canManage() ? 'New Asset' : null" (action)="createAsset()" />
     } @else {
-      <div class="layout" [class.with-cart]="!canManage()">
+      <div class="layout with-cart">
         <div class="grid">
           @for (a of assets(); track a.id) {
             <div class="card" [class.inactive]="!a.isActive">
@@ -91,7 +90,7 @@ interface CartLine {
                 </div>
                 <div class="meta">{{ categoryLabel(a) }} &middot; {{ a.totalQuantity }} available</div>
                 <div class="price">{{ a.rentalPrice | currency: 'INR' }} / {{ pricingLabel(a) }}</div>
-                @if (!canManage()) {
+                @if (a.isActive) {
                   <div class="qty-row">
                     <input type="number" min="0" [max]="a.totalQuantity" [value]="cartQuantity(a.id)" (change)="setCartQuantity(a, $event)" />
                     <button mat-stroked-button (click)="addToCart(a)">Add</button>
@@ -103,33 +102,31 @@ interface CartLine {
           }
         </div>
 
-        @if (!canManage()) {
-          <div class="cart">
-            <h3>Your Rental Request</h3>
-            @if (flats().length > 1) {
-              <mat-form-field appearance="outline" subscriptSizing="dynamic" class="span">
-                <mat-label>Flat</mat-label>
-                <mat-select [value]="selectedFlatId()" (selectionChange)="selectedFlatId.set($event.value)">
-                  @for (f of flats(); track f.id) { <mat-option [value]="f.id">{{ f.flatNumber }}</mat-option> }
-                </mat-select>
-              </mat-form-field>
+        <div class="cart">
+          <h3>{{ canManage() ? 'Book a Rental For a Flat' : 'Your Rental Request' }}</h3>
+          @if (canManage() || flats().length > 1) {
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="span">
+              <mat-label>{{ canManage() ? 'Rent For Flat' : 'Flat' }}</mat-label>
+              <mat-select [value]="selectedFlatId()" (selectionChange)="selectedFlatId.set($event.value)">
+                @for (f of flats(); track f.id) { <mat-option [value]="f.id">{{ f.flatNumber }}</mat-option> }
+              </mat-select>
+            </mat-form-field>
+          }
+          @if (cartLines().length === 0) {
+            <p class="empty">No items added yet.</p>
+          } @else {
+            @for (line of cartLines(); track line.asset.id) {
+              <div class="cart-line">
+                <span>{{ line.quantity }} &times; {{ line.asset.name }}</span>
+                <span>{{ estimateLine(line) | currency: 'INR' }}</span>
+                <button mat-icon-button (click)="removeFromCart(line.asset.id)"><mat-icon>close</mat-icon></button>
+              </div>
             }
-            @if (cartLines().length === 0) {
-              <p class="empty">No items added yet.</p>
-            } @else {
-              @for (line of cartLines(); track line.asset.id) {
-                <div class="cart-line">
-                  <span>{{ line.quantity }} &times; {{ line.asset.name }}</span>
-                  <span>{{ estimateLine(line) | currency: 'INR' }}</span>
-                  <button mat-icon-button (click)="removeFromCart(line.asset.id)"><mat-icon>close</mat-icon></button>
-                </div>
-              }
-              <div class="cart-total">Estimated Total: {{ estimateTotal() | currency: 'INR' }}</div>
-              <p class="hint">Final total is calculated and confirmed after you submit.</p>
-              <button mat-flat-button color="primary" class="span" [disabled]="!canSubmit()" (click)="submitRequest()">Submit Rental Request</button>
-            }
-          </div>
-        }
+            <div class="cart-total">Estimated Total: {{ estimateTotal() | currency: 'INR' }}</div>
+            <p class="hint">Final total is calculated and confirmed after you submit.</p>
+            <button mat-flat-button color="primary" class="span" [disabled]="!canSubmit()" (click)="submitRequest()">Submit Rental Request</button>
+          }
+        </div>
       </div>
     }
     </div>
@@ -212,20 +209,29 @@ export class AssetsListComponent implements OnInit {
       if (societies.length > 0) {
         this.societyId.set(societies[0].id);
         this.load();
+        this.loadFlats();
       } else {
         this.loading.set(false);
       }
     });
-
-    if (!this.canManage()) {
-      this.societyService.getMyFlats().subscribe((flats) => {
-        this.flats.set(flats);
-        if (flats.length > 0) this.selectedFlatId.set(flats[0].id);
-      });
-    }
   }
 
-  onSocietyChange(id: number): void { this.societyId.set(id); this.load(); }
+  // Admin/SuperAdmin can rent on behalf of any flat in the society — the
+  // backend already allows this (CreateAssetBookingCommandHandler only
+  // enforces "must be a current resident of this flat" when the caller
+  // lacks assets.manage); a resident only ever sees their own flat(s).
+  private loadFlats(): void {
+    const flats$ = this.canManage()
+      ? this.societyService.getFlats({ societyId: this.societyId(), pageSize: 500 }).pipe(map((r) => r.items))
+      : this.societyService.getMyFlats();
+
+    flats$.subscribe((flats) => {
+      this.flats.set(flats);
+      if (flats.length > 0) this.selectedFlatId.set(flats[0].id);
+    });
+  }
+
+  onSocietyChange(id: number): void { this.societyId.set(id); this.load(); this.loadFlats(); }
   onStartDateChange(date: Date | null): void { if (date) this.startDate.set(date); }
   onEndDateChange(date: Date | null): void { if (date) this.endDate.set(date); }
 
@@ -306,7 +312,10 @@ export class AssetsListComponent implements OnInit {
       next: () => {
         this.toast.success('Rental request submitted.');
         this.cart.set(new Map());
-        this.router.navigate(['/my-rentals']);
+        // An admin booking on behalf of another flat has no stake in their
+        // own "My Rentals" — send them to the admin list where the new
+        // request actually shows up instead.
+        this.router.navigate([this.canManage() ? '/asset-rentals' : '/my-rentals']);
       },
       error: (err) => this.toast.error(err?.error?.message || 'Could not submit the rental request.')
     });

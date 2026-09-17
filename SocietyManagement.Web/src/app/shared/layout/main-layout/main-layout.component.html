@@ -39,7 +39,8 @@
             </a>
           }
         } @else {
-          <button type="button" class="nav-group-header" (click)="toggleGroup(node.name)">
+          <button type="button" class="nav-group-header" [class.nav-group-header--active]="isGroupActive(node.name)"
+                  (click)="toggleGroup(node.name)">
             <mat-icon class="group-icon">{{ node.icon }}</mat-icon>
             <span class="group-label">{{ node.name }}</span>
             <mat-icon class="chevron" [class.chevron--open]="isGroupExpanded(node.name)">chevron_right</mat-icon>

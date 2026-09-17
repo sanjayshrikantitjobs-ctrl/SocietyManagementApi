@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { interval } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
@@ -37,38 +38,57 @@ interface NavItem {
 
 type NavNode = { type: 'item'; item: NavItem } | { type: 'group'; name: string; icon: string; items: NavItem[] };
 
+// Grouped into logical sections so the sidebar stays short — each group
+// renders as one collapsible header (see navNodes()/GROUP_ICONS below).
+// Reorganizing this list only changes *where* an item appears in the menu;
+// its route, icon and every permission flag are untouched, so existing
+// routing/authorization/deep-links/breadcrumbs all keep working unchanged.
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: 'dashboard', link: '/dashboard', hideForWatchman: true },
-  { label: 'Festivals & Events', icon: 'celebration', link: '/festivals', hideForWatchman: true },
-  { label: 'Announcements', icon: 'campaign', link: '/announcements' },
-  { label: 'Facilities', icon: 'villa', link: '/facilities', hideForWatchman: true },
-  { label: 'Facility Bookings', icon: 'event_available', link: '/facility-bookings', adminOnly: true },
-  { label: 'Assets', icon: 'chair', link: '/assets', hideForWatchman: true },
-  { label: 'Asset Rentals', icon: 'inventory_2', link: '/asset-rentals', adminOnly: true },
-  { label: 'Asset Returns', icon: 'assignment_return', link: '/asset-returns', adminOnly: true },
-  { label: 'Visitors', icon: 'badge', link: '/visitors' },
-  { label: 'Vehicle Security', icon: 'directions_car', link: '/vehicle-security' },
-  { label: 'Maintenance', icon: 'receipt_long', link: '/maintenance', adminOnly: true },
-  { label: 'Residents', icon: 'people', link: '/residents', adminOnly: true },
-  { label: 'Staff', icon: 'engineering', link: '/staff', adminOnly: true },
-  { label: 'Services', icon: 'build', link: '/services', adminOnly: true },
+
+  { label: 'Announcements', icon: 'campaign', link: '/announcements', group: 'Community' },
+  { label: 'Festivals & Events', icon: 'celebration', link: '/festivals', hideForWatchman: true, group: 'Community' },
+  { label: 'Committee', icon: 'groups', link: '/committee', hideForWatchman: true, group: 'Community' },
+  { label: 'Complaints', icon: 'report_problem', link: '/complaints', adminOnly: true, group: 'Community' },
+
+  { label: 'Facilities', icon: 'villa', link: '/facilities', hideForWatchman: true, group: 'Facilities & Bookings' },
+  { label: 'Facility Bookings', icon: 'event_available', link: '/facility-bookings', adminOnly: true, group: 'Facilities & Bookings' },
+
+  { label: 'Assets', icon: 'chair', link: '/assets', hideForWatchman: true, group: 'Assets & Rentals' },
+  { label: 'Asset Rentals', icon: 'inventory_2', link: '/asset-rentals', adminOnly: true, group: 'Assets & Rentals' },
+  { label: 'Asset Returns', icon: 'assignment_return', link: '/asset-returns', adminOnly: true, group: 'Assets & Rentals' },
+
+  { label: 'Visitors', icon: 'badge', link: '/visitors', group: 'Security' },
+  { label: 'Vehicle Security', icon: 'directions_car', link: '/vehicle-security', group: 'Security' },
+
+  { label: 'Maintenance', icon: 'receipt_long', link: '/maintenance', adminOnly: true, group: 'Society Management' },
+  { label: 'Residents', icon: 'people', link: '/residents', adminOnly: true, group: 'Society Management' },
+  { label: 'Staff', icon: 'engineering', link: '/staff', adminOnly: true, group: 'Society Management' },
+  { label: 'Services', icon: 'build', link: '/services', adminOnly: true, group: 'Society Management' },
+
   { label: 'Finance', icon: 'account_balance', link: '/finance', adminOnly: true },
-  { label: 'Complaints', icon: 'report_problem', link: '/complaints', adminOnly: true },
-  { label: 'Committee', icon: 'groups', link: '/committee', hideForWatchman: true },
+
   { label: 'My Bills', icon: 'payments', link: '/my-bills', group: 'My Society', hideForWatchman: true },
   { label: 'My Bookings', icon: 'event_available', link: '/my-facility-bookings', group: 'My Society', hideForWatchman: true },
   { label: 'My Rentals', icon: 'inventory_2', link: '/my-rentals', group: 'My Society', hideForWatchman: true },
   { label: 'My Complaints', icon: 'report_problem', link: '/my-complaints', group: 'My Society', hideForWatchman: true },
   { label: 'My Family', icon: 'family_restroom', link: '/my-family', group: 'My Society', hideForWatchman: true },
   { label: 'Help & Support', icon: 'support_agent', link: '/support', group: 'My Society', hideForWatchman: true, hideForSuperAdmin: true },
-  { label: 'Societies', icon: 'apartment', link: '/society-setup', adminOnly: true },
-  { label: 'Users', icon: 'group', link: '/users', adminOnly: true },
-  { label: 'Roles & Permissions', icon: 'admin_panel_settings', link: '/roles', adminOnly: true },
-  { label: 'Support Tickets', icon: 'confirmation_number', link: '/admin/support-tickets', superAdminOnly: true }
+
+  { label: 'Societies', icon: 'apartment', link: '/society-setup', adminOnly: true, group: 'Administration' },
+  { label: 'Users', icon: 'group', link: '/users', adminOnly: true, group: 'Administration' },
+  { label: 'Roles & Permissions', icon: 'admin_panel_settings', link: '/roles', adminOnly: true, group: 'Administration' },
+  { label: 'Support Tickets', icon: 'confirmation_number', link: '/admin/support-tickets', superAdminOnly: true, group: 'Administration' }
 ];
 
 const GROUP_ICONS: Record<string, string> = {
-  'My Society': 'apartment'
+  Community: 'forum',
+  'Facilities & Bookings': 'villa',
+  'Assets & Rentals': 'inventory_2',
+  Security: 'security',
+  'Society Management': 'domain',
+  'My Society': 'apartment',
+  Administration: 'admin_panel_settings'
 };
 
 /** App shell — collapsible sidebar nav + topbar (search/theme-toggle/user
@@ -147,6 +167,44 @@ export class MainLayoutComponent {
     interval(EXPIRING_SERVICES_POLL_MS)
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.loadExpiringServicesCount());
+
+    // Keeps whichever group the current route lives in expanded — fires on
+    // every navigation (including the very first one, so a hard refresh or
+    // deep link into a nested page like /facility-bookings still opens
+    // "Facilities & Bookings" instead of landing on an all-collapsed menu).
+    // Only ever adds to expandedGroups, never removes — a group the user
+    // opened themselves stays open when they browse elsewhere.
+    this.onNavigationEnd(this.router.url);
+    this.router.events
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        takeUntilDestroyed()
+      )
+      .subscribe((event) => this.onNavigationEnd(event.urlAfterRedirects));
+  }
+
+  // The parent group a nav-item link belongs to, matching either the exact
+  // route or a nested path under it (e.g. "/facilities/12" still belongs to
+  // the "/facilities" item) — used both to auto-expand the active group and
+  // to give its collapsed header a subtle "contains the active page" cue.
+  private readonly activeGroupName = signal<string | null>(null);
+
+  private onNavigationEnd(url: string): void {
+    const path = url.split('?')[0].split('#')[0];
+    const activeItem = this.navItems.find((item) => path === item.link || path.startsWith(item.link + '/'));
+    this.activeGroupName.set(activeItem?.group ?? null);
+    if (!activeItem?.group) return;
+
+    this.expandedGroups.update((current) => {
+      if (current.has(activeItem.group!)) return current;
+      const next = new Set(current);
+      next.add(activeItem.group!);
+      return next;
+    });
+  }
+
+  isGroupActive(name: string): boolean {
+    return this.activeGroupName() === name;
   }
 
   private loadExpiringServicesCount(): void {
@@ -180,9 +238,10 @@ export class MainLayoutComponent {
     }
   }
 
-  // Groups default open so nothing currently reachable becomes hidden
-  // just by introducing the grouping — collapsing is opt-in per visit.
-  readonly expandedGroups = signal<Set<string>>(new Set(Object.keys(GROUP_ICONS)));
+  // Groups default collapsed — keeps the sidebar short. The group
+  // containing the active route is auto-expanded (see expandToActiveGroup);
+  // beyond that, expanding is opt-in per visit.
+  readonly expandedGroups = signal<Set<string>>(new Set());
 
   visibleNavItems(): NavItem[] {
     return this.navItems.filter((item) =>

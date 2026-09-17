@@ -1,12 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { map } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { AuthService } from '../../core/services/auth.service';
 import { Flat } from '../../core/models/society.model';
 import { SocietyService } from '../society-setup/services/society.service';
 import { FacilityDto } from './models/facility.model';
@@ -30,9 +32,9 @@ export interface FacilityBookingFormDialogData {
     <h2 mat-dialog-title>Book {{ data.facility.name }}</h2>
     <form [formGroup]="form" (ngSubmit)="submit()">
       <mat-dialog-content class="grid">
-        @if (flats().length > 1) {
+        @if (canManage() || flats().length > 1) {
           <mat-form-field appearance="outline" class="span-2">
-            <mat-label>Flat</mat-label>
+            <mat-label>{{ canManage() ? 'Book For Flat' : 'Flat' }}</mat-label>
             <mat-select formControlName="flatId">
               @for (f of flats(); track f.id) { <mat-option [value]="f.id">{{ f.flatNumber }}</mat-option> }
             </mat-select>
@@ -96,8 +98,13 @@ export class FacilityBookingFormDialogComponent {
   data = inject<FacilityBookingFormDialogData>(MAT_DIALOG_DATA);
   private readonly fb = inject(FormBuilder);
   private readonly societyService = inject(SocietyService);
+  private readonly auth = inject(AuthService);
 
   readonly flats = signal<Flat[]>([]);
+
+  canManage(): boolean {
+    return this.auth.hasPermission('facilities.manage');
+  }
 
   form = this.fb.nonNullable.group({
     flatId: [0, Validators.required],
@@ -110,7 +117,15 @@ export class FacilityBookingFormDialogComponent {
   });
 
   constructor() {
-    this.societyService.getMyFlats().subscribe((flats) => {
+    // Admin/SuperAdmin can book on behalf of any flat in the society — the
+    // backend already allows this (CreateFacilityBookingCommandHandler only
+    // enforces "must be a current resident of this flat" when the caller
+    // lacks facilities.manage); a resident only ever sees their own flat(s).
+    const flats$ = this.canManage()
+      ? this.societyService.getFlats({ societyId: this.data.facility.societyId, pageSize: 500 }).pipe(map((r) => r.items))
+      : this.societyService.getMyFlats();
+
+    flats$.subscribe((flats) => {
       this.flats.set(flats);
       if (flats.length > 0) this.form.get('flatId')?.setValue(flats[0].id);
     });

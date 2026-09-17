@@ -57,6 +57,17 @@ mat-sidenav-content {
     background: var(--app-surface-alt);
   }
 
+  // Collapsed-but-contains-the-active-page cue — subtler than .active-link's
+  // full pill (that stays reserved for the actual clicked route) since this
+  // fires in practice only for the instant before expandToActiveGroup's
+  // auto-expand takes over, or after the user manually re-collapses it.
+  &--active {
+    .group-icon,
+    .group-label {
+      color: var(--app-primary);
+    }
+  }
+
   .group-icon {
     flex-shrink: 0;
     color: var(--app-text-muted);

@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SocietyManagement.Mobile.Api.Generated;
 using SocietyManagement.Mobile.Core;
+using SocietyManagement.Mobile.Core.Auth;
 
 namespace SocietyManagement.Mobile.Features.Assets;
 
@@ -26,17 +27,22 @@ public partial class AssetsListViewModel : ObservableObject
     private readonly AssetBookingsClient _bookingsClient;
     private readonly FlatsClient _flatsClient;
     private readonly CurrentSocietyService _currentSocietyService;
+    private readonly AuthState _auth;
 
     public AssetsListViewModel(
-        AssetsClient assetsClient, AssetBookingsClient bookingsClient, FlatsClient flatsClient, CurrentSocietyService currentSocietyService)
+        AssetsClient assetsClient, AssetBookingsClient bookingsClient, FlatsClient flatsClient,
+        CurrentSocietyService currentSocietyService, AuthState auth)
     {
         _assetsClient = assetsClient;
         _bookingsClient = bookingsClient;
         _flatsClient = flatsClient;
         _currentSocietyService = currentSocietyService;
+        _auth = auth;
         StartDate = DateTime.Today;
         EndDate = DateTime.Today;
     }
+
+    public bool CanManage => _auth.IsAdmin;
 
     [ObservableProperty] private ObservableCollection<AssetDto> assets = new();
     [ObservableProperty] private ObservableCollection<AssetCartLine> cart = new();
@@ -67,8 +73,22 @@ public partial class AssetsListViewModel : ObservableObject
             var response = await _assetsClient.AssetsGETAsync(societyId, true);
             Assets = new ObservableCollection<AssetDto>(response.Data ?? new());
 
-            var flatsResponse = await _flatsClient.Mine5Async();
-            Flats = new ObservableCollection<FlatDto>(flatsResponse.Data ?? new());
+            // Admin/SuperAdmin can rent on behalf of any flat in the society —
+            // the backend already allows this (see
+            // CreateAssetBookingCommandHandler); a resident only ever sees
+            // their own flat(s).
+            IEnumerable<FlatDto>? flats;
+            if (CanManage)
+            {
+                var flatsResponse = await _flatsClient.FlatsGETAsync(null, null, null, societyId, 1, 500);
+                flats = flatsResponse.Data?.Items;
+            }
+            else
+            {
+                var flatsResponse = await _flatsClient.Mine5Async();
+                flats = flatsResponse.Data;
+            }
+            Flats = new ObservableCollection<FlatDto>(flats ?? new List<FlatDto>());
             if (Flats.Count > 0) SelectedFlat = Flats[0];
         }
         catch (Exception ex)

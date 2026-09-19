@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SocietyManagement.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace SocietyManagement.Infrastructure.Migrations
+namespace SocietyManagement.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260919165045_AddPetsAttendanceDocumentsVendors")]
+    partial class AddPetsAttendanceDocumentsVendors
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -415,56 +418,6 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.HasIndex("SocietyId", "Timestamp");
 
                     b.ToTable("AuditLogs", (string)null);
-                });
-
-            modelBuilder.Entity("SocietyManagement.Domain.Entities.Budget", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(14,2)");
-
-                    b.Property<int>("Category")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("FinancialYear")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("ModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SocietyId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SocietyId", "FinancialYear", "Category")
-                        .IsUnique()
-                        .HasFilter("[IsDeleted] = 0");
-
-                    b.ToTable("Budgets", (string)null);
                 });
 
             modelBuilder.Entity("SocietyManagement.Domain.Entities.Building", b =>
@@ -2448,65 +2401,6 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.ToTable("Gates", (string)null);
                 });
 
-            modelBuilder.Entity("SocietyManagement.Domain.Entities.InventoryItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Category")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal>("MinimumStock")
-                        .HasColumnType("decimal(12,2)");
-
-                    b.Property<DateTime?>("ModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("SocietyId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Unit")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SocietyId", "IsActive");
-
-                    b.ToTable("InventoryItems", (string)null);
-                });
-
             modelBuilder.Entity("SocietyManagement.Domain.Entities.MaintenanceBill", b =>
                 {
                     b.Property<int>("Id")
@@ -3499,131 +3393,6 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.ToTable("Pets", (string)null);
                 });
 
-            modelBuilder.Entity("SocietyManagement.Domain.Entities.PurchaseRequest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("ApprovedByUserId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<DateTime?>("DueDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("ModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("OrderedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RejectionReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("RequestedByName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("RequestedByUserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SocietyId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<int?>("VendorId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("VendorId");
-
-                    b.HasIndex("SocietyId", "Status");
-
-                    b.ToTable("PurchaseRequests", (string)null);
-                });
-
-            modelBuilder.Entity("SocietyManagement.Domain.Entities.PurchaseRequestItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("EstimatedUnitPrice")
-                        .HasColumnType("decimal(12,2)");
-
-                    b.Property<int?>("InventoryItemId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ItemName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("PurchaseRequestId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("decimal(12,2)");
-
-                    b.Property<decimal>("ReceivedQuantity")
-                        .HasColumnType("decimal(12,2)");
-
-                    b.Property<string>("Unit")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InventoryItemId");
-
-                    b.HasIndex("PurchaseRequestId");
-
-                    b.ToTable("PurchaseRequestItems", (string)null);
-                });
-
             modelBuilder.Entity("SocietyManagement.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<int>("Id")
@@ -4337,74 +4106,6 @@ namespace SocietyManagement.Infrastructure.Migrations
                         .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("StaffAttendances", (string)null);
-                });
-
-            modelBuilder.Entity("SocietyManagement.Domain.Entities.StockTransaction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("InventoryItemId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("IssuedTo")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<string>("LocationOfUse")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<DateTime?>("ModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int?>("PurchaseRequestId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("decimal(12,2)");
-
-                    b.Property<int>("SocietyId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("TransactionDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SocietyId");
-
-                    b.HasIndex("InventoryItemId", "TransactionDate");
-
-                    b.ToTable("StockTransactions", (string)null);
                 });
 
             modelBuilder.Entity("SocietyManagement.Domain.Entities.SupportTicket", b =>
@@ -5401,17 +5102,6 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.Navigation("AssetBooking");
                 });
 
-            modelBuilder.Entity("SocietyManagement.Domain.Entities.Budget", b =>
-                {
-                    b.HasOne("SocietyManagement.Domain.Entities.Society", "Society")
-                        .WithMany()
-                        .HasForeignKey("SocietyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Society");
-                });
-
             modelBuilder.Entity("SocietyManagement.Domain.Entities.Building", b =>
                 {
                     b.HasOne("SocietyManagement.Domain.Entities.Society", "Society")
@@ -5909,17 +5599,6 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.Navigation("Society");
                 });
 
-            modelBuilder.Entity("SocietyManagement.Domain.Entities.InventoryItem", b =>
-                {
-                    b.HasOne("SocietyManagement.Domain.Entities.Society", "Society")
-                        .WithMany()
-                        .HasForeignKey("SocietyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Society");
-                });
-
             modelBuilder.Entity("SocietyManagement.Domain.Entities.MaintenanceBill", b =>
                 {
                     b.HasOne("SocietyManagement.Domain.Entities.Flat", "Flat")
@@ -6153,42 +5832,6 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.Navigation("Society");
                 });
 
-            modelBuilder.Entity("SocietyManagement.Domain.Entities.PurchaseRequest", b =>
-                {
-                    b.HasOne("SocietyManagement.Domain.Entities.Society", "Society")
-                        .WithMany()
-                        .HasForeignKey("SocietyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("SocietyManagement.Domain.Entities.Vendor", "Vendor")
-                        .WithMany()
-                        .HasForeignKey("VendorId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Society");
-
-                    b.Navigation("Vendor");
-                });
-
-            modelBuilder.Entity("SocietyManagement.Domain.Entities.PurchaseRequestItem", b =>
-                {
-                    b.HasOne("SocietyManagement.Domain.Entities.InventoryItem", "InventoryItem")
-                        .WithMany()
-                        .HasForeignKey("InventoryItemId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("SocietyManagement.Domain.Entities.PurchaseRequest", "PurchaseRequest")
-                        .WithMany("Items")
-                        .HasForeignKey("PurchaseRequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("InventoryItem");
-
-                    b.Navigation("PurchaseRequest");
-                });
-
             modelBuilder.Entity("SocietyManagement.Domain.Entities.RefreshToken", b =>
                 {
                     b.HasOne("SocietyManagement.Domain.Entities.User", "User")
@@ -6310,25 +5953,6 @@ namespace SocietyManagement.Infrastructure.Migrations
                     b.Navigation("Society");
 
                     b.Navigation("Staff");
-                });
-
-            modelBuilder.Entity("SocietyManagement.Domain.Entities.StockTransaction", b =>
-                {
-                    b.HasOne("SocietyManagement.Domain.Entities.InventoryItem", "InventoryItem")
-                        .WithMany()
-                        .HasForeignKey("InventoryItemId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("SocietyManagement.Domain.Entities.Society", "Society")
-                        .WithMany()
-                        .HasForeignKey("SocietyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("InventoryItem");
-
-                    b.Navigation("Society");
                 });
 
             modelBuilder.Entity("SocietyManagement.Domain.Entities.SupportTicket", b =>
@@ -6741,11 +6365,6 @@ namespace SocietyManagement.Infrastructure.Migrations
             modelBuilder.Entity("SocietyManagement.Domain.Entities.Person", b =>
                 {
                     b.Navigation("OccupancyMemberships");
-                });
-
-            modelBuilder.Entity("SocietyManagement.Domain.Entities.PurchaseRequest", b =>
-                {
-                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("SocietyManagement.Domain.Entities.Role", b =>

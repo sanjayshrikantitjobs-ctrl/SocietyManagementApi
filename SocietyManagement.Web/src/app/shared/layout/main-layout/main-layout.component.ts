@@ -22,6 +22,7 @@ import { SignalrService } from '../../../core/services/signalr.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { AssetUrlPipe } from '../../pipes/asset-url.pipe';
 import { NotificationPanelComponent } from '../../components/notification-panel/notification-panel.component';
+import { GlobalSearchComponent } from '../../components/global-search/global-search.component';
 import { NotificationService } from '../../services/notification.service';
 import { SocietyServiceService } from '../../../features/services/services/society-service.service';
 
@@ -35,6 +36,10 @@ interface NavItem {
   superAdminOnly?: boolean;
   hideForWatchman?: boolean;
   hideForSuperAdmin?: boolean;
+  /** When set, the item shows for any user holding this permission code
+   * (not just Admin) — new modules use this instead of adminOnly so a
+   * custom role can be granted access. */
+  permission?: string;
   group?: string;
 }
 
@@ -52,6 +57,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Festivals & Events', icon: 'celebration', link: '/festivals', hideForWatchman: true, group: 'Community' },
   { label: 'Committee', icon: 'groups', link: '/committee', hideForWatchman: true, group: 'Community' },
   { label: 'Complaints', icon: 'report_problem', link: '/complaints', adminOnly: true, group: 'Community' },
+  { label: 'Documents', icon: 'folder_open', link: '/documents', permission: 'documents.view', group: 'Community' },
 
   { label: 'Facilities', icon: 'villa', link: '/facilities', hideForWatchman: true, group: 'Facilities & Bookings' },
   { label: 'Facility Bookings', icon: 'event_available', link: '/facility-bookings', adminOnly: true, group: 'Facilities & Bookings' },
@@ -67,8 +73,15 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Residents', icon: 'people', link: '/residents', adminOnly: true, group: 'Society Management' },
   { label: 'Staff', icon: 'engineering', link: '/staff', adminOnly: true, group: 'Society Management' },
   { label: 'Services', icon: 'build', link: '/services', adminOnly: true, group: 'Society Management' },
+  { label: 'Staff Attendance', icon: 'event_available', link: '/staff-attendance', permission: 'staff.view', group: 'Society Management' },
+  { label: 'Vendors', icon: 'handyman', link: '/vendors', permission: 'vendors.view', group: 'Society Management' },
+  { label: 'Pets', icon: 'pets', link: '/pets', permission: 'pets.view', group: 'Society Management' },
+
+  { label: 'Purchase Requests', icon: 'shopping_cart', link: '/purchases', permission: 'purchases.view', group: 'Procurement' },
+  { label: 'Inventory', icon: 'inventory_2', link: '/inventory', permission: 'inventory.view', group: 'Procurement' },
 
   { label: 'Finance', icon: 'account_balance', link: '/finance', adminOnly: true },
+  { label: 'Budgets', icon: 'savings', link: '/budgets', permission: 'expenses.manage' },
 
   { label: 'My Bills', icon: 'payments', link: '/my-bills', group: 'My Society', hideForWatchman: true },
   { label: 'My Bookings', icon: 'event_available', link: '/my-facility-bookings', group: 'My Society', hideForWatchman: true },
@@ -88,6 +101,7 @@ const GROUP_ICONS: Record<string, string> = {
   'Facilities & Bookings': 'villa',
   'Assets & Rentals': 'inventory_2',
   Security: 'security',
+  Procurement: 'shopping_cart',
   'Society Management': 'domain',
   'My Society': 'apartment',
   Administration: 'admin_panel_settings'
@@ -102,7 +116,7 @@ const GROUP_ICONS: Record<string, string> = {
   imports: [
     CommonModule, RouterOutlet, RouterLink, RouterLinkActive, MatSidenavModule, MatToolbarModule,
     MatListModule, MatIconModule, MatButtonModule, MatMenuModule, MatDividerModule,
-    MatProgressBarModule, MatTooltipModule, MatBadgeModule, AssetUrlPipe, NotificationPanelComponent
+    MatProgressBarModule, MatTooltipModule, MatBadgeModule, AssetUrlPipe, NotificationPanelComponent, GlobalSearchComponent
   ],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss'
@@ -275,6 +289,7 @@ export class MainLayoutComponent {
 
   visibleNavItems(): NavItem[] {
     return this.navItems.filter((item) =>
+      (!item.permission || this.auth.hasPermission(item.permission)) &&
       (!item.adminOnly || this.auth.isAdmin()) &&
       (!item.superAdminOnly || this.auth.isSuperAdmin()) &&
       (!item.hideForWatchman || !this.auth.isWatchman()) &&

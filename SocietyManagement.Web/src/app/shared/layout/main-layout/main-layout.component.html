@@ -68,6 +68,8 @@
         <mat-icon>menu</mat-icon>
       </button>
 
+      <app-global-search />
+
       <span class="spacer"></span>
 
       @if (auth.isAdmin() && expiringServicesCount() > 0) {

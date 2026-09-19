@@ -39,6 +39,16 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<AnnouncementSave> AnnouncementSaves => Set<AnnouncementSave>();
     public DbSet<Notification> Notifications => Set<Notification>();
 
+    public DbSet<Pet> Pets => Set<Pet>();
+    public DbSet<StaffAttendance> StaffAttendances => Set<StaffAttendance>();
+    public DbSet<SocietyDocument> SocietyDocuments => Set<SocietyDocument>();
+    public DbSet<Vendor> Vendors => Set<Vendor>();
+    public DbSet<InventoryItem> InventoryItems => Set<InventoryItem>();
+    public DbSet<StockTransaction> StockTransactions => Set<StockTransaction>();
+    public DbSet<PurchaseRequest> PurchaseRequests => Set<PurchaseRequest>();
+    public DbSet<PurchaseRequestItem> PurchaseRequestItems => Set<PurchaseRequestItem>();
+    public DbSet<Budget> Budgets => Set<Budget>();
+
     public DbSet<Facility> Facilities => Set<Facility>();
     public DbSet<FacilityBlackoutDate> FacilityBlackoutDates => Set<FacilityBlackoutDate>();
     public DbSet<FacilityBooking> FacilityBookings => Set<FacilityBooking>();

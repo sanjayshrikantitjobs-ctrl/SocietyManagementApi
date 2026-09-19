@@ -42,6 +42,20 @@
       </div>
     </div>
 
+    @if (operationsRows().length > 0) {
+      <div class="app-card attention-card">
+        <h3><mat-icon>assignment_late</mat-icon> Operations</h3>
+        <div class="attention-grid">
+          @for (row of operationsRows(); track row.link) {
+            <div class="attention-row">
+              <div><span class="count">{{ row.count }}</span> {{ row.label }}</div>
+              <a [routerLink]="row.link">{{ row.cta }}</a>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
     <div class="charts-grid">
       <div class="app-card chart-card">
         <h3>Flat Occupancy</h3>

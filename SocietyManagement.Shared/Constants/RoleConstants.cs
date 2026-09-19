@@ -104,6 +104,42 @@ public static class Permissions
         public const string Manage = "assets.manage";
     }
 
+    /// <summary>Pet registry — admin-managed.</summary>
+    public static class Pets
+    {
+        public const string View = "pets.view";
+        public const string Manage = "pets.manage";
+    }
+
+    /// <summary>Society document repository — Manage sees every document,
+    /// View only those marked visible to all residents.</summary>
+    public static class Documents
+    {
+        public const string View = "documents.view";
+        public const string Manage = "documents.manage";
+    }
+
+    public static class Vendors
+    {
+        public const string View = "vendors.view";
+        public const string Manage = "vendors.manage";
+    }
+
+    public static class Inventory
+    {
+        public const string View = "inventory.view";
+        public const string Manage = "inventory.manage";
+    }
+
+    /// <summary>View sees requests, Manage creates/orders/receives them,
+    /// Approve is the separate sign-off (committee/admin).</summary>
+    public static class Purchases
+    {
+        public const string View = "purchases.view";
+        public const string Manage = "purchases.manage";
+        public const string Approve = "purchases.approve";
+    }
+
     public static class Complaints
     {
         public const string View = "complaints.view";

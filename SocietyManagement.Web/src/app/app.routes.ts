@@ -69,6 +69,48 @@ export const routes: Routes = [
         loadComponent: () => import('./features/assets/my-asset-rentals.component').then((m) => m.MyAssetRentalsComponent)
       },
       {
+        path: 'inventory',
+        canActivate: [permissionGuard],
+        data: { permission: 'inventory.view' },
+        loadComponent: () => import('./features/inventory/inventory.component').then((m) => m.InventoryComponent)
+      },
+      {
+        path: 'purchases',
+        canActivate: [permissionGuard],
+        data: { permission: 'purchases.view' },
+        loadComponent: () => import('./features/purchases/purchases-list.component').then((m) => m.PurchasesListComponent)
+      },
+      {
+        path: 'budgets',
+        canActivate: [permissionGuard],
+        data: { permission: 'expenses.manage' },
+        loadComponent: () => import('./features/budgets/budgets.component').then((m) => m.BudgetsComponent)
+      },
+      {
+        path: 'pets',
+        canActivate: [permissionGuard],
+        data: { permission: 'pets.view' },
+        loadComponent: () => import('./features/pets/pets-list.component').then((m) => m.PetsListComponent)
+      },
+      {
+        path: 'vendors',
+        canActivate: [permissionGuard],
+        data: { permission: 'vendors.view' },
+        loadComponent: () => import('./features/vendors/vendors-list.component').then((m) => m.VendorsListComponent)
+      },
+      {
+        path: 'documents',
+        canActivate: [permissionGuard],
+        data: { permission: 'documents.view' },
+        loadComponent: () => import('./features/documents/documents-list.component').then((m) => m.DocumentsListComponent)
+      },
+      {
+        path: 'staff-attendance',
+        canActivate: [permissionGuard],
+        data: { permission: 'staff.view' },
+        loadComponent: () => import('./features/attendance/attendance.component').then((m) => m.AttendanceComponent)
+      },
+      {
         path: 'visitors',
         loadChildren: () => import('./features/visitors/visitors.routes').then((m) => m.VISITORS_ROUTES)
       },

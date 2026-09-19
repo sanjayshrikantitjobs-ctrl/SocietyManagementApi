@@ -14,7 +14,7 @@ import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loa
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 import { ComplaintService } from '../../complaints/services/complaint.service';
 import { MaintenanceService } from '../../maintenance/services/maintenance.service';
-import { DashboardService } from '../dashboard.service';
+import { DashboardService, OperationsAttention } from '../dashboard.service';
 
 /** Admin dashboard — every number scoped to the caller's own society (see
  * GetAdminDashboardSummaryQuery's doc comment: this used to be a
@@ -38,6 +38,23 @@ export class AdminDashboardComponent {
 
   readonly loading = signal(true);
   readonly summary = signal<AdminDashboardSummary | null>(null);
+  readonly operations = signal<OperationsAttention | null>(null);
+
+  // Rows for the "Operations" attention card — a row appears only when the
+  // API returned a count for it (i.e. the caller has that module's permission)
+  // and that count is above zero.
+  operationsRows(): { count: number; label: string; link: string; cta: string }[] {
+    const o = this.operations();
+    if (!o) return [];
+    return [
+      { count: o.purchasesPendingApproval, label: 'Purchase requests awaiting approval', link: '/purchases', cta: 'Review' },
+      { count: o.lowStockItems, label: 'Items at or below minimum stock', link: '/inventory', cta: 'View stock' },
+      { count: o.vendorContractsExpiring, label: 'Vendor contracts ending within 30 days', link: '/vendors', cta: 'View vendors' },
+      { count: o.documentsExpiring, label: 'Documents expiring within 30 days', link: '/documents', cta: 'View documents' },
+      { count: o.petVaccinationsOverdue, label: 'Pet vaccinations overdue', link: '/pets', cta: 'View pets' },
+      { count: o.staffNotMarkedToday, label: 'Staff attendance not marked today', link: '/staff-attendance', cta: 'Mark attendance' }
+    ].filter((r): r is { count: number; label: string; link: string; cta: string } => (r.count ?? 0) > 0);
+  }
   readonly upcoming = signal<UpcomingItems | null>(null);
   readonly recentActivity = signal<RecentActivityItem[]>([]);
   readonly complaintKpis = signal<ComplaintKpisDto | null>(null);
@@ -111,6 +128,7 @@ export class AdminDashboardComponent {
       this.collectionChartData.datasets[1].data = points.map((p) => p.pending);
     });
 
+    this.dashboardService.getOperationsAttention(societyId).subscribe({ next: (o) => this.operations.set(o), error: () => this.operations.set(null) });
     this.dashboardService.getUpcoming(societyId).subscribe((upcoming) => this.upcoming.set(upcoming));
     this.dashboardService.getRecentActivity(societyId).subscribe((items) => this.recentActivity.set(items));
 

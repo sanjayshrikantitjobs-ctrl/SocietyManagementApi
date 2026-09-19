@@ -7,6 +7,15 @@ import {
   AdminDashboardSummary, MemberDashboardSummary, MonthlyCollectionPoint, RecentActivityItem, UpcomingItems
 } from '../../core/models/dashboard.model';
 
+export interface OperationsAttention {
+  vendorContractsExpiring: number | null;
+  lowStockItems: number | null;
+  purchasesPendingApproval: number | null;
+  documentsExpiring: number | null;
+  petVaccinationsOverdue: number | null;
+  staffNotMarkedToday: number | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
   private readonly http = inject(HttpClient);
@@ -29,6 +38,12 @@ export class DashboardService {
 
   getRecentActivity(societyId: number, take = 10): Observable<RecentActivityItem[]> {
     return this.http.get<ApiResponse<RecentActivityItem[]>>(`${this.baseUrl}/recent-activity`, { params: { societyId, take } })
+      .pipe(map((res) => res.data!));
+  }
+
+  // Only the counts the caller has permission for come back non-null.
+  getOperationsAttention(societyId: number): Observable<OperationsAttention> {
+    return this.http.get<ApiResponse<OperationsAttention>>(`${environment.apiUrl}/search/attention`, { params: { societyId } })
       .pipe(map((res) => res.data!));
   }
 

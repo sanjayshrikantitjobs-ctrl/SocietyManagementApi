@@ -86,6 +86,15 @@ public interface IApplicationDbContext
     DbSet<AnnouncementRead> AnnouncementReads { get; }
     DbSet<AnnouncementSave> AnnouncementSaves { get; }
     DbSet<Notification> Notifications { get; }
+    DbSet<Pet> Pets { get; }
+    DbSet<StaffAttendance> StaffAttendances { get; }
+    DbSet<SocietyDocument> SocietyDocuments { get; }
+    DbSet<Vendor> Vendors { get; }
+    DbSet<InventoryItem> InventoryItems { get; }
+    DbSet<StockTransaction> StockTransactions { get; }
+    DbSet<PurchaseRequest> PurchaseRequests { get; }
+    DbSet<PurchaseRequestItem> PurchaseRequestItems { get; }
+    DbSet<Budget> Budgets { get; }
 
     DbSet<Facility> Facilities { get; }
     DbSet<FacilityBlackoutDate> FacilityBlackoutDates { get; }

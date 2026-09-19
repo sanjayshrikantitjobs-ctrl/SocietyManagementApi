@@ -16,11 +16,19 @@
                    IsVisible="{Binding SocietyAddress, Converter={StaticResource StringToBoolConverter}}" />
         </VerticalStackLayout>
 
-        <Label Grid.Column="1" Text="&#128276;" FontSize="20" VerticalOptions="Center">
-            <Label.GestureRecognizers>
+        <Grid Grid.Column="1" VerticalOptions="Center">
+            <Label Text="&#128276;" FontSize="20" />
+            <Border StrokeThickness="0" WidthRequest="16" HeightRequest="16" Padding="0"
+                    StrokeShape="RoundRectangle 8" BackgroundColor="{StaticResource Danger}"
+                    HorizontalOptions="End" VerticalOptions="Start" Margin="0,-4,-6,0"
+                    IsVisible="{Binding UnreadNotificationCount, Converter={StaticResource CountToBoolConverter}}">
+                <Label Text="{Binding UnreadNotificationCount}" FontSize="9" FontAttributes="Bold" TextColor="White"
+                       HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+            </Border>
+            <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnNotificationsTapped" />
-            </Label.GestureRecognizers>
-        </Label>
+            </Grid.GestureRecognizers>
+        </Grid>
 
         <Label Grid.Column="2" Text="{Binding ThemeIcon}" FontSize="20" VerticalOptions="Center">
             <Label.GestureRecognizers>

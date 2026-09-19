@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { AssetUrlPipe } from '../../shared/pipes/asset-url.pipe';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
+import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
 import { StaffFormDialogComponent } from './staff-form-dialog.component';
@@ -16,15 +17,17 @@ import { StaffService } from './services/staff.service';
 @Component({
   selector: 'app-staff-detail',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatChipsModule, MatIconModule, AssetUrlPipe, PageHeaderComponent],
+  imports: [CommonModule, MatButtonModule, MatIconModule, AssetUrlPipe, PageHeaderComponent, StatusBadgeComponent],
   template: `
     @if (staff(); as s) {
       <div class="app-page">
         <app-page-header [title]="s.firstName + ' ' + s.lastName" [subtitle]="categoryLabels[s.category]"
           [breadcrumbs]="[{ label: 'Staff', link: '/staff' }, { label: s.firstName + ' ' + s.lastName }]">
-          <mat-chip-set><mat-chip [class.active]="s.isActive" [class.inactive]="!s.isActive">{{ s.isActive ? 'Active' : 'Inactive' }}</mat-chip></mat-chip-set>
-          <button mat-stroked-button (click)="edit()"><mat-icon>edit</mat-icon> Edit</button>
-          <button mat-stroked-button color="warn" (click)="remove()"><mat-icon>delete_outline</mat-icon> Delete</button>
+          <app-status-badge [variant]="s.isActive ? 'success' : 'neutral'" [label]="s.isActive ? 'Active' : 'Inactive'" />
+          @if (canManage()) {
+            <button mat-stroked-button (click)="edit()"><mat-icon>edit</mat-icon> Edit</button>
+            <button mat-stroked-button color="warn" (click)="remove()"><mat-icon>delete_outline</mat-icon> Delete</button>
+          }
         </app-page-header>
 
         <div class="panel">
@@ -55,8 +58,6 @@ import { StaffService } from './services/staff.service';
     .details { width: 100%; border-collapse: collapse; }
     .details td { padding: 10px 8px; border-top: 1px solid var(--app-border); font-size: 14px; }
     .details td:first-child { color: var(--app-text-muted); width: 180px; }
-    .active { background: #dcfce7 !important; color: #15803d !important; }
-    .inactive { background: #f1f5f9 !important; color: #64748b !important; }
   `]
 })
 export class StaffDetailComponent implements OnInit {
@@ -66,6 +67,11 @@ export class StaffDetailComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly toast = inject(ToastService);
+  private readonly auth = inject(AuthService);
+
+  canManage(): boolean {
+    return this.auth.hasPermission('staff.manage');
+  }
 
   readonly staff = signal<StaffDto | null>(null);
   readonly categoryLabels: Record<number, string> = STAFF_CATEGORY_LABELS;

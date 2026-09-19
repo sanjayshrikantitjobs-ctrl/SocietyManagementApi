@@ -9,4 +9,6 @@ public interface IFlatContributionsExportService
 {
     byte[] GeneratePdf(FlatContributionsExportData data);
     byte[] GenerateExcel(FlatContributionsExportData data);
+    byte[] GenerateLedgerPdf(ContributionLedgerExportData data);
+    byte[] GenerateLedgerExcel(ContributionLedgerExportData data);
 }

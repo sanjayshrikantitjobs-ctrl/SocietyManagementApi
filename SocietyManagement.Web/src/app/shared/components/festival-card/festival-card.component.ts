@@ -4,18 +4,21 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { Festival, FESTIVAL_STATUS_LABELS } from '../../../features/festivals/models/festival.model';
 import { AssetUrlPipe } from '../../pipes/asset-url.pipe';
+import { StatusBadgeComponent, StatusBadgeVariant } from '../status-badge/status-badge.component';
+
+const FESTIVAL_STATUS_VARIANT: Record<number, StatusBadgeVariant> = { 1: 'warning', 2: 'success', 3: 'neutral' };
 
 /** Reusable festival summary card for the festivals grid — spec's "Festival
  * Card" reusable component. */
 @Component({
   selector: 'app-festival-card',
   standalone: true,
-  imports: [CommonModule, MatChipsModule, MatIconModule, AssetUrlPipe],
+  imports: [CommonModule, MatChipsModule, MatIconModule, AssetUrlPipe, StatusBadgeComponent],
   template: `
     <div class="festival-card app-card app-fade-in" (click)="open.emit()">
       <div class="banner" [style.backgroundImage]="festival().bannerImageUrl ? 'url(' + (festival().bannerImageUrl | assetUrl) + ')' : null">
         @if (!festival().bannerImageUrl) { <mat-icon>celebration</mat-icon> }
-        <span class="status-chip" [class]="'status-' + festival().status">{{ statusLabel() }}</span>
+        <app-status-badge class="status-chip" [variant]="statusVariant()" [label]="statusLabel()" />
       </div>
       <div class="body">
         <h3>{{ festival().name }}</h3>
@@ -37,11 +40,7 @@ import { AssetUrlPipe } from '../../pipes/asset-url.pipe';
     .banner { height: 120px; background: var(--app-primary-light); background-size: cover; background-position: center;
       display: flex; align-items: center; justify-content: center; position: relative; }
     .banner mat-icon { font-size: 40px; width: 40px; height: 40px; color: var(--app-primary); opacity: .6; }
-    .status-chip { position: absolute; top: 10px; right: 10px; padding: 3px 10px; border-radius: 12px;
-      font-size: 11px; font-weight: 600; background: rgba(255,255,255,.9); }
-    .status-chip.status-1 { color: #b45309; }
-    .status-chip.status-2 { color: #15803d; }
-    .status-chip.status-3 { color: #475569; }
+    .status-chip { position: absolute; top: 10px; right: 10px; }
     .body { padding: 14px 16px 16px; }
     h3 { margin: 0 0 6px; font-size: 16px; font-weight: 700; }
     .dates { display: flex; align-items: center; gap: 4px; margin: 0 0 12px; font-size: 12px; color: var(--app-text-muted); }
@@ -60,5 +59,9 @@ export class FestivalCardComponent {
 
   statusLabel(): string {
     return FESTIVAL_STATUS_LABELS[this.festival().status];
+  }
+
+  statusVariant(): StatusBadgeVariant {
+    return FESTIVAL_STATUS_VARIANT[this.festival().status] ?? 'neutral';
   }
 }

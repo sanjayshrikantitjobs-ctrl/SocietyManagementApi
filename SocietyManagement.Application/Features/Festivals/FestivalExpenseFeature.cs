@@ -199,8 +199,14 @@ public class FestivalExpenseCommandHandlers :
         expense.ApprovedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditAction.Approve, "Festivals", nameof(FestivalExpense), expense.Id.ToString(), ct: ct);
-        await _notificationService.SendToAllAsync("FestivalExpenseApproved",
-            new { festivalId = expense.FestivalId, expenseId = expense.Id, amount = expense.Amount }, ct);
+
+        // Was SendToAllAsync — same tenant-isolation fix as
+        // FestivalContributionRecorded: a festival expense belongs to one society.
+        var expenseFestivalSocietyId = await _context.Festivals
+            .Where(f => f.Id == expense.FestivalId).Select(f => f.SocietyId).FirstOrDefaultAsync(ct);
+        await _notificationService.SendToSocietyAsync(expenseFestivalSocietyId, "FestivalExpenseApproved",
+            new { festivalId = expense.FestivalId, expenseId = expense.Id, amount = expense.Amount },
+            "Festival expense approved", $"₹{expense.Amount:0.##} approved", $"festival-expense-{expense.Id}-approved", ct);
         return Unit.Value;
     }
 

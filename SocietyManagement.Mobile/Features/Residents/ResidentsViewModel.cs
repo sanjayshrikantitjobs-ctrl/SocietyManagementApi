@@ -127,6 +127,30 @@ public partial class ResidentsViewModel : ObservableObject
         }
     }
 
+    /// <summary>Same PhoneDialer.Default.Open + fallback pattern already
+    /// used by LoginPage.xaml.cs's "Contact Us" tap — opens the device
+    /// dialer pre-filled, never places the call itself.</summary>
+    [RelayCommand]
+    private async Task CallAsync(object? row)
+    {
+        var phone = row switch
+        {
+            FlatOwnershipGridDto o => o.PrimaryOwnerPhone,
+            FlatTenancyGridDto t => t.PrimaryTenantPhone,
+            _ => null
+        };
+        if (string.IsNullOrWhiteSpace(phone)) return;
+
+        try
+        {
+            PhoneDialer.Default.Open(phone);
+        }
+        catch (Exception)
+        {
+            if (Shell.Current is not null) await Shell.Current.DisplayAlert("Call", phone, "OK");
+        }
+    }
+
     [RelayCommand]
     private async Task OpenFlatDetailAsync(object? flat)
     {

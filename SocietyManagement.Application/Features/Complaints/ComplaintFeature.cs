@@ -184,8 +184,12 @@ public class ComplaintCommandHandlers :
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditAction.Create, "Complaints", nameof(Complaint), complaint.Id.ToString(), ct: ct);
 
+        // societyId scopes the *persisted* notification to this complaint's
+        // own society's admins — the live SignalR group (role-Admin) is
+        // unchanged, still every connected Admin regardless of society.
         await _notificationService.SendToRoleAsync(SocietyManagement.Shared.Constants.Roles.Admin, "ComplaintRaised",
-            new { complaintId = complaint.Id, flatNumber = flat.FlatNumber, title = complaint.Title, priority = complaint.Priority }, ct);
+            new { complaintId = complaint.Id, flatNumber = flat.FlatNumber, title = complaint.Title, priority = complaint.Priority },
+            "New complaint raised", $"Flat {flat.FlatNumber}: {complaint.Title}", complaint.SocietyId, ct: ct);
 
         return complaint.Id;
     }
@@ -244,8 +248,13 @@ public class ComplaintCommandHandlers :
 
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditAction.Update, "Complaints", nameof(Complaint), complaint.Id.ToString(), ct: ct);
+        // No dedupeKey: Assigned/InProgress/Resolved/Reopened can each
+        // legitimately recur across a complaint's reopen cycles, so a
+        // static per-complaint key would wrongly suppress a second,
+        // genuine notification — the Status guard above already prevents
+        // this handler running twice for the same transition.
         await _notificationService.SendToUserAsync(complaint.RaisedByUserId, "ComplaintAssigned",
-            new { complaintId = complaint.Id, title = complaint.Title }, ct);
+            new { complaintId = complaint.Id, title = complaint.Title }, "Complaint assigned", complaint.Title, ct: ct);
         return Unit.Value;
     }
 
@@ -263,7 +272,7 @@ public class ComplaintCommandHandlers :
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditAction.Update, "Complaints", nameof(Complaint), complaint.Id.ToString(), ct: ct);
         await _notificationService.SendToUserAsync(complaint.RaisedByUserId, "ComplaintInProgress",
-            new { complaintId = complaint.Id, title = complaint.Title }, ct);
+            new { complaintId = complaint.Id, title = complaint.Title }, "Complaint in progress", complaint.Title, ct: ct);
         return Unit.Value;
     }
 
@@ -283,7 +292,7 @@ public class ComplaintCommandHandlers :
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditAction.Update, "Complaints", nameof(Complaint), complaint.Id.ToString(), ct: ct);
         await _notificationService.SendToUserAsync(complaint.RaisedByUserId, "ComplaintResolved",
-            new { complaintId = complaint.Id, title = complaint.Title }, ct);
+            new { complaintId = complaint.Id, title = complaint.Title }, "Complaint resolved", complaint.Title, ct: ct);
         return Unit.Value;
     }
 
@@ -322,7 +331,8 @@ public class ComplaintCommandHandlers :
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditAction.Update, "Complaints", nameof(Complaint), complaint.Id.ToString(), ct: ct);
         await _notificationService.SendToRoleAsync(SocietyManagement.Shared.Constants.Roles.Admin, "ComplaintReopened",
-            new { complaintId = complaint.Id, title = complaint.Title, reason = request.Reason }, ct);
+            new { complaintId = complaint.Id, title = complaint.Title, reason = request.Reason },
+            "Complaint reopened", complaint.Title, complaint.SocietyId, ct: ct);
         return Unit.Value;
     }
 

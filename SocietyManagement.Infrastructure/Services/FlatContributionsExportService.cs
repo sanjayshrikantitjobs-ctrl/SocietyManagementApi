@@ -75,6 +75,113 @@ public class FlatContributionsExportService : IFlatContributionsExportService
         return document.GeneratePdf();
     }
 
+    public byte[] GenerateLedgerPdf(ContributionLedgerExportData data)
+    {
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(30);
+                page.DefaultTextStyle(x => x.FontSize(9));
+
+                page.Header().Column(headerColumn =>
+                {
+                    headerColumn.Item().Text(data.SocietyName).FontSize(16).Bold().FontColor(Colors.Blue.Darken2);
+                    headerColumn.Item().Text($"{data.FestivalName} — All Contributions").FontSize(12).SemiBold();
+                    headerColumn.Item().Text(data.FilterLabel).FontSize(9).FontColor(Colors.Grey.Darken1);
+                    headerColumn.Item().PaddingTop(6).LineHorizontal(2).LineColor(Colors.Blue.Darken2);
+                });
+
+                page.Content().PaddingVertical(10).Table(table =>
+                {
+                    table.ColumnsDefinition(columns =>
+                    {
+                        columns.RelativeColumn(2f);   // Donor
+                        columns.RelativeColumn(0.9f); // Flat
+                        columns.RelativeColumn(1.2f); // Amount
+                        columns.RelativeColumn(1.3f); // Method
+                        columns.RelativeColumn(1.3f); // Date
+                        columns.RelativeColumn(1.6f); // Receipt
+                    });
+
+                    void Header(string text) => table.Cell().Background(Colors.Blue.Darken2).Padding(5)
+                        .Text(text).FontColor(Colors.White).SemiBold();
+                    Header("Donor");
+                    Header("Flat");
+                    Header("Amount");
+                    Header("Method");
+                    Header("Date");
+                    Header("Receipt");
+
+                    var alternate = false;
+                    foreach (var row in data.Rows)
+                    {
+                        var bg = alternate ? Colors.Grey.Lighten4 : Colors.White;
+                        alternate = !alternate;
+
+                        void Cell(string text) => table.Cell().Background(bg).Padding(5).Text(text);
+                        Cell(row.Donor);
+                        Cell(row.FlatNumber ?? "Guest");
+                        Cell($"Rs. {row.Amount:N0}");
+                        Cell(row.MethodLabel);
+                        Cell(row.PaymentDate.ToString("dd MMM yyyy"));
+                        Cell(row.ReceiptNumber);
+                    }
+                });
+
+                page.Footer().AlignCenter().Text(
+                    $"Generated on {DateTime.Now:dd MMM yyyy HH:mm} — {data.Rows.Count} contribution(s), total Rs. {data.TotalAmount:N0}.")
+                    .FontSize(8).FontColor(Colors.Grey.Darken1);
+            });
+        });
+
+        return document.GeneratePdf();
+    }
+
+    public byte[] GenerateLedgerExcel(ContributionLedgerExportData data)
+    {
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.Worksheets.Add("All Contributions");
+
+        sheet.Cell(1, 1).Value = data.SocietyName;
+        sheet.Cell(1, 1).Style.Font.Bold = true;
+        sheet.Cell(1, 1).Style.Font.FontSize = 14;
+        sheet.Cell(2, 1).Value = $"{data.FestivalName} — All Contributions";
+        sheet.Cell(3, 1).Value = data.FilterLabel;
+
+        var headerRow = 5;
+        string[] headers = ["Donor", "Flat", "Amount", "Method", "Date", "Receipt", "Transaction ID"];
+        for (var i = 0; i < headers.Length; i++)
+        {
+            sheet.Cell(headerRow, i + 1).Value = headers[i];
+        }
+        sheet.Range(headerRow, 1, headerRow, headers.Length).Style.Font.Bold = true;
+
+        var row = headerRow + 1;
+        foreach (var r in data.Rows)
+        {
+            sheet.Cell(row, 1).Value = r.Donor;
+            sheet.Cell(row, 2).Value = r.FlatNumber ?? "Guest";
+            sheet.Cell(row, 3).Value = r.Amount;
+            sheet.Cell(row, 4).Value = r.MethodLabel;
+            sheet.Cell(row, 5).Value = r.PaymentDate.ToString("dd MMM yyyy");
+            sheet.Cell(row, 6).Value = r.ReceiptNumber;
+            sheet.Cell(row, 7).Value = r.TransactionId ?? "";
+            row++;
+        }
+        sheet.Cell(row, 2).Value = "Total";
+        sheet.Cell(row, 2).Style.Font.Bold = true;
+        sheet.Cell(row, 3).Value = data.TotalAmount;
+        sheet.Cell(row, 3).Style.Font.Bold = true;
+
+        sheet.Columns(1, headers.Length).AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return stream.ToArray();
+    }
+
     public byte[] GenerateExcel(FlatContributionsExportData data)
     {
         using var workbook = new XLWorkbook();

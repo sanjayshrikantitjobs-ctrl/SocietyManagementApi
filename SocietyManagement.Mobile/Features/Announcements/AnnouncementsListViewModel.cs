@@ -5,6 +5,7 @@ using SocietyManagement.Mobile.Api.Generated;
 using SocietyManagement.Mobile.Core;
 using SocietyManagement.Mobile.Core.Auth;
 using SocietyManagement.Mobile.Features.Announcements.Forms;
+using SocietyManagement.Mobile.Shared.Controls;
 
 namespace SocietyManagement.Mobile.Features.Announcements;
 
@@ -26,7 +27,14 @@ public partial class AnnouncementsListViewModel : ObservableObject
         _client = client;
         _currentSocietyService = currentSocietyService;
         Auth = authState;
+        TypeOptions = new ObservableCollection<AnnouncementType>(Enum.GetValues<AnnouncementType>());
     }
+
+    /// <summary>Every AnnouncementType value — the Picker's ItemDisplayBinding
+    /// runs each one through PascalCaseToWordsConverter (already used
+    /// elsewhere for this exact enum), so no separate label list to keep
+    /// in sync with the server-side taxonomy.</summary>
+    public ObservableCollection<AnnouncementType> TypeOptions { get; }
 
     public AuthState Auth { get; }
 
@@ -39,6 +47,19 @@ public partial class AnnouncementsListViewModel : ObservableObject
     /// component.ts's readFilter; only meaningful for a resident's own feed,
     /// since the admin list never resolves IsRead/IsSaved per-user.</summary>
     [ObservableProperty] private string readFilter = "All";
+    [ObservableProperty] private ObservableCollection<FilterChipOption> filterOptions = new();
+    [ObservableProperty] private AnnouncementType? selectedType;
+
+    partial void OnReadFilterChanged(string value) => ApplyFilter();
+
+    /// <summary>Admin's list is server-paginated by type (see LoadAsync);
+    /// the resident feed already has everything loaded (pageSize 100, same
+    /// as Unread/Saved) so it's filtered client-side in ApplyFilter.</summary>
+    partial void OnSelectedTypeChanged(AnnouncementType? value)
+    {
+        if (Auth.IsAdmin) _ = LoadCommand.ExecuteAsync(null);
+        else ApplyFilter();
+    }
 
     [RelayCommand]
     private async Task LoadAsync()
@@ -51,7 +72,7 @@ public partial class AnnouncementsListViewModel : ObservableObject
         try
         {
             var response = Auth.IsAdmin
-                ? await _client.AnnouncementsGETAsync(societyId, null, null, null, 1, 100)
+                ? await _client.AnnouncementsGETAsync(societyId, null, SelectedType, null, 1, 100)
                 : await _client.PublishedAsync(societyId, 1, 100);
             _allAnnouncements = response.Data?.Items?.ToList() ?? new();
             ApplyFilter();
@@ -66,13 +87,6 @@ public partial class AnnouncementsListViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
-    private void SetFilter(string filter)
-    {
-        ReadFilter = filter;
-        ApplyFilter();
-    }
-
     private void ApplyFilter()
     {
         IEnumerable<AnnouncementDto> filtered = ReadFilter switch
@@ -81,7 +95,16 @@ public partial class AnnouncementsListViewModel : ObservableObject
             "Saved" => _allAnnouncements.Where(a => a.IsSaved == true),
             _ => _allAnnouncements
         };
+        if (!Auth.IsAdmin && SelectedType is { } type) filtered = filtered.Where(a => a.Type == type);
         Announcements = new ObservableCollection<AnnouncementDto>(filtered);
+
+        var unreadCount = _allAnnouncements.Count(a => a.IsRead != true);
+        FilterOptions = new ObservableCollection<FilterChipOption>
+        {
+            new("All", "All"),
+            new("Unread", "Unread", unreadCount),
+            new("Saved", "🔖 Saved")
+        };
     }
 
     [RelayCommand]

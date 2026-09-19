@@ -71,6 +71,7 @@ public class AnnouncementLifecycleService : BackgroundService
 
             foreach (var announcement in toPublish)
             {
+                var truncatedMessage = announcement.Description.Length > 200 ? announcement.Description[..200] + "…" : announcement.Description;
                 await notificationService.SendToSocietyAsync(announcement.SocietyId, "AnnouncementPublished", new
                 {
                     AnnouncementId = announcement.Id,
@@ -78,8 +79,8 @@ public class AnnouncementLifecycleService : BackgroundService
                     Type = announcement.Type.ToString(),
                     Priority = announcement.Priority.ToString(),
                     announcement.Title,
-                    Message = announcement.Description.Length > 200 ? announcement.Description[..200] + "…" : announcement.Description
-                }, ct);
+                    Message = truncatedMessage
+                }, announcement.Title, truncatedMessage, $"announcement-{announcement.Id}-published", ct);
             }
 
             if (toPublish.Count > 0)

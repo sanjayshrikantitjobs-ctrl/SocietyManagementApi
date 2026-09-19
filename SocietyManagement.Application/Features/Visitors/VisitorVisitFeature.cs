@@ -170,7 +170,8 @@ public class VisitorVisitCommandHandlers :
             var dto = await ProjectAsync(visit.Id, ct);
             foreach (var userId in residentUserIds)
             {
-                await _notificationService.SendToUserAsync(userId, "VisitorApprovalRequested", dto, ct);
+                await _notificationService.SendToUserAsync(userId, "VisitorApprovalRequested", dto,
+                    "Visitor approval requested", $"{dto.VisitorName} at Flat {dto.FlatNumber}", ct: ct);
             }
 
             // Additive to the SignalR push above, not a replacement — this reaches
@@ -329,7 +330,9 @@ public class VisitorVisitCommandHandlers :
 
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditAction.Approve, "Visitors", nameof(VisitorVisit), visit.Id.ToString(), ct: ct);
-        await _notificationService.SendToUserAsync(visit.CreatedByUserId, "VisitorApproved", await ProjectAsync(visit.Id, ct), ct);
+        var approvedDto = await ProjectAsync(visit.Id, ct);
+        await _notificationService.SendToUserAsync(visit.CreatedByUserId, "VisitorApproved", approvedDto,
+            "Visitor approved", $"{approvedDto.VisitorName} was approved", ct: ct);
     }
 
     private async Task RejectInternalAsync(VisitorVisit visit, int? rejectedByUserId, string? reason, CancellationToken ct)
@@ -341,7 +344,9 @@ public class VisitorVisitCommandHandlers :
 
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditAction.Reject, "Visitors", nameof(VisitorVisit), visit.Id.ToString(), ct: ct);
-        await _notificationService.SendToUserAsync(visit.CreatedByUserId, "VisitorRejected", await ProjectAsync(visit.Id, ct), ct);
+        var rejectedDto = await ProjectAsync(visit.Id, ct);
+        await _notificationService.SendToUserAsync(visit.CreatedByUserId, "VisitorRejected", rejectedDto,
+            "Visitor rejected", $"{rejectedDto.VisitorName} was rejected", ct: ct);
     }
 
     public async Task<Unit> Handle(CheckInVisitCommand request, CancellationToken ct)
@@ -403,7 +408,9 @@ public class VisitorVisitCommandHandlers :
         visit.Status = VisitorVisitStatus.Expired;
         await _context.SaveChangesAsync(ct);
         await _auditService.LogAsync(AuditAction.Update, "Visitors", nameof(VisitorVisit), visit.Id.ToString(), ct: ct);
-        await _notificationService.SendToUserAsync(visit.CreatedByUserId, "VisitorRequestExpired", await ProjectAsync(visit.Id, ct), ct);
+        var expiredDto = await ProjectAsync(visit.Id, ct);
+        await _notificationService.SendToUserAsync(visit.CreatedByUserId, "VisitorRequestExpired", expiredDto,
+            "Visitor request expired", $"{expiredDto.VisitorName}'s request expired", ct: ct);
         return Unit.Value;
     }
 

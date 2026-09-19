@@ -1,8 +1,10 @@
-﻿using Microcharts.Maui;
+﻿using CommunityToolkit.Maui;
+using Microcharts.Maui;
 using Microsoft.Extensions.Logging;
 using Plugin.Maui.OCR;
 using SocietyManagement.Mobile.Core;
 using SocietyManagement.Mobile.Core.Auth;
+using SocietyManagement.Mobile.Core.Signalr;
 using SocietyManagement.Mobile.Features.Announcements;
 using SocietyManagement.Mobile.Features.Announcements.Forms;
 using SocietyManagement.Mobile.Features.Assets;
@@ -19,6 +21,7 @@ using SocietyManagement.Mobile.Features.Finance.Forms;
 using SocietyManagement.Mobile.Features.Maintenance;
 using SocietyManagement.Mobile.Features.Maintenance.Forms;
 using SocietyManagement.Mobile.Features.Maintenance.Payments;
+using SocietyManagement.Mobile.Features.Notifications;
 using SocietyManagement.Mobile.Features.ParkingFines;
 using SocietyManagement.Mobile.Features.Residents;
 using SocietyManagement.Mobile.Features.Residents.Forms;
@@ -42,6 +45,7 @@ public static class MauiProgram
 		var builder = MauiApp.CreateBuilder();
 		builder
 			.UseMauiApp<App>()
+			.UseMauiCommunityToolkit()
 			.UseMicrocharts()
 			.UseOcr()
 			.ConfigureFonts(fonts =>
@@ -54,6 +58,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<AuthState>();
 		builder.Services.AddSingleton<IAuthService, AuthService>();
 		builder.Services.AddSingleton<CurrentSocietyService>();
+		builder.Services.AddSingleton<NotificationHubClient>();
 		builder.Services.AddSocietyApiClients();
 
 		builder.Services.AddTransient<TopBarView>();
@@ -194,6 +199,8 @@ public static class MauiProgram
 		builder.Services.AddTransient<RolesPage>();
 		builder.Services.AddTransient<SupportTicketsViewModel>();
 		builder.Services.AddTransient<SupportTicketsPage>();
+		builder.Services.AddTransient<NotificationCenterViewModel>();
+		builder.Services.AddTransient<NotificationCenterPage>();
 
 		builder.Services.AddTransient<ComingSoonPage>();
 		builder.Services.AddTransient<ContactUsPage>();

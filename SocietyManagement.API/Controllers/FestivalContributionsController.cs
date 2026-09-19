@@ -34,6 +34,26 @@ public class FestivalContributionsController : ApiControllerBase
         return Ok(ApiResponse<decimal>.SuccessResponse(result));
     }
 
+    [HttpGet("export/pdf")]
+    [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExportPdf(
+        [FromQuery] int festivalId, [FromQuery] string? search, [FromQuery] ContributionPaymentMethod? paymentMethod)
+    {
+        var bytes = await Mediator.Send(new GetContributionsExportPdfQuery(festivalId, search, paymentMethod));
+        return File(bytes, "application/pdf", "all-contributions.pdf");
+    }
+
+    [HttpGet("export/excel")]
+    [HasPermission(Permissions.Festivals.View)]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExportExcel(
+        [FromQuery] int festivalId, [FromQuery] string? search, [FromQuery] ContributionPaymentMethod? paymentMethod)
+    {
+        var bytes = await Mediator.Send(new GetContributionsExportExcelQuery(festivalId, search, paymentMethod));
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "all-contributions.xlsx");
+    }
+
     [HttpGet("top-contributors")]
     [HasPermission(Permissions.Festivals.View)]
     [ProducesResponseType(typeof(ApiResponse<List<TopContributorDto>>), StatusCodes.Status200OK)]

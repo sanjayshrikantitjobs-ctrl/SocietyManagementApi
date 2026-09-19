@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:notifications="clr-namespace:SocietyManagement.Mobile.Features.Notifications"
+             xmlns:gen="clr-namespace:SocietyManagement.Mobile.Api.Generated"
+             x:Class="SocietyManagement.Mobile.Features.Notifications.NotificationCenterPage"
+             x:DataType="notifications:NotificationCenterViewModel"
+             x:Name="Root"
+             Title="Notifications">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+        <Label Grid.Row="1" Style="{StaticResource ErrorText}" Margin="16,0" Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <Button Grid.Row="2" Margin="16,10" Text="Mark all read" Command="{Binding MarkAllReadCommand}"
+                HorizontalOptions="Start" />
+
+        <RefreshView Grid.Row="3" Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+            <CollectionView ItemsSource="{Binding Notifications}" SelectionMode="Single" SelectionChanged="OnNotificationSelected">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Margin="0,24" Spacing="4">
+                        <Label Text="You're all caught up." Style="{StaticResource Muted}" HorizontalOptions="Center" />
+                        <Label Text="Notifications about your complaints, visitors, festivals and more will show up here."
+                               Style="{StaticResource Muted}" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="gen:NotificationDto">
+                        <Border Style="{StaticResource RowCard}" Margin="14,7">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding Title}" FontAttributes="Bold" />
+                                <Label Grid.Row="1" Grid.Column="0" Text="{Binding Message}" MaxLines="3" LineBreakMode="TailTruncation"
+                                       Style="{StaticResource Muted}" Margin="0,2,0,0" />
+                                <Label Grid.Row="2" Grid.Column="0" Text="{Binding CreatedAt, StringFormat='{0:MMM d, yyyy h:mm tt}'}"
+                                       Style="{StaticResource Muted}" FontSize="11" Margin="0,4,0,0" />
+                                <Label Grid.Row="0" Grid.Column="1" Text="●" TextColor="{StaticResource Primary}"
+                                       IsVisible="{Binding IsRead, Converter={StaticResource EqualsConverter}, ConverterParameter=False}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+
+</ContentPage>

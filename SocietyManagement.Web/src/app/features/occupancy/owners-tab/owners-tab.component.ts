@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { PageEvent } from '@angular/material/paginator';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { PromptDialogComponent } from '../../../shared/components/prompt-dialog/prompt-dialog.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
@@ -31,7 +32,7 @@ import { OccupancyService } from '../services/occupancy.service';
   standalone: true,
   imports: [
     CommonModule, MatButtonModule, MatCheckboxModule, MatChipsModule, MatIconModule, MatSortModule,
-    MatTableModule, DataTableComponent, StatCardComponent
+    MatTableModule, MatTooltipModule, DataTableComponent, StatCardComponent
   ],
   template: `
     <div class="tab-content">
@@ -79,7 +80,13 @@ import { OccupancyService } from '../services/occupancy.service';
           </ng-container>
           <ng-container matColumnDef="phone">
             <th mat-header-cell *matHeaderCellDef>Mobile</th>
-            <td mat-cell *matCellDef="let r">{{ r.primaryOwnerPhone ?? '—' }}</td>
+            <td mat-cell *matCellDef="let r">
+              @if (r.primaryOwnerPhone) {
+                <a class="quick-dial" [href]="'tel:' + r.primaryOwnerPhone" (click)="$event.stopPropagation()" [matTooltip]="'Call ' + r.primaryOwnerPhone">
+                  <mat-icon>call</mat-icon>{{ r.primaryOwnerPhone }}
+                </a>
+              } @else { — }
+            </td>
           </ng-container>
           <ng-container matColumnDef="members">
             <th mat-header-cell *matHeaderCellDef mat-sort-header="membercount">Members</th>
@@ -108,6 +115,9 @@ import { OccupancyService } from '../services/occupancy.service';
     .clickable-row:hover { background: var(--app-surface-alt); }
     .owned { background: #dcfce7 !important; color: #15803d !important; }
     .vacant { background: #f1f5f9 !important; color: #64748b !important; }
+    .quick-dial { display: inline-flex; align-items: center; gap: 4px; color: var(--app-primary); text-decoration: none; font-size: 13px; }
+    .quick-dial:hover { text-decoration: underline; }
+    .quick-dial mat-icon { font-size: 16px; width: 16px; height: 16px; }
   `]
 })
 export class OwnersTabComponent implements OnInit {

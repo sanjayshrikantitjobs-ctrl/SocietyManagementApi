@@ -1,4 +1,5 @@
 using SocietyManagement.Mobile.Core.Auth;
+using SocietyManagement.Mobile.Core.Signalr;
 using SocietyManagement.Mobile.Features.Announcements;
 using SocietyManagement.Mobile.Features.Announcements.Forms;
 using SocietyManagement.Mobile.Features.Assets;
@@ -13,6 +14,7 @@ using SocietyManagement.Mobile.Features.Festivals.Forms;
 using SocietyManagement.Mobile.Features.Maintenance;
 using SocietyManagement.Mobile.Features.Maintenance.Forms;
 using SocietyManagement.Mobile.Features.Maintenance.Payments;
+using SocietyManagement.Mobile.Features.Notifications;
 using SocietyManagement.Mobile.Features.Residents;
 using SocietyManagement.Mobile.Features.Residents.Forms;
 using SocietyManagement.Mobile.Features.Societies;
@@ -25,14 +27,29 @@ namespace SocietyManagement.Mobile;
 public partial class AppShell : Shell
 {
     private readonly IAuthService _authService;
+    private readonly NotificationHubClient _notificationHub;
     private readonly AppFlyoutMenuView _flyoutMenu;
 
-    public AppShell(IAuthService authService, AuthState authState)
+    public AppShell(IAuthService authService, AuthState authState, NotificationHubClient notificationHub)
     {
         InitializeComponent();
         _authService = authService;
+        _notificationHub = notificationHub;
+
+        // Starts/stops the one shared hub connection on the same
+        // login/logout signal every other AuthState subscriber already
+        // reacts to — no separate auth wiring for real-time delivery.
+        authState.PropertyChanged += async (_, e) =>
+        {
+            if (e.PropertyName != nameof(AuthState.IsAuthenticated)) return;
+            if (authState.IsAuthenticated) await _notificationHub.StartAsync();
+            else await _notificationHub.StopAsync();
+        };
         Routing.RegisterRoute(nameof(ComingSoonPage), typeof(ComingSoonPage));
         Routing.RegisterRoute(nameof(ContactUsPage), typeof(ContactUsPage));
+        // Reachable only from TopBarView's notification bell — not a flyout
+        // destination of its own, same as ChangePasswordPage below.
+        Routing.RegisterRoute(nameof(NotificationCenterPage), typeof(NotificationCenterPage));
         // Reachable only via query-parameter navigation from FestivalsListPage
         // (a festival "detail push", not a flyout destination of its own).
         Routing.RegisterRoute(nameof(FestivalDetailPage), typeof(FestivalDetailPage));

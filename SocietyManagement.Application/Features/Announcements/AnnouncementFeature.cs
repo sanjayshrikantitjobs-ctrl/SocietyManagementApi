@@ -150,6 +150,7 @@ public class AnnouncementCommandHandlers :
         announcement.PublishAt ??= DateTime.UtcNow;
         await _context.SaveChangesAsync(ct);
 
+        var truncatedMessage = announcement.Description.Length > 200 ? announcement.Description[..200] + "…" : announcement.Description;
         await _notificationService.SendToSocietyAsync(announcement.SocietyId, "AnnouncementPublished", new
         {
             AnnouncementId = announcement.Id,
@@ -157,8 +158,8 @@ public class AnnouncementCommandHandlers :
             Type = announcement.Type.ToString(),
             Priority = announcement.Priority.ToString(),
             announcement.Title,
-            Message = announcement.Description.Length > 200 ? announcement.Description[..200] + "…" : announcement.Description
-        }, ct);
+            Message = truncatedMessage
+        }, announcement.Title, truncatedMessage, $"announcement-{announcement.Id}-published", ct);
     }
 
     public async Task<int> Handle(CreateAnnouncementCommand request, CancellationToken ct)
@@ -185,6 +186,7 @@ public class AnnouncementCommandHandlers :
 
         if (request.PublishNow)
         {
+            var truncatedMessage = announcement.Description.Length > 200 ? announcement.Description[..200] + "…" : announcement.Description;
             await _notificationService.SendToSocietyAsync(announcement.SocietyId, "AnnouncementPublished", new
             {
                 AnnouncementId = announcement.Id,
@@ -192,8 +194,8 @@ public class AnnouncementCommandHandlers :
                 Type = announcement.Type.ToString(),
                 Priority = announcement.Priority.ToString(),
                 announcement.Title,
-                Message = announcement.Description.Length > 200 ? announcement.Description[..200] + "…" : announcement.Description
-            }, ct);
+                Message = truncatedMessage
+            }, announcement.Title, truncatedMessage, $"announcement-{announcement.Id}-published", ct);
         }
 
         return announcement.Id;

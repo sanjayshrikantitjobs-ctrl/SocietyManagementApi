@@ -1,7 +1,10 @@
 using System.Runtime.CompilerServices;
+using SocietyManagement.Mobile.Api.Generated;
 using SocietyManagement.Mobile.Core;
 using SocietyManagement.Mobile.Core.Auth;
+using SocietyManagement.Mobile.Core.Signalr;
 using SocietyManagement.Mobile.Features.Auth;
+using SocietyManagement.Mobile.Features.Notifications;
 
 namespace SocietyManagement.Mobile.Shared;
 
@@ -21,10 +24,13 @@ public partial class TopBarView : ContentView
     private readonly CurrentSocietyService? _currentSocietyService;
     private readonly AuthState? _authState;
     private readonly IAuthService? _authService;
+    private readonly NotificationHubClient? _notificationHub;
+    private readonly NotificationsClient? _notificationsClient;
 
     private string _societyName = "Society Management";
     private string? _societyAddress;
     private string _themeIcon = "\U0001F319"; // 🌙
+    private int _unreadNotificationCount;
 
     public string SocietyName
     {
@@ -44,18 +50,52 @@ public partial class TopBarView : ContentView
         set { _themeIcon = value; RaisePropertyChanged(); }
     }
 
+    public int UnreadNotificationCount
+    {
+        get => _unreadNotificationCount;
+        set { _unreadNotificationCount = value; RaisePropertyChanged(); }
+    }
+
     public TopBarView()
     {
         InitializeComponent();
     }
 
-    public TopBarView(CurrentSocietyService currentSocietyService, AuthState authState, IAuthService authService) : this()
+    public TopBarView(CurrentSocietyService currentSocietyService, AuthState authState, IAuthService authService,
+        NotificationHubClient notificationHub, NotificationsClient notificationsClient) : this()
     {
         _currentSocietyService = currentSocietyService;
         _authState = authState;
         _authService = authService;
+        _notificationHub = notificationHub;
+        _notificationsClient = notificationsClient;
         UpdateThemeIcon();
         Loaded += async (_, _) => await LoadSocietyAsync();
+        Loaded += async (_, _) => await LoadUnreadCountAsync();
+        // NotificationReceived fires for every open TopBarView instance since
+        // NotificationHubClient is a Singleton — cheap (one int fetch) and
+        // keeps the badge live on whichever page is currently shown, same as
+        // Web's main-layout re-fetching its own badge on the same signal.
+        _notificationHub.NotificationReceived += OnNotificationReceived;
+        Unloaded += (_, _) => _notificationHub.NotificationReceived -= OnNotificationReceived;
+    }
+
+    private void OnNotificationReceived() =>
+        MainThread.BeginInvokeOnMainThread(async () => await LoadUnreadCountAsync());
+
+    private async Task LoadUnreadCountAsync()
+    {
+        if (_notificationsClient is null) return;
+        try
+        {
+            var response = await _notificationsClient.UnreadCount2Async();
+            UnreadNotificationCount = response.Data ?? 0;
+        }
+        catch
+        {
+            // Badge is cosmetic — a failed lookup just leaves the last known
+            // count (0 on first load), never blocks the top bar.
+        }
     }
 
     private async Task LoadSocietyAsync()
@@ -77,7 +117,7 @@ public partial class TopBarView : ContentView
 
     private async void OnNotificationsTapped(object? sender, TappedEventArgs e)
     {
-        await AppShell.GoToComingSoonAsync("Notifications");
+        await Shell.Current.GoToAsync(nameof(NotificationCenterPage));
     }
 
     private void OnThemeToggleTapped(object? sender, TappedEventArgs e)

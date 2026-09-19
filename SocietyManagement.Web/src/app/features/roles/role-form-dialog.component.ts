@@ -25,7 +25,26 @@ const ROLE_PRESETS: { label: string; codes: string[] }[] = [
       'festivals.view', 'festivals.manage', 'festivals.expense.approve',
       'complaints.view', 'complaints.manage'
     ]
+  },
+  {
+    label: 'Security Head',
+    codes: [
+      'visitors.view', 'visitors.approve', 'visitors.reject', 'visitors.checkin', 'visitors.checkout',
+      'visitors.view_history', 'visitors.manage_gates', 'visitors.manage_purposes',
+      'vehicles.scan', 'vehicles.search', 'vehicles.register',
+      'parking_fines.view', 'parking_fines.create',
+      'staff.view'
+    ]
   }
+  // An "Accountant" preset was considered but doesn't hold up yet: /finance
+  // has no permission code at all today — its route and every backend
+  // endpoint under it check role === 'Admin' directly, not a granular
+  // permission (unlike Complaints/Staff, which already had the permission
+  // codes and just needed their role-literal checks swapped out — see
+  // app.routes.ts). Offering the preset would silently not work. Adding a
+  // finance.view/finance.manage permission is a real option, but it's a
+  // backend/access-control decision on financial data specifically, so
+  // left for an explicit follow-up rather than done as a side effect here.
 ];
 
 /**

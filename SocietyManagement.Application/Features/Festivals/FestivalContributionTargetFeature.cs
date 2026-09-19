@@ -385,9 +385,12 @@ public class FlatContributionQueryHandlers :
     {
         var all = await BuildFlatContributionsAsync(request.FestivalId, ct);
 
+        // Flats with no target may simply be declining to pay, so they're
+        // left out of the "X / Y flats paid" denominator (their target is 0,
+        // so the amount totals are unaffected either way).
         return new FlatContributionKpisDto
         {
-            TotalFlats = all.Count,
+            TotalFlats = all.Count(f => f.Status != FlatContributionStatus.NoTarget),
             TotalTargetAmount = all.Sum(f => f.TargetAmount),
             TotalPaidAmount = all.Sum(f => f.PaidAmount),
             TotalOutstandingAmount = all.Sum(f => f.OutstandingAmount),
@@ -402,6 +405,11 @@ public class FlatContributionQueryHandlers :
     {
         var all = await BuildFlatContributionsAsync(request.FestivalId, ct);
         all = ApplyFilters(all, request.Search, request.Statuses);
+
+        // No-target flats aren't counted in the summary unless the user
+        // explicitly filtered to them.
+        if (request.Statuses is not { Count: > 0 } || !request.Statuses.Contains(FlatContributionStatus.NoTarget))
+            all = all.Where(f => f.Status != FlatContributionStatus.NoTarget).ToList();
 
         return new FlatContributionsSumDto
         {

@@ -10,15 +10,17 @@ import { MatSelectModule } from '@angular/material/select';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { FilterBarComponent, FilterBarOption } from '../../shared/components/filter-bar/filter-bar.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader/skeleton-loader.component';
+import { StatusBadgeComponent, StatusBadgeVariant } from '../../shared/components/status-badge/status-badge.component';
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
 import { Society } from '../../core/models/society.model';
 import { SocietyService } from '../society-setup/services/society.service';
 import { AnnouncementFormDialogComponent } from './announcement-form-dialog.component';
 import {
   ANNOUNCEMENT_PRIORITY_LABELS, ANNOUNCEMENT_STATUS_LABELS, ANNOUNCEMENT_TYPE_LABELS,
-  AnnouncementDto, AnnouncementStatus
+  AnnouncementDto, AnnouncementStatus, AnnouncementType
 } from './models/announcement.model';
 import { AnnouncementService } from './services/announcement.service';
 
@@ -27,7 +29,7 @@ import { AnnouncementService } from './services/announcement.service';
   standalone: true,
   imports: [
     CommonModule, MatButtonModule, MatFormFieldModule, MatIconModule, MatMenuModule, MatSelectModule,
-    EmptyStateComponent, PageHeaderComponent, SkeletonLoaderComponent
+    EmptyStateComponent, FilterBarComponent, PageHeaderComponent, SkeletonLoaderComponent, StatusBadgeComponent
   ],
   template: `
     <div class="app-page">
@@ -39,6 +41,13 @@ import { AnnouncementService } from './services/announcement.service';
           </mat-select>
         </mat-form-field>
       }
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="type-filter">
+        <mat-label>Type</mat-label>
+        <mat-select [value]="typeFilter()" (selectionChange)="onTypeFilterChange($event.value)">
+          <mat-option [value]="null">All Types</mat-option>
+          @for (t of typeOptions; track t.value) { <mat-option [value]="t.value">{{ t.label }}</mat-option> }
+        </mat-select>
+      </mat-form-field>
       @if (canManage()) {
         <mat-form-field appearance="outline" subscriptSizing="dynamic" class="status-filter">
           <mat-label>Status</mat-label>
@@ -54,15 +63,8 @@ import { AnnouncementService } from './services/announcement.service';
     </app-page-header>
 
     @if (!canManage() && !loading() && announcements().length > 0) {
-      <div class="read-filters">
-        <button mat-stroked-button [class.active]="readFilter() === 'all'" (click)="readFilter.set('all')">All</button>
-        <button mat-stroked-button [class.active]="readFilter() === 'unread'" (click)="readFilter.set('unread')">
-          Unread @if (unreadCount() > 0) { <span class="count-pill">{{ unreadCount() }}</span> }
-        </button>
-        <button mat-stroked-button [class.active]="readFilter() === 'saved'" (click)="readFilter.set('saved')">
-          <mat-icon inline>bookmark</mat-icon> Saved
-        </button>
-      </div>
+      <app-filter-bar class="read-filters" [options]="readFilterOptions()" [selected]="readFilter()"
+        (selectedChange)="onReadFilterChange($event)" />
     }
 
     @if (loading()) {
@@ -82,7 +84,7 @@ import { AnnouncementService } from './services/announcement.service';
               <div class="card-title-row">
                 @if (!canManage() && !a.isRead) { <span class="unread-dot"></span> }
                 <span class="title">{{ a.title }}</span>
-                <span class="badge priority-{{ a.priority }}">{{ priorityLabel(a) }}</span>
+                <app-status-badge [variant]="priorityVariant(a)" [label]="priorityLabel(a)" />
               </div>
               <div class="meta">
                 <span class="type">{{ typeLabel(a) }}</span>
@@ -90,7 +92,7 @@ import { AnnouncementService } from './services/announcement.service';
                 <span>{{ a.publishAt ?? a.createdAt | date: 'mediumDate' }}</span>
                 @if (canManage()) {
                   <span class="dot">&middot;</span>
-                  <span class="status status-{{ a.status }}">{{ statusLabel(a) }}</span>
+                  <app-status-badge [variant]="statusVariant(a)" [label]="statusLabel(a)" />
                 }
               </div>
               <p class="excerpt">{{ a.description }}</p>
@@ -123,11 +125,8 @@ import { AnnouncementService } from './services/announcement.service';
   styles: [`
     .society-picker { width: 200px; margin-right: 8px; }
     .status-filter { width: 160px; margin-right: 8px; }
-    .read-filters { display: flex; gap: 8px; margin-bottom: 16px; }
-    .read-filters button { border-radius: 20px; }
-    .read-filters button.active { background: var(--app-primary-light, #eef1fe); color: var(--app-primary, #4f6ef7); border-color: var(--app-primary, #4f6ef7); }
-    .read-filters mat-icon[inline] { font-size: 16px; height: 16px; width: 16px; vertical-align: -2px; margin-right: 2px; }
-    .count-pill { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 8px; background: var(--app-primary, #4f6ef7); color: #fff; font-size: 11px; line-height: 16px; }
+    .type-filter { width: 180px; margin-right: 8px; }
+    .read-filters { display: block; margin-bottom: 16px; }
     .list { display: flex; flex-direction: column; gap: 12px; }
     .save-btn mat-icon { color: var(--app-text-muted); }
     .save-btn.saved mat-icon { color: var(--app-primary, #4f6ef7); }
@@ -141,15 +140,7 @@ import { AnnouncementService } from './services/announcement.service';
     .card-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
     .unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--app-primary, #4f6ef7); flex-shrink: 0; }
     .title { font-weight: 600; font-size: 15px; }
-    .badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #eee; color: #555; }
-    .badge.priority-3 { background: #fff3e0; color: #b25f00; }
-    .badge.priority-4 { background: #fdecea; color: #c0392b; }
     .meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--app-text-muted); margin-bottom: 8px; }
-    .status { font-weight: 500; }
-    .status-1 { color: #888; }
-    .status-2 { color: #b26a00; }
-    .status-3 { color: #2e7d32; }
-    .status-4 { color: #999; }
     .excerpt { margin: 0; font-size: 13px; color: var(--app-text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .danger { color: #c0392b; }
   `]
@@ -168,17 +159,33 @@ export class AnnouncementsListComponent implements OnInit {
   readonly societyId = signal(0);
   readonly announcements = signal<AnnouncementDto[]>([]);
   readonly statusFilter = signal<AnnouncementStatus | null>(null);
+  readonly typeFilter = signal<AnnouncementType | null>(null);
   readonly readFilter = signal<'all' | 'unread' | 'saved'>('all');
 
   readonly unreadCount = computed(() => this.announcements().filter((a) => !a.isRead).length);
   readonly visibleAnnouncements = computed(() => {
     const filter = this.readFilter();
-    if (filter === 'unread') return this.announcements().filter((a) => !a.isRead);
-    if (filter === 'saved') return this.announcements().filter((a) => a.isSaved);
-    return this.announcements();
+    let list = this.announcements();
+    if (filter === 'unread') list = list.filter((a) => !a.isRead);
+    if (filter === 'saved') list = list.filter((a) => a.isSaved);
+    // Admin's Type filter round-trips to the server (see load()); the
+    // resident feed is already fully loaded (pageSize 100, same as the
+    // Unread/Saved filters above), so it's filtered the same way here.
+    if (!this.canManage() && this.typeFilter() !== null) list = list.filter((a) => a.type === this.typeFilter());
+    return list;
   });
+  readonly readFilterOptions = computed<FilterBarOption[]>(() => [
+    { value: 'all', label: 'All' },
+    { value: 'unread', label: 'Unread', count: this.unreadCount() },
+    { value: 'saved', label: '🔖 Saved' }
+  ]);
+
+  onReadFilterChange(value: string): void {
+    if (value === 'all' || value === 'unread' || value === 'saved') this.readFilter.set(value);
+  }
 
   readonly statusOptions = Object.entries(ANNOUNCEMENT_STATUS_LABELS).map(([value, label]) => ({ value: Number(value), label }));
+  readonly typeOptions = Object.entries(ANNOUNCEMENT_TYPE_LABELS).map(([value, label]) => ({ value: Number(value), label }));
 
   canManage(): boolean {
     return this.auth.hasPermission('notices.manage');
@@ -192,6 +199,12 @@ export class AnnouncementsListComponent implements OnInit {
   }
   statusLabel(a: AnnouncementDto): string {
     return ANNOUNCEMENT_STATUS_LABELS[a.status];
+  }
+  priorityVariant(a: AnnouncementDto): StatusBadgeVariant {
+    return ({ 1: 'neutral', 2: 'neutral', 3: 'warning', 4: 'danger' } as Record<number, StatusBadgeVariant>)[a.priority] ?? 'neutral';
+  }
+  statusVariant(a: AnnouncementDto): StatusBadgeVariant {
+    return ({ 1: 'neutral', 2: 'warning', 3: 'success', 4: 'neutral' } as Record<number, StatusBadgeVariant>)[a.status] ?? 'neutral';
   }
 
   ngOnInit(): void {
@@ -216,10 +229,19 @@ export class AnnouncementsListComponent implements OnInit {
     this.load();
   }
 
+  onTypeFilterChange(type: AnnouncementType | null): void {
+    this.typeFilter.set(type);
+    // Admin's list is server-paginated by type; the resident feed already
+    // has everything loaded and just re-runs visibleAnnouncements() below.
+    if (this.canManage()) this.load();
+  }
+
   load(): void {
     this.loading.set(true);
     const request$ = this.canManage()
-      ? this.announcementService.getAnnouncements({ societyId: this.societyId(), status: this.statusFilter() ?? undefined, pageSize: 100 })
+      ? this.announcementService.getAnnouncements({
+          societyId: this.societyId(), status: this.statusFilter() ?? undefined, type: this.typeFilter() ?? undefined, pageSize: 100
+        })
       : this.announcementService.getPublished({ societyId: this.societyId(), pageSize: 100 });
 
     request$.subscribe((result) => {

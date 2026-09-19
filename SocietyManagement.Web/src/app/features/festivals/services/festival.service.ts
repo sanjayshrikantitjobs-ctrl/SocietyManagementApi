@@ -137,6 +137,12 @@ export class FestivalService {
   exportFlatContributionsExcel(params: { festivalId: number; search?: string; statuses?: FlatContributionStatus[] }): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/festival-contributions/flat-summary/export/excel`, { params: toHttpParams(params), responseType: 'blob' });
   }
+  exportContributionsPdf(params: { festivalId: number; search?: string; paymentMethod?: number }): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/festival-contributions/export/pdf`, { params: toHttpParams(params), responseType: 'blob' });
+  }
+  exportContributionsExcel(params: { festivalId: number; search?: string; paymentMethod?: number }): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/festival-contributions/export/excel`, { params: toHttpParams(params), responseType: 'blob' });
+  }
   setContributionTargets(festivalId: number, targetAmount: number): Observable<number> {
     return this.http.post<ApiResponse<number>>(`${this.baseUrl}/festival-contributions/targets`, { festivalId, targetAmount })
       .pipe(map((r) => r.data!));

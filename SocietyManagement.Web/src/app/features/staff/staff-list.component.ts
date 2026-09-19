@@ -10,6 +10,7 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { DataTableComponent } from '../../shared/components/data-table/data-table.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { SocietyService } from '../society-setup/services/society.service';
 import { StaffFormDialogComponent } from './staff-form-dialog.component';
@@ -27,7 +28,9 @@ import { StaffService } from './services/staff.service';
     <div class="app-page">
       <app-page-header title="Staff" subtitle="Society employees — watchmen, sweepers, gardeners, and more."
         [breadcrumbs]="[{ label: 'Staff' }]">
-        <button mat-flat-button color="primary" (click)="add()"><mat-icon>add</mat-icon> Add Staff</button>
+        @if (canManage()) {
+          <button mat-flat-button color="primary" (click)="add()"><mat-icon>add</mat-icon> Add Staff</button>
+        }
       </app-page-header>
 
       <app-data-table
@@ -79,6 +82,11 @@ export class StaffListComponent implements OnInit {
   private readonly staffService = inject(StaffService);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
+  private readonly auth = inject(AuthService);
+
+  canManage(): boolean {
+    return this.auth.hasPermission('staff.manage');
+  }
 
   readonly loading = signal(true);
   readonly rows = signal<StaffDto[]>([]);

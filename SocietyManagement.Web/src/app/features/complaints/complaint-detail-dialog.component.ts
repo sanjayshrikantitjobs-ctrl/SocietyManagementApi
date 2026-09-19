@@ -153,7 +153,13 @@ export class ComplaintDetailDialogComponent implements OnInit {
   readonly loading = signal(true);
   readonly complaint = signal<ComplaintDto | null>(null);
   readonly staffOptions = signal<StaffDto[]>([]);
-  readonly isAdmin = this.auth.isAdmin;
+  // Was auth.isAdmin (role-literal) — meant a Committee Member custom role
+  // could never manage a complaint even after being granted
+  // complaints.manage, since this checked "is your role literally Admin,"
+  // not the permission. Same fix as the /complaints route guard.
+  isAdmin(): boolean {
+    return this.auth.hasPermission('complaints.manage');
+  }
 
   selectedStaffId: number | null = null;
   resolutionNotes = '';

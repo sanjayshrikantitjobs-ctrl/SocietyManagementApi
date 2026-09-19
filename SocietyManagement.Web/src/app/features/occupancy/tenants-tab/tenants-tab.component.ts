@@ -2,9 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
 import { PageEvent } from '@angular/material/paginator';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 import { SocietyService } from '../../society-setup/services/society.service';
@@ -18,7 +20,10 @@ import { OccupancyService } from '../services/occupancy.service';
 @Component({
   selector: 'app-tenants-tab',
   standalone: true,
-  imports: [CommonModule, MatChipsModule, MatSortModule, MatTableModule, DataTableComponent, StatCardComponent],
+  imports: [
+    CommonModule, MatChipsModule, MatIconModule, MatSortModule, MatTableModule, MatTooltipModule,
+    DataTableComponent, StatCardComponent
+  ],
   template: `
     <div class="tab-content">
       @if (summary(); as s) {
@@ -50,7 +55,13 @@ import { OccupancyService } from '../services/occupancy.service';
           </ng-container>
           <ng-container matColumnDef="phone">
             <th mat-header-cell *matHeaderCellDef>Mobile</th>
-            <td mat-cell *matCellDef="let r">{{ r.primaryTenantPhone ?? '—' }}</td>
+            <td mat-cell *matCellDef="let r">
+              @if (r.primaryTenantPhone) {
+                <a class="quick-dial" [href]="'tel:' + r.primaryTenantPhone" (click)="$event.stopPropagation()" [matTooltip]="'Call ' + r.primaryTenantPhone">
+                  <mat-icon>call</mat-icon>{{ r.primaryTenantPhone }}
+                </a>
+              } @else { — }
+            </td>
           </ng-container>
           <ng-container matColumnDef="members">
             <th mat-header-cell *matHeaderCellDef mat-sort-header="membercount">Members</th>
@@ -77,6 +88,9 @@ import { OccupancyService } from '../services/occupancy.service';
     .clickable-row:hover { background: var(--app-surface-alt); }
     .rented { background: #fef3c7 !important; color: #b45309 !important; }
     .vacant { background: #f1f5f9 !important; color: #64748b !important; }
+    .quick-dial { display: inline-flex; align-items: center; gap: 4px; color: var(--app-primary); text-decoration: none; font-size: 13px; }
+    .quick-dial:hover { text-decoration: underline; }
+    .quick-dial mat-icon { font-size: 16px; width: 16px; height: 16px; }
   `]
 })
 export class TenantsTabComponent implements OnInit {

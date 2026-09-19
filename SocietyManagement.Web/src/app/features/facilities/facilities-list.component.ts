@@ -14,6 +14,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader/skeleton-loader.component';
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
+import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { Society } from '../../core/models/society.model';
 import { SocietyService } from '../society-setup/services/society.service';
 import { FacilityBookingFormDialogComponent } from './facility-booking-form-dialog.component';
@@ -26,7 +27,7 @@ import { FacilityService } from './services/facility.service';
   standalone: true,
   imports: [
     CommonModule, RouterLink, MatButtonModule, MatFormFieldModule, MatIconModule, MatMenuModule, MatSelectModule,
-    AssetUrlPipe, EmptyStateComponent, PageHeaderComponent, SkeletonLoaderComponent
+    AssetUrlPipe, EmptyStateComponent, PageHeaderComponent, SkeletonLoaderComponent, StatusBadgeComponent
   ],
   template: `
     <div class="app-page">
@@ -70,7 +71,7 @@ import { FacilityService } from './services/facility.service';
               </div>
               <div class="meta">{{ typeLabel(f) }} &middot; Capacity {{ f.capacity }}</div>
               <div class="price">{{ f.pricePerUnit | currency: 'INR' }} / {{ pricingLabel(f) }}</div>
-              @if (!f.isActive) { <span class="badge">Inactive</span> }
+              @if (!f.isActive) { <app-status-badge variant="neutral" label="Inactive" /> }
               @if (f.isActive) {
                 <button mat-stroked-button color="primary" class="book-btn" (click)="$event.stopPropagation(); bookFacility(f)">Book</button>
               }
@@ -93,7 +94,6 @@ import { FacilityService } from './services/facility.service';
     .title { font-weight: 600; font-size: 15px; }
     .meta { font-size: 12px; color: var(--app-text-muted); margin-top: 4px; }
     .price { font-size: 13px; font-weight: 600; margin-top: 6px; }
-    .badge { display: inline-block; margin-top: 6px; font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #f0f0f0; color: #888; }
     .book-btn { display: block; width: 100%; margin-top: 10px; }
     .danger { color: #c0392b; }
   `]

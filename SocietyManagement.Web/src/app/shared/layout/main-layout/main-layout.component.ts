@@ -21,6 +21,8 @@ import { LoadingService } from '../../../core/services/loading.service';
 import { SignalrService } from '../../../core/services/signalr.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { AssetUrlPipe } from '../../pipes/asset-url.pipe';
+import { NotificationPanelComponent } from '../../components/notification-panel/notification-panel.component';
+import { NotificationService } from '../../services/notification.service';
 import { SocietyServiceService } from '../../../features/services/services/society-service.service';
 
 const EXPIRING_SERVICES_POLL_MS = 5 * 60 * 1000;
@@ -100,7 +102,7 @@ const GROUP_ICONS: Record<string, string> = {
   imports: [
     CommonModule, RouterOutlet, RouterLink, RouterLinkActive, MatSidenavModule, MatToolbarModule,
     MatListModule, MatIconModule, MatButtonModule, MatMenuModule, MatDividerModule,
-    MatProgressBarModule, MatTooltipModule, MatBadgeModule, AssetUrlPipe
+    MatProgressBarModule, MatTooltipModule, MatBadgeModule, AssetUrlPipe, NotificationPanelComponent
   ],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss'
@@ -116,10 +118,16 @@ export class MainLayoutComponent {
   private readonly signalr = inject(SignalrService);
   private readonly router = inject(Router);
   private readonly servicesApi = inject(SocietyServiceService);
+  private readonly notificationService = inject(NotificationService);
 
   // Topbar notification bell — a live count, not a persisted inbox (see
   // SocietyServiceFeature.cs's GetExpiringServicesQuery comment for why).
+  // Left exactly as-is — the real Notification Center bell below is a
+  // second, separate affordance, not a repurposing of this one.
   readonly expiringServicesCount = signal(0);
+
+  // The real, persisted Notification Center's bell/badge.
+  readonly unreadNotificationCount = signal(0);
 
   readonly currentYear = new Date().getFullYear();
 
@@ -168,6 +176,23 @@ export class MainLayoutComponent {
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.loadExpiringServicesCount());
 
+    if (this.auth.isAuthenticated()) this.loadUnreadNotificationCount();
+
+    // Reuses the SignalR connection SignalrService already holds — no
+    // second connection, no second delivery channel. Its notifications()
+    // signal only changes when a real event arrives (see SignalrService),
+    // so re-fetching the authoritative unread count from the server here is
+    // simpler and safer than trying to optimistically track "did this
+    // specific push increase MY count" client-side. Skips the initial
+    // (empty-array) run so login doesn't fire a redundant extra request on
+    // top of the one above.
+    let sawFirstRun = false;
+    effect(() => {
+      this.signalr.notifications();
+      if (!sawFirstRun) { sawFirstRun = true; return; }
+      this.loadUnreadNotificationCount();
+    });
+
     // Keeps whichever group the current route lives in expanded — fires on
     // every navigation (including the very first one, so a hard refresh or
     // deep link into a nested page like /facility-bookings still opens
@@ -215,6 +240,11 @@ export class MainLayoutComponent {
 
   openExpiringServices(): void {
     this.router.navigate(['/services']);
+  }
+
+  private loadUnreadNotificationCount(): void {
+    if (!this.auth.isAuthenticated()) return;
+    this.notificationService.getUnreadCount().subscribe((count) => this.unreadNotificationCount.set(count));
   }
 
   toggleSidenav(): void {

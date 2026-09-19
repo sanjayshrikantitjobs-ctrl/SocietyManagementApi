@@ -11,6 +11,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AssetUrlPipe } from '../../shared/pipes/asset-url.pipe';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
 import { FacilityBookingFormDialogComponent } from './facility-booking-form-dialog.component';
 import { FacilityFormDialogComponent } from './facility-form-dialog.component';
@@ -22,7 +23,7 @@ import { FacilityService } from './services/facility.service';
   standalone: true,
   imports: [
     CommonModule, MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatIconModule, MatInputModule,
-    AssetUrlPipe, PageHeaderComponent
+    AssetUrlPipe, PageHeaderComponent, StatusBadgeComponent
   ],
   template: `
     @if (facility(); as f) {
@@ -37,11 +38,14 @@ import { FacilityService } from './services/facility.service';
       <div class="content">
         @if (f.imageUrl) { <img [src]="f.imageUrl | assetUrl" class="hero" alt="" /> }
 
-        <div class="rate-row">
-          <div><strong>{{ f.pricePerUnit | currency: 'INR' }}</strong> / {{ pricingLabel(f) }}</div>
-          @if (f.securityDeposit > 0) { <div>Deposit {{ f.securityDeposit | currency: 'INR' }}</div> }
-          @if (f.cleaningCharge > 0) { <div>Cleaning {{ f.cleaningCharge | currency: 'INR' }}</div> }
-          @if (f.requiresApproval) { <div class="badge">Requires Approval</div> }
+        <div class="rate-card">
+          <span class="rate-card-label">Rate &amp; charges</span>
+          <div class="rate-row">
+            <div><strong>{{ f.pricePerUnit | currency: 'INR' }}</strong> / {{ pricingLabel(f) }}</div>
+            @if (f.securityDeposit > 0) { <div>Deposit {{ f.securityDeposit | currency: 'INR' }}</div> }
+            @if (f.cleaningCharge > 0) { <div>Cleaning {{ f.cleaningCharge | currency: 'INR' }}</div> }
+            @if (f.requiresApproval) { <app-status-badge variant="warning" label="Requires Approval" /> }
+          </div>
         </div>
         @if (f.description) { <p class="description">{{ f.description }}</p> }
 
@@ -97,8 +101,9 @@ import { FacilityService } from './services/facility.service';
   styles: [`
     .content { max-width: 720px; }
     .hero { width: 100%; max-height: 260px; object-fit: cover; border-radius: 10px; margin-bottom: 16px; }
-    .rate-row { display: flex; gap: 16px; align-items: center; font-size: 13px; margin-bottom: 8px; flex-wrap: wrap; }
-    .badge { background: #fff3e0; color: #b26a00; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+    .rate-card { background: var(--app-surface-alt); border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; }
+    .rate-card-label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: var(--app-text-muted); margin-bottom: 6px; }
+    .rate-row { display: flex; gap: 16px; align-items: center; font-size: 13px; flex-wrap: wrap; }
     .description { color: var(--app-text-muted); font-size: 14px; }
     h3 { margin: 20px 0 10px; font-size: 15px; }
     .date-field { width: 240px; }

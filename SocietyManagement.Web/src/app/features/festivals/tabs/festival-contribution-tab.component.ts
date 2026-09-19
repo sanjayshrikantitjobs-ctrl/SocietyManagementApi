@@ -51,6 +51,7 @@ const NO_FLAT_OPTION_VALUE = 0;
         <app-stat-card label="Collected Toward Target" [value]="'₹' + (kpis()?.totalPaidAmount ?? 0 | number)" icon="paid" iconColor="#16a34a" iconBg="#ecfdf5" />
         <app-stat-card label="Outstanding" [value]="'₹' + (kpis()?.totalOutstandingAmount ?? 0 | number)" icon="hourglass_empty" iconColor="#dc2626" iconBg="#fef2f2" />
         <app-stat-card label="Flats Fully Paid" [value]="(kpis()?.flatsPaidCount ?? 0) + ' / ' + (kpis()?.totalFlats ?? 0)" icon="task_alt" iconColor="#2563eb" iconBg="#eff6ff" />
+        <app-stat-card label="Sponsorship Received" [value]="'₹' + (sponsorReceived() | number) + ' / ₹' + (sponsorPromised() | number)" icon="handshake" iconColor="#9333ea" iconBg="#faf5ff" />
       </div>
 
       <div class="toolbar">
@@ -62,6 +63,9 @@ const NO_FLAT_OPTION_VALUE = 0;
           @if (view() === 'flats') {
             <button mat-stroked-button (click)="exportFlatsPdf()"><mat-icon>picture_as_pdf</mat-icon> Export PDF</button>
             <button mat-stroked-button (click)="exportFlatsExcel()"><mat-icon>grid_on</mat-icon> Export Excel</button>
+          } @else {
+            <button mat-stroked-button (click)="exportLedgerPdf()" matTooltip="Exports the rows for the selected payment mode and search"><mat-icon>picture_as_pdf</mat-icon> Export PDF</button>
+            <button mat-stroked-button (click)="exportLedgerExcel()" matTooltip="Exports the rows for the selected payment mode and search"><mat-icon>grid_on</mat-icon> Export Excel</button>
           }
           @if (canManage()) {
             <button mat-stroked-button (click)="setTargetsForAllFlats()"><mat-icon>flag</mat-icon> Set Target for All Flats</button>
@@ -245,6 +249,8 @@ export class FestivalContributionTabComponent implements OnInit {
 
   readonly view = signal<'flats' | 'all'>('flats');
   readonly kpis = signal<FlatContributionKpisDto | null>(null);
+  readonly sponsorReceived = signal(0);
+  readonly sponsorPromised = signal(0);
 
   // "By Flat" view state
   readonly flatsLoading = signal(true);
@@ -305,6 +311,10 @@ export class FestivalContributionTabComponent implements OnInit {
 
   // ---- KPIs + "By Flat" -----------------------------------------------------
   loadKpis(): void {
+    this.festivalService.getSponsors(this.festivalId()).subscribe((sponsors) => {
+      this.sponsorReceived.set(sponsors.reduce((s, x) => s + x.receivedAmount, 0));
+      this.sponsorPromised.set(sponsors.reduce((s, x) => s + x.promisedAmount, 0));
+    });
     this.festivalService.getFlatContributionKpis(this.festivalId()).subscribe((data) => this.kpis.set(data));
   }
 
@@ -474,6 +484,24 @@ export class FestivalContributionTabComponent implements OnInit {
   exportFlatsExcel(): void {
     this.festivalService.exportFlatContributionsExcel(this.flatsExportParams()).subscribe((blob) => {
       this.downloadBlob(blob, 'contributions-by-flat.xlsx');
+    });
+  }
+
+  private ledgerExportParams() {
+    return {
+      festivalId: this.festivalId(), search: this.searchTerm() || undefined, paymentMethod: this.paymentMethodFilter ?? undefined
+    };
+  }
+
+  exportLedgerPdf(): void {
+    this.festivalService.exportContributionsPdf(this.ledgerExportParams()).subscribe((blob) => {
+      this.downloadBlob(blob, 'all-contributions.pdf');
+    });
+  }
+
+  exportLedgerExcel(): void {
+    this.festivalService.exportContributionsExcel(this.ledgerExportParams()).subscribe((blob) => {
+      this.downloadBlob(blob, 'all-contributions.xlsx');
     });
   }
 

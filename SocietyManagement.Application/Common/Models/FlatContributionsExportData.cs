@@ -18,3 +18,23 @@ public class FlatContributionsExportData
     public string FilterLabel { get; set; } = default!;
     public List<FlatContributionExportRow> Rows { get; set; } = new();
 }
+
+public class ContributionLedgerExportRow
+{
+    public string Donor { get; set; } = default!;
+    public string? FlatNumber { get; set; }
+    public decimal Amount { get; set; }
+    public string MethodLabel { get; set; } = default!;
+    public DateTime PaymentDate { get; set; }
+    public string ReceiptNumber { get; set; } = default!;
+    public string? TransactionId { get; set; }
+}
+
+public class ContributionLedgerExportData
+{
+    public string SocietyName { get; set; } = default!;
+    public string FestivalName { get; set; } = default!;
+    public string FilterLabel { get; set; } = default!;
+    public decimal TotalAmount { get; set; }
+    public List<ContributionLedgerExportRow> Rows { get; set; } = new();
+}

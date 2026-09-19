@@ -88,6 +88,7 @@ public static class ApiClientsRegistration
         services.AddHttpClientWithAuth<MaintenanceDashboardClient>();
         services.AddHttpClientWithAuth<MaintenanceSettingsClient>();
         services.AddHttpClientWithAuth<MembersClient>();
+        services.AddHttpClientWithAuth<NotificationsClient>();
         services.AddHttpClientWithAuth<OccupancySettingsClient>();
         services.AddHttpClientWithAuth<ParkingFinesClient>();
         services.AddHttpClientWithAuth<ParkingSlotsClient>();

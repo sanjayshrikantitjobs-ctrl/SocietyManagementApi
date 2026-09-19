@@ -161,7 +161,14 @@
                                     <Label Text="Vacant" Style="{StaticResource chipTextNeutral}" />
                                 </Border>
                                 <Label Grid.Row="1" Grid.Column="0" Text="{Binding PrimaryOwnerName}" Style="{StaticResource Muted}" />
-                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding PrimaryOwnerPhone}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                                <HorizontalStackLayout Grid.Row="1" Grid.Column="1" Spacing="4" HorizontalOptions="End"
+                                        IsVisible="{Binding PrimaryOwnerPhone, Converter={StaticResource StringToBoolConverter}}">
+                                    <HorizontalStackLayout.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.CallCommand}" CommandParameter="{Binding .}" />
+                                    </HorizontalStackLayout.GestureRecognizers>
+                                    <Label Text="📞" FontSize="12" />
+                                    <Label Text="{Binding PrimaryOwnerPhone}" Style="{StaticResource Muted}" TextColor="{StaticResource Primary}" />
+                                </HorizontalStackLayout>
                             </Grid>
                         </Border>
                     </DataTemplate>
@@ -194,7 +201,14 @@
                                     <Label Text="Vacant" Style="{StaticResource chipTextNeutral}" />
                                 </Border>
                                 <Label Grid.Row="1" Grid.Column="0" Text="{Binding PrimaryTenantName}" Style="{StaticResource Muted}" />
-                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding PrimaryTenantPhone}" Style="{StaticResource Muted}" HorizontalOptions="End" />
+                                <HorizontalStackLayout Grid.Row="1" Grid.Column="1" Spacing="4" HorizontalOptions="End"
+                                        IsVisible="{Binding PrimaryTenantPhone, Converter={StaticResource StringToBoolConverter}}">
+                                    <HorizontalStackLayout.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.CallCommand}" CommandParameter="{Binding .}" />
+                                    </HorizontalStackLayout.GestureRecognizers>
+                                    <Label Text="📞" FontSize="12" />
+                                    <Label Text="{Binding PrimaryTenantPhone}" Style="{StaticResource Muted}" TextColor="{StaticResource Primary}" />
+                                </HorizontalStackLayout>
                             </Grid>
                         </Border>
                     </DataTemplate>

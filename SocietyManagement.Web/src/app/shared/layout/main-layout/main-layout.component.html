@@ -77,6 +77,21 @@
         </button>
       }
 
+      <button mat-icon-button [matMenuTriggerFor]="notificationMenu" #notifTrigger="matMenuTrigger"
+              aria-label="Notifications" matTooltip="Notifications">
+        @if (unreadNotificationCount() > 0) {
+          <mat-icon [matBadge]="unreadNotificationCount()" matBadgeColor="primary" matBadgeSize="small">notifications_none</mat-icon>
+        } @else {
+          <mat-icon>notifications_none</mat-icon>
+        }
+      </button>
+      <mat-menu #notificationMenu="matMenu" xPosition="before">
+        <div (click)="$event.stopPropagation()">
+          <app-notification-panel (unreadCountChanged)="unreadNotificationCount.set($event)"
+            (closed)="notifTrigger.closeMenu()" />
+        </div>
+      </mat-menu>
+
       <button mat-icon-button (click)="theme.toggle()" [matTooltip]="theme.isDark() ? 'Light mode' : 'Dark mode'">
         <mat-icon>{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
       </button>

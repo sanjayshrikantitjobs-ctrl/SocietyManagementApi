@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from './core/guards/auth.guard';
+import { permissionGuard } from './core/guards/permission.guard';
 import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
@@ -88,9 +89,14 @@ export const routes: Routes = [
         loadChildren: () => import('./features/residents/residents.routes').then((m) => m.RESIDENTS_ROUTES)
       },
       {
+        // Was role-literal ['Admin'] despite staff.view/staff.manage already
+        // existing as granular permissions — meant no custom role (e.g. a
+        // Security Head preset) could ever reach this page no matter what
+        // was granted via Roles & Permissions. Permission-gated like the
+        // feature's own actions already are.
         path: 'staff',
-        canActivate: [roleGuard],
-        data: { roles: ['Admin'] },
+        canActivate: [permissionGuard],
+        data: { permission: 'staff.view' },
         loadChildren: () => import('./features/staff/staff.routes').then((m) => m.STAFF_ROUTES)
       },
       {
@@ -106,9 +112,13 @@ export const routes: Routes = [
         loadChildren: () => import('./features/finance/finance.routes').then((m) => m.FINANCE_ROUTES)
       },
       {
+        // Same fix as 'staff' below — was role-literal ['Admin'] despite
+        // complaints.view/manage already existing, which silently broke the
+        // Committee Member preset's Complaints access (it grants the
+        // permission, but the route itself never checked it).
         path: 'complaints',
-        canActivate: [roleGuard],
-        data: { roles: ['Admin'] },
+        canActivate: [permissionGuard],
+        data: { permission: 'complaints.view' },
         loadChildren: () => import('./features/complaints/complaints.routes').then((m) => m.COMPLAINTS_ROUTES)
       },
       {

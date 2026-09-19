@@ -88,8 +88,11 @@ public class SupportTicketCommandHandlers :
         await _auditService.LogAsync(AuditAction.Create, "Support", nameof(SupportTicket), ticket.Id.ToString(), ct: ct);
 
         var societyName = await _context.Societies.Where(s => s.Id == societyId).Select(s => s.Name).FirstOrDefaultAsync(ct);
+        // No societyId here, intentionally — SuperAdmin is cross-society by
+        // design, so every SuperAdmin should see every society's tickets.
         await _notificationService.SendToRoleAsync(SocietyManagement.Shared.Constants.Roles.SuperAdmin, "SupportTicketCreated",
-            new { ticketId = ticket.Id, subject = ticket.Subject, societyName }, ct);
+            new { ticketId = ticket.Id, subject = ticket.Subject, societyName },
+            "New support ticket", $"{societyName}: {ticket.Subject}", ct: ct);
 
         return ticket.Id;
     }
@@ -113,7 +116,7 @@ public class SupportTicketCommandHandlers :
         if (request.Status == SupportTicketStatus.Resolved)
         {
             await _notificationService.SendToUserAsync(ticket.CreatedByUserId, "SupportTicketResolved",
-                new { ticketId = ticket.Id, subject = ticket.Subject }, ct);
+                new { ticketId = ticket.Id, subject = ticket.Subject }, "Support ticket resolved", ticket.Subject, ct: ct);
         }
 
         return Unit.Value;

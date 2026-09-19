@@ -126,10 +126,11 @@ public class ContributionCommandHandlers :
 
     public async Task<int> Handle(CreateContributionCommand request, CancellationToken ct)
     {
-        if (!await _context.Festivals.AnyAsync(f => f.Id == request.FestivalId && !f.IsDeleted, ct))
-        {
-            throw new NotFoundException(nameof(Festival), request.FestivalId);
-        }
+        var festivalSocietyId = await _context.Festivals
+            .Where(f => f.Id == request.FestivalId && !f.IsDeleted)
+            .Select(f => (int?)f.SocietyId)
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotFoundException(nameof(Festival), request.FestivalId);
 
         if (request.FlatId.HasValue &&
             !await _context.Flats.AnyAsync(fl => fl.Id == request.FlatId && !fl.IsDeleted, ct))
@@ -161,8 +162,14 @@ public class ContributionCommandHandlers :
         var totalCollected = await _context.FestivalContributions
             .Where(c => c.FestivalId == request.FestivalId && !c.IsDeleted)
             .SumAsync(c => c.Amount, ct);
-        await _notificationService.SendToAllAsync("FestivalContributionRecorded",
-            new { festivalId = request.FestivalId, amount = contribution.Amount, totalCollected }, ct);
+        // Was SendToAllAsync — a festival is one society's own event, not
+        // something every user in the entire database should be notified
+        // about; tenant-isolation fix, not a behavior change to what
+        // "recording a contribution" means.
+        await _notificationService.SendToSocietyAsync(festivalSocietyId, "FestivalContributionRecorded",
+            new { festivalId = request.FestivalId, amount = contribution.Amount, totalCollected },
+            "Contribution recorded", $"₹{contribution.Amount:0.##} recorded — ₹{totalCollected:0.##} collected so far",
+            $"festival-contribution-{contribution.Id}-recorded", ct);
 
         if (!string.IsNullOrWhiteSpace(whatsAppNumber))
         {
@@ -320,20 +327,29 @@ public record GetPendingContributorsQuery(int FestivalId) : IRequest<List<Pendin
 
 public record GetContributionReceiptPdfQuery(int Id) : IRequest<byte[]>;
 
+/// <summary>Same filters as GetContributionsQuery, unpaginated — every matching row is exported.</summary>
+public record GetContributionsExportPdfQuery(int FestivalId, string? Search, ContributionPaymentMethod? PaymentMethod) : IRequest<byte[]>;
+
+public record GetContributionsExportExcelQuery(int FestivalId, string? Search, ContributionPaymentMethod? PaymentMethod) : IRequest<byte[]>;
+
 public class ContributionQueryHandlers :
     IRequestHandler<GetContributionsQuery, PaginatedResult<FestivalContributionDto>>,
     IRequestHandler<GetContributionsSumQuery, decimal>,
     IRequestHandler<GetTopContributorsQuery, List<TopContributorDto>>,
     IRequestHandler<GetPendingContributorsQuery, List<PendingContributorDto>>,
-    IRequestHandler<GetContributionReceiptPdfQuery, byte[]>
+    IRequestHandler<GetContributionReceiptPdfQuery, byte[]>,
+    IRequestHandler<GetContributionsExportPdfQuery, byte[]>,
+    IRequestHandler<GetContributionsExportExcelQuery, byte[]>
 {
     private readonly IApplicationDbContext _context;
     private readonly IPdfReceiptService _pdfReceiptService;
+    private readonly IFlatContributionsExportService _exportService;
 
-    public ContributionQueryHandlers(IApplicationDbContext context, IPdfReceiptService pdfReceiptService)
+    public ContributionQueryHandlers(IApplicationDbContext context, IPdfReceiptService pdfReceiptService, IFlatContributionsExportService exportService)
     {
         _context = context;
         _pdfReceiptService = pdfReceiptService;
+        _exportService = exportService;
     }
 
     /// <summary>Shared by GetContributionsQuery and its "sum" companion so
@@ -402,6 +418,53 @@ public class ContributionQueryHandlers :
 
         return new PaginatedResult<FestivalContributionDto>(items, totalCount, pageNumber, pageSize);
     }
+
+    private async Task<ContributionLedgerExportData> BuildLedgerExportAsync(
+        int festivalId, string? search, ContributionPaymentMethod? paymentMethod, CancellationToken ct)
+    {
+        var festival = await _context.Festivals.FirstOrDefaultAsync(f => f.Id == festivalId && !f.IsDeleted, ct)
+            ?? throw new NotFoundException(nameof(Festival), festivalId);
+        var society = await _context.Societies.FirstOrDefaultAsync(s => s.Id == festival.SocietyId, ct);
+
+        var rows = await ApplyFilters(festivalId, null, search, paymentMethod)
+            .OrderByDescending(c => c.PaymentDate).ThenByDescending(c => c.CreatedAt)
+            .Select(c => new { c.MemberName, FlatNumber = c.Flat != null ? c.Flat.FlatNumber : null, c.Amount, c.PaymentMethod, c.PaymentDate, c.ReceiptNumber, c.TransactionId })
+            .ToListAsync(ct);
+
+        var filters = new List<string>();
+        if (paymentMethod.HasValue) filters.Add(paymentMethod.Value switch
+        {
+            ContributionPaymentMethod.Cash => "Cash",
+            ContributionPaymentMethod.UPI => "UPI",
+            _ => "Bank Transfer"
+        });
+        if (!string.IsNullOrWhiteSpace(search)) filters.Add($"Search: {search.Trim()}");
+
+        return new ContributionLedgerExportData
+        {
+            SocietyName = society?.Name ?? "Society",
+            FestivalName = festival.Name,
+            FilterLabel = filters.Count > 0 ? string.Join(" · ", filters) : "All Payment Modes",
+            TotalAmount = rows.Sum(r => r.Amount),
+            Rows = rows.Select(r => new ContributionLedgerExportRow
+            {
+                Donor = r.MemberName, FlatNumber = r.FlatNumber, Amount = r.Amount,
+                MethodLabel = r.PaymentMethod switch
+                {
+                    ContributionPaymentMethod.Cash => "Cash",
+                    ContributionPaymentMethod.UPI => "UPI",
+                    _ => "Bank Transfer"
+                },
+                PaymentDate = r.PaymentDate, ReceiptNumber = r.ReceiptNumber, TransactionId = r.TransactionId
+            }).ToList()
+        };
+    }
+
+    public async Task<byte[]> Handle(GetContributionsExportPdfQuery request, CancellationToken ct) =>
+        _exportService.GenerateLedgerPdf(await BuildLedgerExportAsync(request.FestivalId, request.Search, request.PaymentMethod, ct));
+
+    public async Task<byte[]> Handle(GetContributionsExportExcelQuery request, CancellationToken ct) =>
+        _exportService.GenerateLedgerExcel(await BuildLedgerExportAsync(request.FestivalId, request.Search, request.PaymentMethod, ct));
 
     public async Task<decimal> Handle(GetContributionsSumQuery request, CancellationToken ct) =>
         await ApplyFilters(request.FestivalId, request.FlatId, request.Search, request.PaymentMethod).SumAsync(c => c.Amount, ct);
